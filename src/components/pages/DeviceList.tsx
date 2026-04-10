@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { RefreshCcw, Monitor, Copy, List, LayoutGrid, Table, Loader, RefreshCcwDot } from "lucide-react";
+import {  Monitor, Copy, List, LayoutGrid, RefreshCcwDot } from "lucide-react";
 import { Device } from "../../types/Device";
 import { HeaderActionButton } from "../tools/Button";
 
 export const DeviceList = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list'); // Mặc định là list
   const [devices, setDevices] = useState<Device[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
 
   const scanAdbDevices = async () => {
     setLoading(true);

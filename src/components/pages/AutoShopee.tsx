@@ -2,9 +2,7 @@ import {
   Plus,
   Play,
   Trash2,
-  FileSpreadsheet,
   Download,
-  Upload,
   Search,
 
   FolderOpen,
