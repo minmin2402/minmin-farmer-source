@@ -1,13 +1,13 @@
 {
   "name": "minmin-control",
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build:logic": "tsc && vite build",
     "obfuscate": "javascript-obfuscator ./dist-electron --output ./dist-electron --compact true --self-defending true --control-flow-flattening true --dead-code-injection true --string-array true",
-    "build": "npm run build:logic && npm run obfuscate && electron-builder",
+    "build": "npm run build:logic && electron-builder --publish always",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "build:test": "npm run build:logic && electron-builder --dir"
@@ -30,7 +30,8 @@
       {
         "provider": "github",
         "owner": "minmin2402",
-        "repo": "MinMinFarmer-Release"
+        "repo": "MinMinFarmer-Release",
+        "releaseType": "release"
       }
     ],
     "nsis": {
