@@ -1,0 +1,109 @@
+{
+  "name": "minmin-control",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build:logic": "tsc && vite build",
+    "obfuscate": "javascript-obfuscator ./dist-electron --output ./dist-electron --compact true --self-defending true --control-flow-flattening true --dead-code-injection true --string-array true",
+    "build": "npm run build:logic && npm run obfuscate && electron-builder",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "build:test": "npm run build:logic && electron-builder --dir"
+  },
+  "build": {
+    "appId": "com.minmin.farmer",
+    "productName": "MinMin Farmer Pro",
+    "copyright": "Copyright © 2026 MinMin Coder",
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/puppeteer/.local-chromium/**/*",
+      "**/resources/bin/**/*"
+    ],
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "resources/**/*"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "minmin-coder",
+        "repo": "MinMinFarmer-Release"
+      }
+    ],
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "MinMin Farmer",
+      "createDesktopShortcut": true,
+      "runAfterFinish": true,
+      "installerIcon": "resources/icon.ico",
+      "uninstallerIcon": "resources/icon.ico"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "resources/icon.ico"
+    }
+  },
+  "dependencies": {
+    "@google/genai": "^1.48.0",
+    "@google/generative-ai": "^0.24.1",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@xyflow/react": "^12.10.2",
+    "adbkit": "^2.11.1",
+    "axios": "^1.14.0",
+    "bufferutil": "^4.1.0",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.8.3",
+    "form-data": "^4.0.5",
+    "lucide-react": "^1.7.0",
+    "node-fetch": "^3.3.2",
+    "node-machine-id": "^1.1.12",
+    "openai": "^6.33.0",
+    "p-limit": "^7.3.0",
+    "puppeteer-core": "^24.40.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.6.0",
+    "sharp": "^0.34.5",
+    "sweetalert2": "^11.26.24",
+    "utf-8-validate": "^6.0.6",
+    "uuid": "^13.0.0",
+    "xlsx": "^0.18.5",
+    "xmldom": "^0.6.0",
+    "xpath": "^0.0.34"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "^2.6.13",
+    "@types/react": "^18.2.64",
+    "@types/react-dom": "^18.2.21",
+    "@types/xmldom": "^0.1.34",
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.27",
+    "electron": "^30.0.1",
+    "electron-builder": "^24.13.3",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "javascript-obfuscator": "^5.4.1",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.6",
+    "vite-plugin-electron": "^0.28.6",
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "webpack-obfuscator": "^3.6.1"
+  },
+  "main": "dist-electron/main.js"
+}

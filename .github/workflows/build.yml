@@ -1,0 +1,22 @@
+name: Build/Release Electron
+on:
+  push:
+    tags:
+      - 'v*' # Chạy khi bạn push tag như v1.0.1
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Dependencies
+        run: npm install
+      - name: Build and Publish
+        run: npm run build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Tự động dùng token của GitHub

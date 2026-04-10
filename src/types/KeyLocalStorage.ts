@@ -1,0 +1,1 @@
+export const STORAGE_KEY = "minmin_config_video_mkt";
