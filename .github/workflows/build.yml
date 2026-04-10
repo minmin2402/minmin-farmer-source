@@ -17,6 +17,6 @@ jobs:
       - name: Install Dependencies
         run: npm install
       - name: Build and Publish
-        run: npm run build
+        run: npm run build:test
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Tự động dùng token của GitHub
+          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }} # Tự động dùng token của GitHub

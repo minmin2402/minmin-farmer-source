@@ -1,7 +1,7 @@
 {
   "name": "minmin-control",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -29,7 +29,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "minmin-coder",
+        "owner": "minmin2402",
         "repo": "MinMinFarmer-Release"
       }
     ],
