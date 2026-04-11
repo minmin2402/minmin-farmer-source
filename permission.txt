@@ -1,0 +1,3 @@
+Quyền đăng video theo máy, sử dùng số lượng máy => cho set device của máy để lưu lại cho phép chạy tool.
+Quyền tạo video AI
+Quyền viết script

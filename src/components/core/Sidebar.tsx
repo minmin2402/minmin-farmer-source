@@ -23,8 +23,12 @@ export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
       try {
         // @ts-ignore
         const hwid = await window.electronAPI.getDeviceId();
+        // @ts-ignore
+        const versionapp = await window.electronAPI.getVersionApp();
+
+
         // Cập nhật State một cách an toàn
-        setAppInfo(prev => ({ ...prev, hwid: hwid }));
+        setAppInfo(prev => ({ ...prev, hwid: hwid, version:versionapp?.version ?? "" }));
       } catch (error) {
         console.error("Lỗi lấy HWID:", error);
         setAppInfo(prev => ({ ...prev, hwid: "ERROR" }));

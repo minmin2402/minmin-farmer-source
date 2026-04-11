@@ -18,6 +18,7 @@ import { autoUpdater } from "electron-updater";
 
 import { TaskRunner } from './engine/TaskMakeVideoRunner';
 import { gpmService } from './services/gpm.service';
+import LicenseService from './services/license.service';
 
 
 const require = createRequire(import.meta.url)
@@ -123,7 +124,6 @@ ipcMain.handle('adb:get-devices', async () => {
     return []
   }
 })
-
 
 // electron/main.ts
 ipcMain.handle('adb:screencap', async (_event, deviceId: string) => {
@@ -276,7 +276,7 @@ async function ensureADBKeyboard(deviceId: string) {
       console.log(`[${deviceId}] Cài đặt thành công!`);
     }
 
-  
+
     execSync(`adb -s ${deviceId} shell ime enable com.android.adbkeyboard/.AdbIME`);
     execSync(`adb -s ${deviceId} shell ime set com.android.adbkeyboard/.AdbIME `);
 
@@ -387,10 +387,10 @@ ipcMain.handle('adb:execute', async (_event, { deviceId, action, params }) => {
       }
       case 'type_text':
 
-        
+
         try {
           await ensureADBKeyboard(deviceId);
-  
+
           // Vít ga gửi tiếng Việt qua Broadcast
           await client.shell(deviceId, `am broadcast -a ADB_INPUT_TEXT --es msg '${params.content}'`);
         } catch (error) {
@@ -521,9 +521,12 @@ export function setupGpmHandlers() {
 export function setupVideoAffHandle() {
   // Hứng lệnh lấy danh sách profile
 
+
   ipcMain.handle('video:run-tasks', async (_event: IpcMainInvokeEvent, data: any) => {
-    const runner = new TaskRunner(_event, data);
-    return await runner.execute();
+    if ((await new LicenseService().checkKey()).status) {
+      const runner = new TaskRunner(_event, data);
+      return await runner.execute();
+    }
 
   });
 
@@ -532,7 +535,7 @@ export function setupVideoAffHandle() {
 
 
 
-function createWindow() {
+async function createWindow() {
 
   splashWindow = new BrowserWindow({
     width: 400, height: 500,
@@ -547,7 +550,7 @@ function createWindow() {
     icon: path.join(process.env.VITE_PUBLIC, 'logo.ico'),
     webPreferences: {
       webSecurity: false,
-      preload: path.join(__dirname, 'preload.mjs'), 
+      preload: path.join(__dirname, 'preload.mjs'),
     },
     show: false
   })
@@ -558,21 +561,18 @@ function createWindow() {
 
   win.setMenu(null);
 
- 
+
   win.setMenuBarVisibility(false)
 
   if (VITE_DEV_SERVER_URL) {
 
     win.loadURL(VITE_DEV_SERVER_URL)
     console.log("🛠️ Đang ở chế độ Dev - Bỏ qua check update, vào App sau 2s");
-
     splashWindow?.webContents.send('status', 'Chế độ Dev: Đang kết nối Server...');
-
-
-   
     setTimeout(() => {
       launchMainApp();
     }, 2000);
+
   } else {
     if (app.isPackaged) {
       win.webContents.on('devtools-opened', () => {
@@ -614,13 +614,15 @@ function createWindow() {
     });
   }
 
+  console.log(await new LicenseService().checkKey())
+
 
 }
 function launchMainApp() {
   if (win && splashWindow) {
     win.maximize();
     win.show();
-    win.webContents.openDevTools();
+    //win.webContents.openDevTools();
 
 
 
@@ -649,6 +651,7 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
     checkUpdates();
+
   }
 })
 
