@@ -1,14 +1,61 @@
-import { User, Mail, Globe, Cpu, ShieldCheck, Copy, CheckCircle2 } from "lucide-react";
+import {
+  User,
+  Mail,
+  Globe,
+  Cpu,
+  ShieldCheck,
+  Copy,
+  CheckCircle2,
+  Crown,
+  Star,
+  Zap,
+  Clock,
+  Loader2,
+  ExternalLink,
+  Smartphone,
+
+} from "lucide-react";
 import { useState, useEffect } from "react";
 
+// Định nghĩa lại Interface để khớp với Backend
+interface LicenseInfo {
+  status: boolean;
+  deviceId: string;
+  maxDevices: string;
+  plan: "Basic" | "Pro" | "Ultra" | "Member";
+  expiredAt: string;
+  permissions: string[];
+  message: string;
+}
+
 export const AboutPage = () => {
-  const [deviceId, setDeviceId] = useState("Đang lấy ID...");
+  const [deviceId, setDeviceId] = useState("Đang truy xuất...");
+  const [license, setLicense] = useState<LicenseInfo | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
 
-  // Giả lập lấy Hardware ID từ Electron sau này
   useEffect(() => {
-    // @ts-ignore
-    window.electronAPI?.getDeviceId?.().then(id => setDeviceId(id || "MINMIN-PC-8888"));
+    const loadSystemInfo = async () => {
+      try {
+        setLoading(true);
+
+        // 1. Gọi BE qua IPC để lấy HWID
+        // @ts-ignore
+        const id = await window.electronAPI.getDeviceId();
+        setDeviceId(id || "N/A");
+
+        // 2. Gọi BE qua IPC để check License từ Server
+        // @ts-ignore
+        const info = await window.electronAPI.getLicenseInfo();
+        setLicense(info);
+      } catch (error) {
+        console.error("Lỗi khi tải thông tin bản quyền:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSystemInfo();
   }, []);
 
   const handleCopy = () => {
@@ -17,84 +64,268 @@ export const AboutPage = () => {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
+  // Hàm xử lý hiển thị UI theo từng cấp độ gói
+  const getPlanConfig = () => {
+    if (loading)
+      return {
+        label: "Đang kiểm tra...",
+        color: "text-slate-400",
+        bg: "bg-slate-50",
+        border: "border-slate-200",
+        icon: <Loader2 className="animate-spin" size={20} />,
+      };
+
+    if (!license || !license.status)
+      return {
+        label: "CHƯA KÍCH HOẠT",
+        color: "text-red-500",
+        bg: "bg-red-50",
+        border: "border-red-100",
+        icon: <Clock size={24} />,
+      };
+
+    switch (license.plan) {
+      case "Ultra":
+        return {
+          label: "ULTRA - VÔ HẠN",
+          color: "text-purple-600",
+          bg: "bg-purple-50",
+          border: "border-purple-200",
+          icon: <Crown size={24} />,
+        };
+      case "Pro":
+        return {
+          label: "PROFESSIONAL",
+          color: "text-orange-600",
+          bg: "bg-orange-50",
+          border: "border-orange-200",
+          icon: <Zap size={24} />,
+        };
+      case "Member":
+        return {
+          label: "TRI ÂN MEMBER",
+          color: "text-pink-600",
+          bg: "bg-pink-50",
+          border: "border-pink-200",
+          icon: <Star size={24} />,
+        };
+      default:
+        return {
+          label: "BASIC EDITION",
+          color: "text-blue-600",
+          bg: "bg-blue-50",
+          border: "border-blue-200",
+          icon: <CheckCircle2 size={24} />,
+        };
+    }
+  };
+
+  const plan = getPlanConfig();
+
   return (
-    <div className="p-8 w-full max-w-4xl mx-auto space-y-6 select-none overflow-y-auto h-screen pb-20">
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-lg shadow-blue-200">
-          M
+    <div className="p-8 w-full max-w-5xl mx-auto space-y-6 select-none overflow-y-auto h-screen pb-24 scrollbar-hide animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex items-center justify-between mb-10">
+        <div className="flex items-center gap-5">
+          <div className="w-16 h-16 bg-linear-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-200 ring-4 ring-white">
+            M
+          </div>
+          <div>
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight italic">
+              MinMinFarmer
+            </h1>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-md">
+                V 1.0.6
+              </span>
+              <span className="text-green-500 text-[10px] font-bold flex items-center gap-1">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />{" "}
+                ONLINE
+              </span>
+            </div>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">MinMinFarmer</h1>
-          <p className="text-slate-500 font-medium">Phiên bản 1.0.0 (Beta Edition)</p>
+        <div className="hidden md:block text-right">
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+            Powered by
+          </p>
+          <p className="text-sm font-bold text-slate-400 italic">
+            MinMin Coder Lab
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card Tác Giả */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-          <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-            <User size={16} /> Thông tin tác giả
+        {/* Card 1: Thông tin Tác Giả */}
+        <div className="bg-white p-7 rounded-4xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+          <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+            <User size={14} className="text-blue-500" /> Dev Team Info
           </h2>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 text-slate-700 font-bold text-lg">
-              MinMin
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600">
+                MM
+              </div>
+              <div>
+                <div className="text-slate-800 font-black text-lg leading-none">
+                  MinMin
+                </div>
+                <div className="text-slate-400 text-xs font-medium">
+                  Lead Developer
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-3 text-slate-500 text-sm">
-              <Mail size={14} /> crasmaverkgkg@gmail.com
-            </div>
-            <div className="flex items-center gap-3 text-slate-500 text-sm">
-              <Globe size={14} /> minmintool.site
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center gap-3 text-slate-500 text-sm hover:text-blue-600 cursor-pointer transition-colors">
+                <Mail size={14} /> crasmaverkgkg@gmail.com
+              </div>
+              <div className="flex items-center gap-3 text-slate-500 text-sm hover:text-blue-600 cursor-pointer transition-colors">
+                <Globe size={14} /> nhhtool.id.vn
+              </div>
             </div>
           </div>
-          <div className="pt-4 flex gap-2">
-             <button className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-all">
-                Liên hệ Telegram @minmin24203
-             </button>
-          </div>
+          <button className="w-full mt-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-blue-600 transition-all flex items-center justify-center gap-2 group">
+            HỖ TRỢ TELEGRAM{" "}
+            <ExternalLink
+              size={14}
+              className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"
+            />
+          </button>
         </div>
 
-        {/* Card Bản Quyền */}
-        <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 space-y-4 relative overflow-hidden">
-          <ShieldCheck className="absolute -right-4 -bottom-4 text-blue-100 w-32 h-32" />
-          <h2 className="text-sm font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
-            <ShieldCheck size={16} /> Trạng thái bản quyền
-          </h2>
-          <div className="space-y-2 relative z-10">
-            <div className="flex items-center gap-2 text-blue-600 font-black text-xl">
-              <CheckCircle2 size={24} /> TRỌN ĐỜI (LIFETIME)
+        {/* Card 2: Trạng thái Bản quyền (Real-time) */}
+        <div
+          className={`${plan.bg} p-7 rounded-[2.5rem] border-2 ${plan.border} relative overflow-hidden flex flex-col justify-between shadow-2xl shadow-slate-200/50 group transition-all duration-500 hover:scale-[1.02]`}
+        >
+          {/* Background Decor: Vòng tròn mờ tạo chiều sâu */}
+          <div
+            className={`absolute -right-10 -top-10 w-40 h-40 ${plan.color} opacity-[0.03] rounded-full blur-3xl`}
+          />
+          <ShieldCheck
+            className={`absolute -right-4 -bottom-4 ${plan.color} opacity-[0.08] w-48 h-48 rotate-12 transition-transform duration-700 group-hover:rotate-0`}
+          />
+
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-6">
+              <h2
+                className={`text-[10px] font-black ${plan.color} opacity-60 uppercase tracking-[0.25em] flex items-center gap-2`}
+              >
+                <ShieldCheck size={14} strokeWidth={3} /> License Status
+              </h2>
+              {/* Badge Trạng thái nhỏ */}
+              <span
+                className={`px-2 py-0.5 rounded-full text-[9px] font-black ${plan.color} bg-white/50 backdrop-blur-sm border ${plan.border}`}
+              >
+                ACTIVE
+              </span>
             </div>
-            <p className="text-blue-500/80 text-xs font-medium italic">
-              * Phần mềm được cấp quyền sử dụng vĩnh viễn cho máy này.
+
+            <div className={`flex flex-col gap-1`}>
+              <div
+                className={`flex items-center gap-3 ${plan.color} font-black text-3xl tracking-tight`}
+              >
+                {plan.icon} {plan.label}
+              </div>
+              <p
+                className={`${plan.color} text-[10px] font-bold opacity-60 ml-9 tracking-wide`}
+              >
+                Verified System Identity
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-10 space-y-4 relative z-10">
+            {/* Grid thông tin con */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Box Giới hạn máy */}
+              <div
+                className={`p-3 rounded-2xl bg-white/40 backdrop-blur-md border ${plan.border} shadow-sm`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Smartphone size={12} className={plan.color} />
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                    Capacity
+                  </span>
+                </div>
+                <div className={`text-xs font-black ${plan.color}`}>
+                  {license?.plan === "Ultra"
+                    ? "UNLIMITED"
+                    : `${license?.maxDevices || 0} DEVICES`}
+                </div>
+              </div>
+
+              {/* Box Hạn dùng */}
+              <div
+                className={`p-3 rounded-2xl bg-white/40 backdrop-blur-md border ${plan.border} shadow-sm`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock size={12} className={plan.color} />
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                    Expiry
+                  </span>
+                </div>
+                <div className={`text-xs font-black ${plan.color}`}>
+                  {license?.expiredAt?.split(" ")[0] || "LIFETIME"}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer text */}
+            <div className="flex items-center gap-2 px-1">
+              <div
+                className={`w-1 h-1 rounded-full ${plan.color} animate-pulse`}
+              />
+              <p className="text-slate-400 text-[9px] font-bold leading-relaxed tracking-tight">
+                Thiết bị đã được định danh bảo mật toàn cầu
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Device HWID Section */}
+      <div className="bg-white p-7 rounded-4xl border border-slate-100 shadow-sm space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+              <Cpu size={14} /> Machine Hardware ID
+            </h2>
+            <p className="text-[11px] text-slate-400 font-medium italic">
+              Sử dụng mã này để đăng ký hoặc gia hạn gói cước
             </p>
           </div>
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-2 text-xs font-black bg-slate-50 border border-slate-200 px-5 py-2.5 rounded-xl hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all active:scale-95 shadow-sm"
+          >
+            {isCopied ? (
+              <>
+                <CheckCircle2 size={14} /> ĐÃ SAO CHÉP
+              </>
+            ) : (
+              <>
+                <Copy size={14} /> COPY HWID
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className="relative group">
+          <div className="bg-slate-50 p-5 rounded-2xl font-mono text-xs text-slate-500 break-all border border-slate-100 shadow-inner group-hover:border-blue-200 transition-colors leading-relaxed">
+            {deviceId}
+          </div>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <ShieldCheck size={20} className="text-blue-200" />
+          </div>
         </div>
       </div>
 
-      {/* Card Device ID - Phần quan trọng để khóa bản quyền */}
-      <div className="bg-slate-50 p-6 rounded-2xl border border-dashed border-slate-300 space-y-4">
-        <div className="flex items-center justify-between">
-            <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Cpu size={16} /> Thông tin thiết bị (Hardware ID)
-            </h2>
-            <button 
-                onClick={handleCopy}
-                className="flex items-center gap-2 text-[10px] font-bold bg-white border border-slate-200 px-3 py-1.5 rounded-md hover:bg-slate-100 transition-all"
-            >
-                {isCopied ? <><CheckCircle2 size={12} className="text-green-500" /> ĐÃ CHÉP</> : <><Copy size={12} /> SAO CHÉP ID</>}
-            </button>
-        </div>
-        <div className="bg-slate-200/50 p-4 rounded-xl font-mono text-sm text-slate-600 break-all border border-slate-200">
-          {deviceId}
-        </div>
-        <p className="text-[11px] text-slate-400 italic">
-            * Cung cấp mã này cho tác giả để được hỗ trợ kỹ thuật hoặc gia hạn bản quyền.
+      {/* Footer Disclaimer */}
+      <div className="flex flex-col items-center gap-4 pt-8">
+        <div className="h-px w-20 bg-slate-200" />
+        <p className="text-[9px] text-slate-300 font-black uppercase tracking-[0.4em]">
+          © 2024-2026 MINMIN FARMER PRO • SECURITY VERIFIED
         </p>
-      </div>
-
-      <div className="text-center pt-10">
-         <p className="text-[10px] text-slate-300 font-bold uppercase tracking-[0.2em]">
-            © 2026 MinMin Control Phone - All Rights Reserved
-         </p>
       </div>
     </div>
   );

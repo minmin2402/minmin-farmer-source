@@ -92,7 +92,6 @@ ipcMain.handle('adb:mirror-device', async (_event, deviceId: string) => {
   return { success: true };
 });
 
-
 ipcMain.handle('get-version', () => {
   return {
     version: app.getVersion(),// Lấy version từ file package.json
@@ -124,6 +123,10 @@ ipcMain.handle('adb:get-devices', async () => {
     return []
   }
 })
+
+ipcMain.handle('get-license-info', async () => {
+  return await new LicenseService().checkKey();
+});
 
 // electron/main.ts
 ipcMain.handle('adb:screencap', async (_event, deviceId: string) => {

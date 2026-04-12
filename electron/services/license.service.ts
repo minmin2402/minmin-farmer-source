@@ -6,7 +6,8 @@ import crypto from 'crypto';
 export interface LicenseInfo {
   status: boolean;
   deviceId: string;
-  plan: 'Basic' | 'Pro' | 'Ultra'; // Gói sử dụng
+  plan: 'Basic' | 'Pro' | 'Ultra' | 'Member'; // Gói sử dụng
+  maxDevices: number;
   expiredAt: string;               // Hạn sử dụng
   permissions: string[];           // Các quyền (ví dụ: ['auto_shopee', 'multi_control'])
   message: string;
@@ -74,6 +75,7 @@ A5bn46e7LlUg9Nh4H3e+tsYSyWk2QJD+g7rt0FMXcxQeElsiRFtGIzyngiYcpc2C
       return {
         status: false,
         deviceId: '',
+        maxDevices:0,
         plan: 'Basic',
         expiredAt: '',
         permissions: [],

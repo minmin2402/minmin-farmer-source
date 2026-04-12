@@ -2,6 +2,7 @@ import { ipcRenderer, contextBridge } from 'electron'
 
 contextBridge.exposeInMainWorld('electronAPI', {
   openExternal: (url: string) => ipcRenderer.send('open-external', url),
+  getLicenseInfo: () => ipcRenderer.invoke('get-license-info'),
   getDevices: () => ipcRenderer.invoke('adb:get-devices'),
   getDeviceId: () => ipcRenderer.invoke('get-deviceId'),
   getVersionApp: () => ipcRenderer.invoke('get-version'),
