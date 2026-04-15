@@ -2,9 +2,10 @@
 import { app, BrowserWindow, dialog, globalShortcut, ipcMain, IpcMainInvokeEvent, shell } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { exec, execSync } from 'node:child_process';
+import { exec, execSync, spawn } from 'node:child_process';
 import xpath from 'xpath';
 import { DOMParser } from 'xmldom'
+
 
 
 import * as fs from 'fs'; // Dùng cho createWriteStream (Stream)
@@ -14,11 +15,14 @@ import { machineIdSync } from 'node-machine-id';
 import crypto from 'crypto';
 import os from 'os';
 
+
 import { autoUpdater } from "electron-updater";
 
 import { TaskRunner } from './engine/TaskMakeVideoRunner';
 import { gpmService } from './services/gpm.service';
 import LicenseService from './services/license.service';
+//import { streamServer } from './socket-server';
+//import { startDeviceStream } from './adb-manager';
 
 
 const require = createRequire(import.meta.url)
@@ -36,9 +40,7 @@ process.env.APP_ROOT = path.join(__dirname, '..')
 
 
 
-// Lấy đường dẫn thư mục BIN (Local)
-// Nếu đang dev: nó ở thư mục gốc project
-// Nếu đã build: nó nằm cạnh file .exe của app
+
 const isDev = !app.isPackaged;
 const binPath = isDev
   ? path.join(app.getAppPath(), 'bin')
@@ -73,6 +75,8 @@ function checkUpdates() {
   });
 }
 
+
+
 // 2. Hàm Mirror dùng Scrcpy local
 ipcMain.handle('adb:mirror-device', async (_event, deviceId: string) => {
   const scrcpyExePtr = path.join(binPath, 'scrcpy.exe');
@@ -91,6 +95,42 @@ ipcMain.handle('adb:mirror-device', async (_event, deviceId: string) => {
 
   return { success: true };
 });
+
+
+// 2. Hàm Mirror dùng Scrcpy local
+ipcMain.handle('adb:viewphone', async (_event, deviceId, x, y, width, height) => {
+  const scrcpyExePtr = path.join(binPath, 'scrcpy.exe');
+
+  const args = [
+    '-s', deviceId,
+    '--no-control',
+    '--always-on-top',
+    '--window-title', `view-${deviceId}`,
+    '--window-x', Math.floor(Number(x)).toString(),
+    '--window-y', Math.floor(Number(y)).toString(),
+    '--window-width', Math.floor(Number(width)).toString(),
+    '--window-height', Math.floor(Number(height)).toString(),
+    '--max-fps', '15',
+    '--video-bit-rate', '2M', // 👈 Đổi từ --bit-rate thành --video-bit-rate
+    '--no-audio',            // 👈 Tắt audio để tránh lỗi driver và nhẹ máy
+
+  ];
+
+  const scrcpyProcess = spawn(scrcpyExePtr, args);
+  scrcpyProcess.stdout.on('data', (data) => {
+    // Nếu thấy dòng "Texture: ..." là chắc chắn đã lên hình
+    console.log(`[Scrcpy Log ${deviceId}]: ${data}`);
+})
+  // Giữ lại cái này để theo dõi nếu còn lỗi khác
+  scrcpyProcess.stderr.on('data', (data) => {
+    console.error(`[Scrcpy Error ${deviceId}]: ${data}`);
+  });
+
+  scrcpyProcess.on('close', (code) => {
+    console.log(`Scrcpy ${deviceId} exited with code ${code}`);
+  });
+});
+
 
 ipcMain.handle('get-version', () => {
   return {
@@ -659,7 +699,7 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(() => {
-  // Đăng ký phím tắt bảo mật
+
   setupGpmHandlers()
   setupVideoAffHandle()
   if (app.isPackaged) {
@@ -671,4 +711,10 @@ app.whenReady().then(() => {
   createWindow();
 });
 
+
+/* ipcMain.handle('adb:start-stream', async (_event, deviceId: string) => {
+  await startDeviceStream(deviceId);
+  return { success: true };
+});
+ */
 

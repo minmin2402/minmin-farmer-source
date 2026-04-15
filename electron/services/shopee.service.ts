@@ -38,6 +38,7 @@ async function getInfoProduct(port: number, data: any) {
         });
         // 1. Chờ cho đến khi cái Selector tương ứng với XPath hiện ra
         // Lưu ý: Puppeteer hiện đại hỗ trợ cú pháp ::xpath trực tiếp trong waitForSelector
+        
         const xpathSelectorTitle = 'xpath///div[@role="main"]/section/section[2]/div/div/h1';
 
         let productTitle = null
@@ -46,19 +47,20 @@ async function getInfoProduct(port: number, data: any) {
             await page.waitForSelector(xpathSelectorTitle, {
                 timeout: data.configVideoMKT?.time_wait_getdata ?? 15000
             });
-
+            /* javascript-obfuscator:disable */
             // 2. Lấy Text Content ra "vít ga"
-            productTitle = await page.evaluate((xpath) => {
-                const element = document.evaluate(
-                    xpath,
+            productTitle = await page.evaluate((targetXpath) => {
+                const result = document.evaluate(
+                    targetXpath,
                     document,
                     null,
-                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    9,
                     null
                 ).singleNodeValue;
-                return element ? element.textContent?.trim() : "Không tìm thấy tiêu đề";
-            }, "//div[@role='main']/section/section[2]/div/div/h1");
 
+                return result ? result.textContent?.trim() : "Không tìm thấy tiêu đề";
+            }, "//div[@role='main']/section/section[2]/div/div/h1");
+            /* javascript-obfuscator:enable */
             console.log("💎 Tiêu đề sản phẩm lấy được:", productTitle);
 
         } catch (error) {
@@ -73,19 +75,19 @@ async function getInfoProduct(port: number, data: any) {
             await page.waitForSelector(xpathSelectorDesc, {
                 timeout: data.configVideoMKT?.time_wait_getdata ?? 15000
             });
-
+             /* javascript-obfuscator:disable */
             // 2. Lấy Text Content ra "vít ga"
             productDesc = await page.evaluate((xpath) => {
                 const element = document.evaluate(
                     xpath,
                     document,
                     null,
-                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    9,
                     null
                 ).singleNodeValue;
                 return element ? element.textContent?.trim() : "Không tìm thấy mô tả";
             }, "//div[@class='product-detail page-product__detail']/section[2]//p[1]");
-
+            /* javascript-obfuscator:enable */
             console.log("💎 mô tả sản phẩm lấy được:", productDesc);
 
         } catch (error) {
@@ -103,14 +105,14 @@ async function getInfoProduct(port: number, data: any) {
             await page.waitForSelector(xpathSelectorSource, {
                 timeout: data.configVideoMKT?.time_wait_getdata ?? 15000
             });
-
+            /* javascript-obfuscator:disable */
             // 2. Lấy giá trị srcset
             const rawSrcset = await page.evaluate((xpath) => {
                 const element = document.evaluate(
                     xpath,
                     document,
                     null,
-                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    9,
                     null
                 ).singleNodeValue as HTMLSourceElement;
 
@@ -118,7 +120,7 @@ async function getInfoProduct(port: number, data: any) {
                 // srcset có thể là "link1 1x, link2 2x" -> lấy cái đầu tiên
                 return element.srcset.split(' ')[0];
             }, xpathSource);
-
+            /* javascript-obfuscator:enable */
             if (rawSrcset) {
                 console.log("🔗 Link ảnh lấy được:", rawSrcset);
                 const highRawSrcset = rawSrcset.replace("resize_w82", "resize_w780")

@@ -1,1 +1,44 @@
-"use strict";const n=require("electron");n.contextBridge.exposeInMainWorld("electronAPI",{openExternal:e=>n.ipcRenderer.send("open-external",e),getLicenseInfo:()=>n.ipcRenderer.invoke("get-license-info"),getDevices:()=>n.ipcRenderer.invoke("adb:get-devices"),getDeviceId:()=>n.ipcRenderer.invoke("get-deviceId"),getVersionApp:()=>n.ipcRenderer.invoke("get-version"),selectFileApk:()=>n.ipcRenderer.invoke("select-file-apk"),selectFile:()=>n.ipcRenderer.invoke("select-file"),selectFolder:()=>n.ipcRenderer.invoke("select-folder"),openMirror:e=>n.ipcRenderer.invoke("adb:mirror-device",e),executeAdb:e=>n.ipcRenderer.invoke("adb:execute",e),onMainMessage:e=>n.ipcRenderer.on("main-process-message",(i,r)=>e(r)),dumpUi:e=>n.ipcRenderer.invoke("adb:dump-ui",e),screencap:e=>n.ipcRenderer.invoke("adb:screencap",e),listApp:e=>n.ipcRenderer.invoke("adb:list-app",e),onUpdateStatus:e=>{n.ipcRenderer.on("status",(i,r)=>e(r))},onDownloadProgress:e=>{n.ipcRenderer.on("download-progress",(i,r)=>e(r))},getGpmProfiles:()=>n.ipcRenderer.invoke("gpm:get-profiles"),startGpmProfile:e=>n.ipcRenderer.invoke("gpm:start-profile",e),stopGpmProfile:e=>n.ipcRenderer.invoke("gpm:stop-profile",e),checkGpmConnection:e=>n.ipcRenderer.invoke("gpm:check-connection",e),runTaskAutoVideo:e=>n.ipcRenderer.invoke("video:run-tasks",e),stopTaskAutoVideo:e=>n.ipcRenderer.send("video:stop-single-task",e),getInfoProduct:e=>n.ipcRenderer.invoke("video:get-info-product",e),onTaskLog:e=>{const i=(r,o)=>e(o);return n.ipcRenderer.on("video:task-log",i),()=>{n.ipcRenderer.removeListener("video:task-log",i)}}});
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("electronAPI", {
+  openExternal: (url) => electron.ipcRenderer.send("open-external", url),
+  getLicenseInfo: () => electron.ipcRenderer.invoke("get-license-info"),
+  getDevices: () => electron.ipcRenderer.invoke("adb:get-devices"),
+  getDeviceId: () => electron.ipcRenderer.invoke("get-deviceId"),
+  getVersionApp: () => electron.ipcRenderer.invoke("get-version"),
+  selectFileApk: () => electron.ipcRenderer.invoke("select-file-apk"),
+  selectFile: () => electron.ipcRenderer.invoke("select-file"),
+  selectFolder: () => electron.ipcRenderer.invoke("select-folder"),
+  openMirror: (deviceId) => electron.ipcRenderer.invoke("adb:mirror-device", deviceId),
+  // Thêm dòng này
+  openViewPhone: (deviceId, x, y, width, height) => electron.ipcRenderer.invoke("adb:viewphone", deviceId, x, y, width, height),
+  // Thêm dòng này
+  startStream: (deviceId) => electron.ipcRenderer.invoke("adb:start-stream", deviceId),
+  // Thêm dòng này
+  executeAdb: (data) => electron.ipcRenderer.invoke("adb:execute", data),
+  onMainMessage: (callback) => electron.ipcRenderer.on("main-process-message", (_event, value) => callback(value)),
+  dumpUi: (deviceId) => electron.ipcRenderer.invoke("adb:dump-ui", deviceId),
+  screencap: (deviceId) => electron.ipcRenderer.invoke("adb:screencap", deviceId),
+  listApp: (deviceId) => electron.ipcRenderer.invoke("adb:list-app", deviceId),
+  onUpdateStatus: (callback) => {
+    electron.ipcRenderer.on("status", (_event, value) => callback(value));
+  },
+  // Lắng nghe % tiến độ tải (nếu có)
+  onDownloadProgress: (callback) => {
+    electron.ipcRenderer.on("download-progress", (_event, value) => callback(value));
+  },
+  getGpmProfiles: () => electron.ipcRenderer.invoke("gpm:get-profiles"),
+  startGpmProfile: (id) => electron.ipcRenderer.invoke("gpm:start-profile", id),
+  stopGpmProfile: (id) => electron.ipcRenderer.invoke("gpm:stop-profile", id),
+  checkGpmConnection: (url) => electron.ipcRenderer.invoke("gpm:check-connection", url),
+  runTaskAutoVideo: (data) => electron.ipcRenderer.invoke("video:run-tasks", data),
+  stopTaskAutoVideo: (taskIds) => electron.ipcRenderer.send("video:stop-single-task", taskIds),
+  getInfoProduct: (data) => electron.ipcRenderer.invoke("video:get-info-product", data),
+  onTaskLog: (callback) => {
+    const subscription = (_event, data) => callback(data);
+    electron.ipcRenderer.on("video:task-log", subscription);
+    return () => {
+      electron.ipcRenderer.removeListener("video:task-log", subscription);
+    };
+  }
+});

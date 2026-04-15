@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {  Monitor, Copy, List, LayoutGrid, RefreshCcwDot } from "lucide-react";
 import { Device } from "../../types/Device";
 import { HeaderActionButton } from "../tools/Button";
+//import { DeviceMirror } from "../parts/DeviceCard";
 
 export const DeviceList = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list'); // Mặc định là list
@@ -140,23 +141,18 @@ export const DeviceList = () => {
             </tbody>
           </table>
         ) : (
-          /* 🆕 GIAO DIỆN GRID VIEW CHO MINMIN */
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {devices.map((device) => (
-              <div key={device.id} className="bg-white border border-gray-100 rounded-2xl p-2 shadow-sm hover:border-blue-300 transition-all group relative">
-                {/* Khu vực hiển thị màn hình (Sau này nhúng Canvas/Video vào đây) */}
-                <div className="aspect-9/16 bg-slate-900 rounded-xl mb-2 flex items-center justify-center overflow-hidden">
-                   <span className="text-slate-500 text-[10px]">{device.model}</span>
-                   {/* Overlay nút Mirror nhanh */}
-                   <button className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold text-xs">
-                      BẮT ĐẦU MIRROR
-                   </button>
-                </div>
-                <div className="text-[10px] font-mono font-bold text-blue-600 truncate text-center">
-                  {device.id}
-                </div>
-              </div>
+          /* 🆕 GIAO DIỆN GRID VIEW ĐÃ NÂNG CẤP */
+          /* GRID VIEW: Sử dụng auto-fill để tự co giãn theo màn hình */
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+            {/* {devices.filter(d => d.status === 'device').map((device) => (
+              <DeviceMirror key={device.id} deviceId={device.id} />
             ))}
+            
+            {devices.length === 0 && (
+               <div className="col-span-full py-20 text-center text-slate-400 italic">
+                  Không tìm thấy thiết bị nào để hiển thị Grid.
+               </div>
+            )} */}
           </div>
         )}
       </div>

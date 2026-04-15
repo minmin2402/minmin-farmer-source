@@ -18,6 +18,7 @@ import { VideoTask } from "../../types/VideoTask";
 import { ResultTaskVideoModal } from "../modals/ResultTaskVideoModal";
 import { HeaderColoredButton, ExcelImportVideoMKT, HeaderActionButton } from "../tools/Button";
 import toast from "react-hot-toast";
+import { prompt_img, prompt_video } from "../../const";
 
 interface ConfigVideoMKT {
   output_video: string;
@@ -80,6 +81,9 @@ export const VideoMarketingPage = () => {
 - Các prompt cuối: Kêu gọi hành động (CTA).`,
       apikey_gemini: [],
       model_ai_img: "banana-pro",
+      prompt_image: prompt_img,
+      prompt_video: prompt_video
+
     };
   });
   const [isConfigOpen, setIsConfigOpen] = useState(false);

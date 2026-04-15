@@ -10,6 +10,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectFile: () => ipcRenderer.invoke('select-file'),
   selectFolder: () => ipcRenderer.invoke('select-folder'),
   openMirror: (deviceId: string) => ipcRenderer.invoke('adb:mirror-device', deviceId), // Thêm dòng này
+  openViewPhone: (deviceId:string, x:string, y:string, width:string, height:string) => ipcRenderer.invoke('adb:viewphone', deviceId,x,y,width,height), // Thêm dòng này
+  startStream: (deviceId: string) => ipcRenderer.invoke('adb:start-stream', deviceId), // Thêm dòng này
+
+
   executeAdb: (data:any) => ipcRenderer.invoke('adb:execute', data),
   onMainMessage: (callback:any) => ipcRenderer.on('main-process-message', (_event, value) => callback(value)),
   dumpUi: (deviceId:string) => ipcRenderer.invoke('adb:dump-ui', deviceId),
