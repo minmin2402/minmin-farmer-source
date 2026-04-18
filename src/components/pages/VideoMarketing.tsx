@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import * as XLSX from "xlsx";
 import {
   Plus,
   Play,
@@ -16,7 +17,11 @@ import { ConfigModalVideoMKT } from "../modals/ConfigModalVideoMKT";
 import { STORAGE_KEY } from "../../types/KeyLocalStorage";
 import { VideoTask } from "../../types/VideoTask";
 import { ResultTaskVideoModal } from "../modals/ResultTaskVideoModal";
-import { HeaderColoredButton, ExcelImportVideoMKT, HeaderActionButton } from "../tools/Button";
+import {
+  HeaderColoredButton,
+  ExcelImportVideoMKT,
+  HeaderActionButton,
+} from "../tools/Button";
 import toast from "react-hot-toast";
 import { prompt_img, prompt_video } from "../../const";
 
@@ -41,13 +46,42 @@ interface ConfigVideoMKT {
   prompt_review: string | null;
   apikey_gemini: string[];
   model_ai_img: "banana-pro" | "nano-banana-2";
+  voice_code:
+    | "s_hochiminh_male_nguoikechuyenbali2_advertise_vc"
+    | "n_hanoi_male_quangquangcao_advertise_vc"
+    | "s_cantho_female_xanxan_advertise_vc"
+    | "n_hanoi_female_quangcao02_advertise_vc";
+  vbee_app_id: string;
+  vbee_app_token: string;
+  isEnabledLogo: boolean;
+  logoPath: string;
 }
 
 export const VideoMarketingPage = () => {
   // 1. Quản lý danh sách Task
   const [tasks, setTasks] = useState<VideoTask[]>(() => {
     const savedTasks = localStorage.getItem("minmin_videoMKT_tasks");
-    return savedTasks ? JSON.parse(savedTasks) : [];
+    if (!savedTasks) return [];
+
+    try {
+      const parsedTasks: VideoTask[] = JSON.parse(savedTasks);
+
+      // Map qua danh sách task để reset trạng thái khi load app
+      return parsedTasks.map((task) => {
+        // Nếu status là các trạng thái đang chạy dở, reset về none
+        if (task.status === "processing") {
+          return {
+            ...task,
+            status: "none", // Hoặc 'failed' tùy Hoàng muốn
+            log: "Đã dừng do đóng ứng dụng",
+          };
+        }
+        return task;
+      });
+    } catch (error) {
+      console.error("❌ Lỗi parse task từ localStorage:", error);
+      return [];
+    }
   });
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
@@ -82,8 +116,12 @@ export const VideoMarketingPage = () => {
       apikey_gemini: [],
       model_ai_img: "banana-pro",
       prompt_image: prompt_img,
-      prompt_video: prompt_video
-
+      prompt_video: prompt_video,
+      voice_code: "s_cantho_female_xanxan_advertise_vc",
+      vbee_app_id: "",
+      vbee_app_token: "",
+      isEnabledLogo: false,
+      logoPath: "",
     };
   });
   const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -122,6 +160,45 @@ export const VideoMarketingPage = () => {
       setIsResultModalOpen(true);
     } catch (error) {}
   }
+  const handleExportExcel = () => {
+    // 1. Lọc danh sách task dựa trên selectedIds
+    const selectedTasks = tasks.filter((task) => selectedIds.includes(task.id));
+
+    // Kiểm tra nếu chưa chọn task nào
+    if (selectedTasks.length === 0) {
+      alert("Vui lòng chọn ít nhất một task để xuất Excel!");
+      return;
+    }
+
+    // 2. Chuẩn bị dữ liệu từ danh sách đã lọc
+    const dataToExport = selectedTasks.map((task, index) => ({
+      STT: index + 1,
+      "Tên Sản Phẩm": task.productName,
+      "Link Shopee": task.productUrl,
+      "Trạng Thái": task.status,
+      "Đường Dẫn Video": task.finalVideoPath || "N/A",
+    }));
+
+    // 3. Tạo Workbook và Worksheet
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+
+    // Thêm một chút style cho cột rộng ra nhìn cho chuyên nghiệp
+    const wscols = [
+      { wch: 5 }, // STT
+      { wch: 40 }, // Tên Sản Phẩm
+      { wch: 50 }, // Link Shopee
+      { wch: 15 }, // Trạng Thái
+      { wch: 80 }, // Đường Dẫn Video
+    ];
+    worksheet["!cols"] = wscols;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks_Duoc_Chon");
+
+    // 4. Xuất file
+    const fileName = `MinMin_Selected_Export_${Date.now()}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
 
   useEffect(() => {
     localStorage.setItem("minmin_videoMKT_tasks", JSON.stringify(tasks));
@@ -144,7 +221,7 @@ export const VideoMarketingPage = () => {
                 productName: logData?.data?.productTitle ?? task.productName,
                 productDesc: logData?.data?.productDesc ?? task.productDesc,
                 productPathImg: logData?.data?.productPathImage
-                  ? `${configVideoMKT.output_video}/${logData?.data?.productPathImage}`
+                  ? `${logData?.data?.productPathImage}`
                   : task.productPathImg,
                 prompt: logData?.data?.prompt ?? task.prompt,
                 aiImagePath: logData?.data?.imageAIPath ?? task.aiImagePath,
@@ -277,6 +354,7 @@ export const VideoMarketingPage = () => {
             icon={<FileSpreadsheet />}
             label="Xuất Excel"
             bgColor="#e87717"
+            onClick={handleExportExcel}
           />
 
           {/* ➕ NÚT THÊM: Kích nổ thêm hàng mới */}
@@ -470,4 +548,3 @@ export const VideoMarketingPage = () => {
 };
 
 // --- Sub Components ---
-

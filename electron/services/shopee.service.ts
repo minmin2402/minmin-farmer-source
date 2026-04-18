@@ -8,6 +8,36 @@ import fs from 'fs';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+interface ShopeeProductIds {
+    shopId: string;
+    productId: string;
+}
+
+export const getShopeeIds = (url: string): ShopeeProductIds | null => {
+    if (!url) return null;
+
+    try {
+        // Regex 1: Định dạng tên-sản-phẩm-i.60034313.24800471037
+        const type1Regex = /i\.(\d+)\.(\d+)/;
+        
+        // Regex 2: Định dạng /product/60034313/43363406360
+        const type2Regex = /product\/(\d+)\/(\d+)/;
+
+        const match = url.match(type1Regex) || url.match(type2Regex);
+
+        if (match && match.length >= 3) {
+            return {
+                shopId: match[1],
+                productId: match[2]
+            };
+        }
+
+        return null;
+    } catch (error) {
+        console.error("❌ Lỗi parse Shopee URL:", error);
+        return null;
+    }
+};
 
 async function getInfoProduct(port: number, data: any) {
     try {
@@ -125,15 +155,17 @@ async function getInfoProduct(port: number, data: any) {
                 console.log("🔗 Link ảnh lấy được:", rawSrcset);
                 const highRawSrcset = rawSrcset.replace("resize_w82", "resize_w780")
                 // Tiến hành tải ảnh (Bước 2 bên dưới)
-                const resultSaveImage = await downloadImage(highRawSrcset, data);
+                const resultSaveImage = await downloadImage(highRawSrcset, data.task.save_path_project);
+  
                 
                 if (resultSaveImage.success) {
                     try {
-                        let oldImg = path.join(data.configVideoMKT?.output_video, resultSaveImage.name);
+                        let oldImg = path.join(data.task.save_path_project, resultSaveImage.name);
     
                         const imagePathFinally = await processImageTo916(oldImg)
                         if (imagePathFinally) {
-                            productPathImage = imagePathFinally
+                            productPathImage = path.join(data.task.save_path_project,imagePathFinally)
+
                         }
                         try {
                             if (fs.existsSync(oldImg)) {
@@ -150,18 +182,22 @@ async function getInfoProduct(port: number, data: any) {
 
 
                 }
+            }else{
+                throw new Error("Không tìm thấy ảnh")
             }
 
-        } catch (error) {
-            console.error("❌ Lỗi không lấy được srcset:", error);
+        } catch (error:any) {
+            await browser.disconnect();
+            throw new Error(error?.message ?? "Lỗi shopee service kxd")
         }
 
         // 5. Ngắt kết nối (Chỉ ngắt kết nối điều khiển, KHÔNG ĐÓNG trình duyệt)
         await browser.disconnect();
+        
         return { taskId: data.task.id, productTitle, productDesc, productPathImage }
 
-    } catch (error) {
-        console.error("❌ Lỗi khi điều khiển trình duyệt:", error);
+    } catch (error: any) {
+        throw new Error(error?.message ?? "Lỗi shopee service kxd")
     }
 }
 
@@ -183,6 +219,7 @@ export async function shopeeService(_event: IpcMainInvokeEvent,gpmClient: GpmSer
                 data: productInfo,
                 taskId: task.id
             });
+
             result.success=true
             result.message = "Lấy data thành công"
             result.data = productInfo;

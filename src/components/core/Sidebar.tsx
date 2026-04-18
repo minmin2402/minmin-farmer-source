@@ -6,6 +6,7 @@ import {
   Copy,
   ShieldCheck,
   Camera,
+  Podcast,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -15,7 +16,10 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
-  const [appInfo, setAppInfo] = useState({ version: "0.0.0", hwid: "LOADING..." });
+  const [appInfo, setAppInfo] = useState({
+    version: "0.0.0",
+    hwid: "LOADING...",
+  });
 
   useEffect(() => {
     // 1. Tạo một hàm async bên trong useEffect
@@ -26,12 +30,15 @@ export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
         // @ts-ignore
         const versionapp = await window.electronAPI.getVersionApp();
 
-
         // Cập nhật State một cách an toàn
-        setAppInfo(prev => ({ ...prev, hwid: hwid, version:versionapp?.version ?? "" }));
+        setAppInfo((prev) => ({
+          ...prev,
+          hwid: hwid,
+          version: versionapp?.version ?? "",
+        }));
       } catch (error) {
         console.error("Lỗi lấy HWID:", error);
-        setAppInfo(prev => ({ ...prev, hwid: "ERROR" }));
+        setAppInfo((prev) => ({ ...prev, hwid: "ERROR" }));
       }
     };
 
@@ -47,7 +54,24 @@ export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
           MinMinFarmer
         </span>
       </div>
-
+      <NavItem
+        icon={<Camera size={18} />}
+        label="Video Marketing AI"
+        active={currentTab === "video_marketing"}
+        onClick={() => onTabChange("video_marketing")}
+      />
+      <NavItem
+        icon={<Podcast size={18} />}
+        label="Reels Facebook"
+        active={currentTab === "reels_facebook"}
+        onClick={() => onTabChange("reels_facebook")}
+      />
+      <NavItem
+        icon={<ShoppingBag size={18} />}
+        label="Shopee Video"
+        active={currentTab === "auto_shopee"}
+        onClick={() => onTabChange("auto_shopee")}
+      />
       <nav className="flex-1 space-y-1">
         <NavItem
           icon={<PlayCircle size={18} />}
@@ -55,24 +79,14 @@ export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
           active={currentTab === "workflow"}
           onClick={() => onTabChange("workflow")}
         />
-        <NavItem
-          icon={<ShoppingBag size={18} />}
-          label="Auto Shopee"
-          active={currentTab === "auto_shopee"}
-          onClick={() => onTabChange("auto_shopee")}
-        />
+
         <NavItem
           icon={<Smartphone size={18} />}
           label="Thiết bị"
           active={currentTab === "devices"}
           onClick={() => onTabChange("devices")}
         />
-        <NavItem
-          icon={<Camera size={18} />}
-          label="Video Marketing"
-          active={currentTab === "video_marketing"}
-          onClick={() => onTabChange("video_marketing")}
-        />
+
         {/* <NavItem
           icon={<Clapperboard size={18} />}
           label="Tạo Video AI (Grok)"
@@ -86,28 +100,35 @@ export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
           onClick={() => onTabChange("about")}
         />
       </nav>
-            {/* PHẦN MỚI THÊM: THÔNG TIN PHẦN MỀM & HWID 🛠️ */}
+      {/* PHẦN MỚI THÊM: THÔNG TIN PHẦN MỀM & HWID 🛠️ */}
       <div className="mb-4 px-2 space-y-3">
         <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Version</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Version
+            </span>
             <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
               v{appInfo.version}
             </span>
           </div>
-          
+
           <div className="space-y-1">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hardware ID</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Hardware ID
+            </span>
             <div className="flex items-center justify-between gap-2 group/hwid">
               <code className="text-[11px] font-mono font-bold text-slate-600 truncate">
                 {appInfo.hwid}
               </code>
-              <button 
+              <button
                 onClick={() => navigator.clipboard.writeText(appInfo.hwid)}
                 className="p-1 hover:bg-white rounded shadow-sm opacity-0 group-hover/hwid:opacity-100 transition-all"
                 title="Copy HWID"
               >
-                <Copy size={10} className="text-slate-400 hover:text-blue-600" />
+                <Copy
+                  size={10}
+                  className="text-slate-400 hover:text-blue-600"
+                />
               </button>
             </div>
           </div>

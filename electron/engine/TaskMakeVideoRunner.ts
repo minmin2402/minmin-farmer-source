@@ -1,11 +1,16 @@
+
 import { ipcMain, IpcMainInvokeEvent } from "electron";
 import pLimit from "p-limit";
 import { gpmService } from "../services/gpm.service";
-import { shopeeService } from "../services/shopee.service";
+import { getShopeeIds, shopeeService } from "../services/shopee.service";
 import { GrokService } from "../services/grok.service";
 import { GeminiKeyManager } from "../manager/GeminiKeyManager";
 import { GeminiService } from "../gemini.service";
 import { GrokProfileManager, ShopeeProfileManager } from "../manager/ProfileManager";
+import fs from 'fs';
+import path from "path";
+import { VbeeService } from "../services/vbee.service";
+import { addLogoToVideo, mergeAudioToVideo } from "../services/ffmpeg.service";
 
 export class TaskRunner {
     private stoppedTaskIds: Set<string> = new Set();
@@ -46,7 +51,7 @@ export class TaskRunner {
     async execute() {
 
         const { tasks, configVideoMKT } = this.data;
-        const { prompt_review, profiles_aff, thread, apikey_gemini, delay_between, profiles_grok, prompt_image, output_video, prompt_video } = configVideoMKT;
+        const { prompt_review, voice_code, vbee_app_token, isEnabledLogo, logoPath, vbee_app_id, save_shopid_productid, profiles_aff, thread, apikey_gemini, delay_between, profiles_grok, prompt_image, output_video, prompt_video } = configVideoMKT;
 
         // Cho phép chạy tối đa số thread người dùng nhập, không quan tâm có bao nhiêu profile
         const maxThreads = thread || 1;
@@ -63,12 +68,21 @@ export class TaskRunner {
         const checkGPM = await gpmClient.checkConnection(configVideoMKT.api_gpm);
         if (!checkGPM.success)
             return { success: false, message: checkGPM.message };
+        if (!fs.existsSync(output_video)) {
+            return {
+                success: false,
+                message: "Vui lòng chọn lại đường dẫn lưu video trong cấu hình."
+            };
+        }
         if (apikey_gemini.length == 0)
             return { success: false, message: "Api Gemini ít nhất phải có 1" };
         if (profiles_aff.length == 0)
             return { success: false, message: "Profile Shoppe ít nhất phải có 1" };
         if (profiles_grok.length == 0)
             return { success: false, message: "Profile Grok ít nhất phải có 1" };
+        if (!vbee_app_id || !vbee_app_token)
+            return { success: false, message: "Sai cấu hình Vbee AI" };
+
 
         const retryStep = async (fn: () => Promise<any>, stepName: string, taskId: string, maxRetries = 3) => {
             for (let i = 1; i <= maxRetries; i++) {
@@ -90,6 +104,16 @@ export class TaskRunner {
 
         const promises = tasks.map((task: any, index: number) => {
             return limit(async () => {
+                let save_path_project = output_video;
+                if (save_shopid_productid) {
+                    const infoS = await getShopeeIds(task.productUrl)
+                    if (infoS?.shopId) {
+                        save_path_project = path.join(output_video, infoS?.shopId, infoS?.productId)
+                    }
+
+                }
+                task.save_path_project = save_path_project
+
                 let currentProfileId = "";
                 let currentProfileGrokId = "";
 
@@ -123,15 +147,69 @@ export class TaskRunner {
 
                         const currentKey = await keyManager.getAvailableKey();
                         const geminiService = new GeminiService(currentKey);
-                        const res = await geminiService.generateVideoPrompt(prompt_video, productInfo.productTitle, productInfo.productDesc, prompt_review, task.outputCount);
+                        const res = await geminiService.generateVideoPrompt(productInfo.productTitle, productInfo.productDesc, prompt_review, task.outputCount);
 
                         keyManager.releaseKey(currentKey);
                         if (!res.success) throw new Error("Gemini không tạo được prompt");
 
-                        this.event.sender.send('video:task-log', { status: 'processing', message: `✅ Prompt thành công`, data: { prompt: res.data }, taskId: task.id });
+                        this.event.sender.send('video:task-log', { status: 'processing', message: `✅ Prompt thành công`, data: { prompt: prompt_video }, taskId: task.id });
                         return res.data;
                     }, "Tạo Prompt AI", task.id);
 
+                    if (resultGenPrompt.length < task.outputCount) {
+                        throw new Error("Số phân cảnh tạo không đủ")
+                    }
+                    // --- CHẶNG 2.5: TẠO ÂM THANH, GIỌNG ĐỌC ---
+                    const audioFiles = await retryStep(async () => {
+                        if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
+
+                        this.event.sender.send('video:task-log', {
+                            status: 'processing',
+                            message: `🎙️ Đang tạo giọng đọc AI cho ${resultGenPrompt.length} phân cảnh...`,
+                            taskId: task.id
+                        });
+
+                        // 1. Khởi tạo Service (UserID và AppID lấy từ config của bạn)
+                        const vbeeService = new VbeeService(vbee_app_token, vbee_app_id);
+
+                        // 2. Tạo thư mục tạm để chứa voice cho task này
+                        const tempAudioFolder = path.join(save_path_project, `temp_audio_${task.id}`);
+                        if (!fs.existsSync(tempAudioFolder)) fs.mkdirSync(tempAudioFolder, { recursive: true });
+
+                        const voiceResults = [];
+
+                        // 3. Duyệt mảng JSON từ Gemini để tải từng file voice
+                        for (let i = 0; i < resultGenPrompt.length; i++) {
+                            const scene = resultGenPrompt[i];
+
+                            // Gọi Vbee tải giọng đọc
+                            // Bạn có thể lấy voiceName từ config: config.vbee_voice || "hn_female_xuananh_news_48k-h"
+                            const filePath = await vbeeService.downloadAudio(
+                                scene.voice_content,
+                                tempAudioFolder,
+                                voice_code
+                            );
+
+                            if (!filePath) throw new Error(`Lỗi tải giọng đọc ở phân cảnh ${i + 1}`);
+
+                            voiceResults.push(
+
+                                filePath,
+
+                            );
+                        }
+
+                        this.event.sender.send('video:task-log', {
+                            status: 'processing',
+                            message: `✅ Đã tạo xong ${voiceResults.length} file giọng đọc`,
+                            taskId: task.id
+                        });
+
+                        return voiceResults; // Mảng này sẽ chứa đầy đủ: visual_prompt, voice_content và audioPath
+                    }, "Tạo giọng đọc AI", task.id);
+
+
+                    const finalScenes = audioFiles;
                     // --- CHẶNG 3: INIT GROK & VẼ ẢNH ---
                     const imageAIPath = await retryStep(async () => {
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
@@ -142,18 +220,26 @@ export class TaskRunner {
                         const profileNum = (index % profiles_grok.length) + 1;
 
                         // Init Header
-                        const initRes = await grokService.initHeaderGrok(this.event, profileNum,task.id ,grokService, gpmClient, currentProfileGrokId, port);
+                        const initRes = await grokService.initHeaderGrok(this.event, profileNum, task.id, grokService, gpmClient, currentProfileGrokId, port);
                         if (!initRes.success) {
                             await grokManager.releaseProfile(currentProfileGrokId);
                             throw new Error("Init Grok thất bại");
                         }
 
-                        // Gen Image
+
+
+                        let genderPrompt = "realistic male host"; // Mặc định là Nam
+
+                        // Sửa lỗi chính tả: includes (có chữ 'l')
+                        if (voice_code.includes("female")) {
+                            genderPrompt = "realistic female host"; // Chuyển sang Nữ
+                        }
+
                         const imgRes = await grokService.generateReviewVideoImage(
-                            prompt_image,
-                            output_video + "/" + productInfo.productPathImage,
+                            prompt_image + `\n ${genderPrompt}`,
+                            productInfo.productPathImage,
                             profileNum,
-                            output_video,
+                            save_path_project,
                             task.id
                         );
 
@@ -162,12 +248,12 @@ export class TaskRunner {
 
                         if (!imgRes.success) throw new Error("Grok không vẽ được ảnh");
 
-                        this.event.sender.send('video:task-log', { status: 'processing', message: `🎨 Đã vẽ xong ảnh AI`, data: { imageAIPath: imgRes.filePath },  taskId: task.id });
+                        this.event.sender.send('video:task-log', { status: 'processing', message: `🎨 Đã vẽ xong ảnh AI`, data: { imageAIPath: imgRes.filePath }, taskId: task.id });
                         return imgRes.filePath;
                     }, "Khởi tạo & Vẽ ảnh Grok", task.id);
 
                     // --- CHẶNG 4: RENDER VIDEO (Khâu hay lỗi nhất) ---
-                    await retryStep(async () => {
+                    const finalVideoPath = await retryStep(async () => {
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
 
                         const profileNum = (index % profiles_grok.length) + 1;
@@ -175,7 +261,8 @@ export class TaskRunner {
                             this.event,
                             resultGenPrompt,
                             task.id,
-                            output_video,
+                            prompt_video,
+                            save_path_project,
                             profileNum,
                             imageAIPath,
                             task.outputCount
@@ -184,14 +271,45 @@ export class TaskRunner {
                         if (!resVideo.success) throw new Error("Render Video thất bại");
 
                         this.event.sender.send('video:task-log', {
-                            status: 'success',
-                            message: `✅ DONE! Video: ${resVideo.filename}`,
+                            status: 'proccessing',
+                            message: `✅Tạo AI Video: ${resVideo.filename}`,
                             data: { videoAIPath: resVideo.filename },
                             taskId: task.id,
                             index
                         });
-                        return resVideo;
+                        return resVideo.filename;
                     }, "Render Video Final", task.id);
+
+                    // --- CHẶNG 5: EDIT VIDEO ----
+                    this.event.sender.send('video:task-log', { status: 'processing', message: '🎙️ Đang lồng tiếng...', taskId: task.id });
+                    const GoodVideo = await mergeAudioToVideo(finalVideoPath, finalScenes, path.join(save_path_project, `video_good_${task.id}_${Date.now()}.mp4`))
+                    let finalFile=""
+                    if (isEnabledLogo && fs.existsSync(logoPath)) {
+                        this.event.sender.send('video:task-log', { status: 'processing', message: '🎨 Đang chèn Logo bản quyền...', taskId: task.id });
+
+                        const brandedVideo = path.join(save_path_project, `video_good_${task.id}_${Date.now()}.mp4`);
+
+                        await addLogoToVideo(GoodVideo, logoPath, brandedVideo);
+
+                        // Xóa file tạm sau khi đã có video dán logo
+                        if (fs.existsSync(GoodVideo)) fs.unlinkSync(GoodVideo);
+
+                        finalFile = brandedVideo;
+                    } else {
+                        // Nếu không có logo, đổi tên file temp thành file chính thức
+                        const finalPath = path.join(save_path_project, `video_good_${task.id}_${Date.now()}.mp4`);
+                        fs.renameSync(GoodVideo, finalPath);
+                        finalFile = finalPath;
+                    }
+
+                    this.event.sender.send('video:task-log', {
+                        status: 'success',
+                        message: `Hoàn thiện video`,
+                        data: { videoAIPath: finalFile },
+                        taskId: task.id,
+                        index
+                    });
+
 
                 } catch (error: any) {
                     // Giải phóng tài nguyên tồn đọng nếu tất cả các lần retry đều fail
@@ -204,7 +322,7 @@ export class TaskRunner {
 
                     this.event.sender.send('video:task-log', {
                         status: 'error',
-                        message: `❌ Dừng Task do lỗi nặng: ${error.message}`,
+                        message: `❌ Fail: ${error.message}`,
                         taskId: task.id
                     });
                     return null;

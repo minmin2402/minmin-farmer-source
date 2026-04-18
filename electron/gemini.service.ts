@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 
 export class GeminiService {
     private genAI: GoogleGenAI;
-    private model = "gemini-3-flash-preview";
+    private model = "gemini-2.5-flash";
 
     constructor(apiKey: string) {
         this.genAI = new GoogleGenAI({ apiKey: apiKey });
@@ -12,13 +12,14 @@ export class GeminiService {
     /**
      * Biến ý tưởng thô thành Prompt Video chuyên nghiệp
      */
-    async generateVideoPrompt(prompt_video: string, productTitle: string, productDesc: string, prompt_review: string, outputCount: number): Promise<any> {
+    async generateVideoPrompt(productTitle: string, productDesc: string, prompt_review: string, outputCount: number): Promise<any> {
         try {
             const systemPrompt = `
-    Bạn là chuyên gia Prompt Engineer cho AI Video (Grok Extend).
+    Bạn là chuyên gia điều phối Video Script cho AI Video.
     Sản phẩm: ${productTitle}
     Mô tả: ${productDesc}
     Tổng thời lượng: ${outputCount * 10} giây.
+    Yêu cầu: Chia làm ${outputCount} đoạn, mỗi đoạn 10 giây.
 
     DỰA TRÊN CẤU TRÚC NGƯỜI DÙNG CUNG CẤP:
     ${prompt_review}
@@ -33,32 +34,46 @@ export class GeminiService {
     - Đoạn 1: Thực hiện nội dung "Các prompt đầu".
     - Các đoạn ở giữa: Thực hiện nội dung "Các prompt giữa". Phải bắt đầu bằng: "Tiếp nối cảnh trước, camera di chuyển..." để tránh lặp hình (looping).
     - Đoạn cuối cùng: Thực hiện nội dung "Các prompt cuối".`}
+    
+    YÊU CẦU VỀ THỜI LƯỢNG:
+    - Mỗi đoạn "voice_content" chỉ được phép dài tối đa 35 từ tiếng Việt.
+    - Đảm bảo khi đọc lên mất khoảng 7-9 giây, không được vượt quá 10 giây.
 
-    QUY TẮC VỀ GIỌNG ĐỌC (FIX LỖI GIỌNG LAI THÁI):
-    - KHÔNG ĐƯỢC để từ tiếng Anh nguyên bản. PHẢI phiên âm sang tiếng Việt (Ví dụ: "Smartphone" -> "S-mát-phôn", "Grok" -> "Gờ-rốc", "Sale" -> "Sêu", "Click" -> "K-lích").
-    - Tránh đưa quá nhiều từ trong prompt khiến AI nói nhanh, phân bổ từ ngữ đều thời gian ra.
+    YÊU CẦU ĐẦU RA (JSON FORMAT):
+    Trả về duy nhất một mảng JSON các đối tượng. Mỗi đối tượng gồm:
+    - "visual_prompt": Mô tả hành động, bối cảnh bằng tiếng Anh (để Grok hiểu tốt nhất).
+    - "voice_content": Lời bình tiếng Việt (đã phiên âm các từ tiếng nước ngoài, ví dụ: "S-mát-phôn").
+    - "voice_content": Chỉ ghi nội dung nói của nhân vật không ghi nhầm các từ chuyển cảnh vào đó nhé.
 
-    YÊU CẦU ĐẦU RA:
-    - Chỉ trả về chuỗi Prompt tiếng Việt.
-    - Không giải thích, không tiêu đề đoạn.
-    ${prompt_video}
+    MẪU CẤU TRÚC:
+    [
+      {
+        "visual_prompt": "Cinematic shot of the product on a wooden table, soft sunlight...",
+        "voice_content": "Chào mừng bạn đến với s-mát-phôn thế hệ mới."
+      }
+    ]
+      Chỉ trả về JSON, không kèm theo bất kỳ văn bản giải thích nào.
+    
 `;
 
 
 
             const result = await this.genAI.models.generateContent({
                 model: this.model,
-                contents: systemPrompt
+                contents: systemPrompt,
+                config: {
+        responseMimeType: "application/json",
+    }
             });
 
             if (result) {
-                return { success: true, data: result.text }
+                return { success: true, data: JSON.parse(result?.text || "") }
             }
 
             return { success: false };
         } catch (error: any) {
             console.error("❌ Lỗi Gemini:", error.message);
-            return { success: false, data: prompt_video };
+            return { success: false, data: prompt_review };
 
         }
     }

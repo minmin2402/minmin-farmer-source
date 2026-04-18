@@ -7,6 +7,8 @@ Negative: no watermark, no text, no duplication, no CGI, no blur, no distortion,
 
 export const prompt_video = `Mô tả nhân vật/sản phẩm: Lấy y nguyên nhân vật/sản phẩm trong ảnh đầu vào .
 
+Nhân vật không cần nói chuyện tôi sẽ chèn giọng nói sau
+
 Đừng chèn chữ hay subtitle vào video
 
 Bối cảnh: Trong một studio chuyên về quảng cáo sản phẩm phù hợp với thông tin sản phẩm bên dưới.

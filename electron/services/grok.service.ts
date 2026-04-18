@@ -21,7 +21,7 @@ export class GrokService {
         try {
             _event.sender.send('video:task-log', {
                 status: 'processing',
-                message: `🔍 Đang kiểm tra Grok Profile ${profileNum} (GPM: ${gpmProfileId})...`,
+                message: `🔍 Đang kiểm tra Grok Profile ${profileNum}`,
                 taskId: taskId
             });
             let isLive = await grokService.checkHeaderLive(profileNum);
@@ -42,8 +42,10 @@ export class GrokService {
                 }
 
             }
+            await gpmClient.stopProfile(gpmProfileId);
             return { success: true, message: "Đã khởi tạo thành công header grok" }
         } catch (error: any) {
+            await gpmClient.stopProfile(gpmProfileId);
             return { success: true, message: error?.message ?? "[GrokService]: Khởi tạo header thất bại" }
         }
 
@@ -276,13 +278,14 @@ export class GrokService {
             if (!imageUrls || imageUrls.length === 0) return { success: false, message: "Grok Không trả về ảnh" };
 
 
-            const finalPath = await this.downloadImageForPrompt(imageUrls, taskId, profileNum, outputFolder);
+            const finalPath = await this.downloadBestImage(imageUrls, taskId, profileNum, outputFolder);
             if (!finalPath) {
                 return { success: false, message: "Không tìm thấy image" };
             }
 
             return { success: true, filePath: finalPath };
         } catch (error: any) {
+            console.log(error.message)
             return { success: false, message: error.message };
         }
     }
@@ -516,6 +519,52 @@ export class GrokService {
         return "";
     }
 
+    async downloadBestImage(imageUrls: string[], taskId: number | string, profileNum: number, outputFolder: string): Promise<string | null> {
+        if (!imageUrls || imageUrls.length === 0) return null;
+
+        const downloadHeaders = this.buildDownloadHeaders(profileNum);
+
+        // 1. Tạo biến để lưu trữ "ứng cử viên" nặng ký nhất
+        let bestContent: Buffer | null = null;
+        let maxSizeKb = -1;
+
+        console.log(`🔍 Đang quét ${imageUrls.length} ảnh để tìm tấm chất lượng nhất...`);
+
+        for (const url of imageUrls) {
+            try {
+                // 2. Check size từng tấm
+                const { content, sizeKb } = await this.checkImageSize(url, downloadHeaders);
+
+                if (!content) continue;
+
+                // 3. So sánh: Nếu tấm này nặng hơn tấm nặng nhất hiện tại -> cập nhật
+                if (sizeKb > maxSizeKb) {
+                    maxSizeKb = sizeKb;
+                    bestContent = content;
+                    console.log(`📸 Tìm thấy ảnh tốt hơn: ${sizeKb.toFixed(2)} KB`);
+                }
+            } catch (error) {
+                console.error(`❌ Lỗi khi check ảnh ${url}:`, error);
+            }
+        }
+
+        // 4. Sau khi duyệt hết, nếu tìm được tấm ảnh đạt chuẩn (vượt qua MIN_SIZE nếu cần)
+        if (bestContent && maxSizeKb >= this.MIN_IMAGE_SIZE_KB) {
+            if (!fs.existsSync(outputFolder)) fs.mkdirSync(outputFolder, { recursive: true });
+
+            const fileName = `grok_best_${taskId}_${Date.now()}.png`;
+            const finalPath = path.join(outputFolder, fileName);
+
+            // 5. Lúc này mới thực sự ghi file tấm xịn nhất xuống ổ cứng
+            fs.writeFileSync(finalPath, bestContent);
+            console.log(`✅ Đã chọn tấm ảnh "khủng" nhất: ${finalPath} (${maxSizeKb.toFixed(2)} KB)`);
+
+            return finalPath;
+        }
+
+        console.log("⚠️ Không tìm thấy ảnh nào đủ chất lượng.");
+        return null;
+    }
 
     async downloadImageForPrompt(imageUrls: string[], taskId: number | string, profileNum: number, outputFolder: string): Promise<string | null> {
         if (!imageUrls || imageUrls.length === 0) return null;
@@ -583,8 +632,9 @@ export class GrokService {
 
     async createVideoForPromptCore(
         _event: IpcMainInvokeEvent,
-        prompt: string,
+        prompt: any,
         taskId: string,
+        prompt_video:string,
         outputDir: string,
         profileNum: number = 1,
         imagePath: string | null = null,
@@ -603,7 +653,7 @@ export class GrokService {
             post_id: null, video_url: null, is_429: false
         };
 
-        log(`[P${profileNum}] VIDEO ${taskId}: ${prompt.substring(0, 50)}...`);
+        log(`[P${profileNum}] VIDEO ${taskId}: ...`);
 
         try {
             let fileMetadataId = null;
@@ -641,9 +691,10 @@ export class GrokService {
 
 
 
+            const promptGenVideo1 = `${prompt_video} \n ${prompt[0]?.visual_prompt ?? ""} `
             const payload1 = fileUri
                 ? { "mediaType": "MEDIA_POST_TYPE_IMAGE", "mediaUrl": `https://assets.grok.com/${fileUri}` }
-                : { "mediaType": "MEDIA_POST_TYPE_VIDEO", "prompt": prompt };
+                : { "mediaType": "MEDIA_POST_TYPE_VIDEO", "prompt": promptGenVideo1 };
 
             const res1 = await axios.post(url1, payload1, {
                 headers: postHeaders,
@@ -688,7 +739,7 @@ export class GrokService {
             const payload2 = {
                 "temporary": true,
                 "modelName": "grok-3",
-                "message": fileUri ? `https://assets.grok.com/${fileUri} ${prompt} --mode=custom` : `${prompt} --mode=custom`,
+                "message": fileUri ? `https://assets.grok.com/${fileUri} ${promptGenVideo1} --mode=custom` : `${promptGenVideo1} --mode=custom`,
                 "fileAttachments": fileMetadataId ? [fileMetadataId] : [],
                 "toolOverrides": { "videoGen": true },
                 "enableSideBySide": true,
@@ -772,7 +823,7 @@ export class GrokService {
                     ...headers,
                     "x-xai-request-id": uuidv4() // Ép cái ID mới toanh ở đây
                 };
-                const promptvideo2 = prompt
+                const promptvideo2 = prompt[1].visual_prompt;
                 const payload2video = {
                     ...payload2,
                     "message": promptvideo2,
@@ -845,7 +896,7 @@ export class GrokService {
                     ...headers,
                     "x-xai-request-id": uuidv4() // Ép cái ID mới toanh ở đây
                 };
-                const promptvideo3 = prompt
+                const promptvideo3 = prompt[2].visual_prompt
                 const payload3video = {
                     ...payload2,
                     "message": promptvideo3,

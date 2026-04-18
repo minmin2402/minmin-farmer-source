@@ -236,7 +236,7 @@ export const ResultTaskVideoModal = ({
                   {task?.finalVideoPath ? (
                     <video
                       src={`file://${task.finalVideoPath.replace(/\\/g, "/")}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain bg-black"
                       controls
                     />
                   ) : (

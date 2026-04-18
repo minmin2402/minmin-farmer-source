@@ -2,12 +2,14 @@ import "electron";
 import "node:module";
 import "node:url";
 import "node:child_process";
-import { aS, aT, aU, aV, aW } from "./main-JlliMf2N.js";
+import { aS, aT, aU, aV, aW } from "./main-YI1BWRvB.js";
 import "fs";
 import "fs/promises";
 import "path";
 import "crypto";
 import "os";
+import "fluent-ffmpeg";
+import "@ffmpeg-installer/ffmpeg";
 export {
   aS as MAIN_DIST,
   aT as RENDERER_DIST,

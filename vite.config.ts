@@ -5,7 +5,8 @@ import react from '@vitejs/plugin-react'
 
 import obfuscator from 'vite-plugin-javascript-obfuscator';
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
-const isBuild = process.env.NODE_ENV === 'production' || true;
+let isBuild = process.env.NODE_ENV === 'production';
+isBuild =false
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -29,16 +30,17 @@ export default defineConfig({
             ...(isBuild ? [obfuscator({
               options: {
                 compact: true,
-                controlFlowFlattening: true,
-                controlFlowFlatteningThreshold: 0.75,
-                deadCodeInjection: true,
-                deadCodeInjectionThreshold: 0.4,
+                // ❌ XOÁ/TẮT 2 THẰNG NÀY (Nó là thủ phạm tạo ra biến D, E, F...)
+                controlFlowFlattening: false,
+                deadCodeInjection: false,
+
                 stringArray: true,
                 stringArrayEncoding: ['base64'],
                 stringArrayThreshold: 0.75,
                 unicodeEscapeSequence: true,
                 identifierNamesGenerator: 'mangled',
                 removeComments: false,
+                reservedNames: ['evaluate', 'page', 'targetXpath', 'atob'],
               },
             })] : [])
           ],
@@ -47,6 +49,8 @@ export default defineConfig({
             rollupOptions: {
               // Vẫn giữ external cho các thư viện native để tránh lỗi build
               external: [
+                '@ffmpeg-installer/ffmpeg',
+                'fluent-ffmpeg',
                 'adbkit',
                 'bufferutil',
                 'utf-8-validate',

@@ -3,14 +3,14 @@ import fs from 'fs';
 import path from 'path';
 
 
-export async function downloadImage(url: string, data: any): Promise<{ success: boolean; name: string }> {
+export async function downloadImage(url: string, save_path:string): Promise<{ success: boolean; name: string }> {
     try {
         // 1. Tạo tên file unique: img_1712345678_abcd.png
         const uniqueSuffix = Math.random().toString(36).substring(2, 7);
         const fileName = `prod_${Date.now()}_${uniqueSuffix}.png`;
 
         // 2. Lấy đường dẫn lưu từ config của MinMin
-        const outputFolder = data.configVideoMKT?.output_video || "D:\\Output\\Videos";
+        const outputFolder = save_path || "D:\\Output\\Videos";
         
         if (!fs.existsSync(outputFolder)) {
             fs.mkdirSync(outputFolder, { recursive: true });

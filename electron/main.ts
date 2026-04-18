@@ -23,7 +23,11 @@ import { gpmService } from './services/gpm.service';
 import LicenseService from './services/license.service';
 //import { streamServer } from './socket-server';
 //import { startDeviceStream } from './adb-manager';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 
+const pathFFmpeg = ffmpegPath.path.replace('app.asar', 'app.asar.unpacked');
+ffmpeg.setFfmpegPath(pathFFmpeg);
 
 const require = createRequire(import.meta.url)
 
@@ -665,7 +669,7 @@ function launchMainApp() {
   if (win && splashWindow) {
     win.maximize();
     win.show();
-    //win.webContents.openDevTools();
+    win.webContents.openDevTools();
 
 
 
