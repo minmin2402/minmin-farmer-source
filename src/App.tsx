@@ -7,7 +7,7 @@ import { VideoAiGrok } from "./components/pages/VideoAiGrok";
 import { AutoShopee } from "./components/pages/AutoShopee";
 import { VideoMarketingPage } from "./components/pages/VideoMarketing";
 import { Toaster } from 'react-hot-toast';
-import { ReelsFacebook } from "./components/pages/ReelsFacebook";
+
 
 function App() {
   // Trạng thái để biết đang ở tab nào: 'devices', 'workflow', hoặc 'shopee'
@@ -30,11 +30,11 @@ function App() {
           <AutoShopee/>
         </div>
       )}
-      {activeTab === "reels_facebook" && (
+      {/* {activeTab === "reels_facebook" && (
         <div className="flex-1 flex items-center justify-center">
           <ReelsFacebook/>
         </div>
-      )}
+      )} */}
 
       {activeTab === "about" && (
         <div className="flex-1 flex items-center justify-center  ">
