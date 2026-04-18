@@ -99,7 +99,7 @@ export const VideoMarketingPage = () => {
     }
     // Nếu không có hoặc lỗi thì dùng mặc định
     return {
-      output_video: "D:\\Output\\Videos",
+      output_video: "",
       save_shopid_productid: true,
       thread: 1,
       delay_between: 3,

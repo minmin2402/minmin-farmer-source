@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { app } from 'electron';
 import { IpcMainInvokeEvent } from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -7,14 +8,27 @@ import { GpmService } from './gpm.service';
 import puppeteer from 'puppeteer-core';
 
 export class GrokService {
-    private headersDir: string = "C:\\Users\\Admin\\Desktop\\TESTGROK";
     private MIN_IMAGE_SIZE_KB = 50;
+    private configDir: string;
+    private headersDir: string;
 
     constructor() {
-        // Tạo thư mục lưu trữ nếu chưa có
+        // 1. Lấy đường dẫn AppData/Roaming/Tên-App-Của-Hoàng
+        // Nếu chạy ở môi trường Dev, nó sẽ tạo folder theo tên app trong package.json
+        const userDataPath = app.getPath('userData');
+
+        // 2. Tạo folder cấu hình chung (Ví dụ: MinMinConfig)
+        this.configDir = path.join(userDataPath, "configs");
+        
+        // 3. Folder riêng cho Grok Headers
+        this.headersDir = path.join(this.configDir, "grok_headers");
+
+        // Tự động tạo cây thư mục
         if (!fs.existsSync(this.headersDir)) {
             fs.mkdirSync(this.headersDir, { recursive: true });
         }
+
+        console.log("📂 Thư mục cấu hình tại:", this.headersDir);
     }
 
     async initHeaderGrok(_event: IpcMainInvokeEvent, profileNum: number, taskId: string, grokService: GrokService, gpmClient: GpmService, gpmProfileId: string, port: number) {

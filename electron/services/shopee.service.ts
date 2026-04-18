@@ -229,7 +229,7 @@ export async function shopeeService(_event: IpcMainInvokeEvent,gpmClient: GpmSer
 
         }
     } catch (err:any) {
-        _event.sender.send('video:task-log', { status: 'error', message: `Lỗi cào dữ liệu: ${err}`, taskId: task.id });
+        _event.sender.send('video:task-log', { status: 'processing', message: `Lỗi cào dữ liệu: ${err}`, taskId: task.id });
         result.success = false
         result.message = err?.message ?? "[ShopeeService] Lỗi không xác định"
 
