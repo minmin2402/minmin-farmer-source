@@ -7,7 +7,7 @@ import { processImageTo916 } from './image.service';
 import path from 'path';
 import fs from 'fs';
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 interface ShopeeProductIds {
     shopId: string;

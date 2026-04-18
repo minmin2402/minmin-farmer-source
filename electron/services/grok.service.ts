@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { GpmService } from './gpm.service';
 import puppeteer from 'puppeteer-core';
 import { logger } from '../utils/logger';
+import { sleep } from './shopee.service';
 
 export class GrokService {
     private MIN_IMAGE_SIZE_KB = 50;
@@ -1022,6 +1023,4 @@ export class GrokService {
 
 }
 
-function sleep(arg0: number) {
-    throw new Error('Function not implemented.');
-}
+
