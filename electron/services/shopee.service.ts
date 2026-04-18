@@ -43,6 +43,7 @@ async function getInfoProduct(port: number, data: any) {
     try {
         // 1. Kết nối vào trình duyệt GPM đang mở qua Port
         // GPM chạy ở local nên mình dùng 127.0.0.1
+        await sleep(3000);
         const browser = await puppeteer.connect({
             browserURL: `http://127.0.0.1:${port}`,
             defaultViewport: null // Giữ nguyên kích thước cửa sổ của GPM
@@ -210,6 +211,8 @@ export async function shopeeService(_event: IpcMainInvokeEvent,gpmClient: GpmSer
         const startResult = await gpmClient.startProfile(profileId, port);
         if (!startResult.success) throw new Error(startResult.message);
 
+     
+  
         if (startResult.data.remote_debugging_port) {
             productInfo = await getInfoProduct(startResult.data.remote_debugging_port, { ...data, task });
 

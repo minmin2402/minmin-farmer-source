@@ -2,7 +2,7 @@ import "electron";
 import "node:module";
 import "node:url";
 import "node:child_process";
-import { aS, aT, aU, aV, aW } from "./main-YI1BWRvB.js";
+import { aS, aT, aU, aV, aW } from "./main-BaGDYr1R.js";
 import "fs";
 import "fs/promises";
 import "path";
