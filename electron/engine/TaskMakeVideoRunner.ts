@@ -11,6 +11,7 @@ import fs from 'fs';
 import path from "path";
 import { VbeeService } from "../services/vbee.service";
 import { addLogoToVideo, mergeAudioToVideo } from "../services/ffmpeg.service";
+import { logger } from "../utils/logger";
 
 export class TaskRunner {
     private stoppedTaskIds: Set<string> = new Set();
@@ -86,7 +87,9 @@ export class TaskRunner {
 
         const retryStep = async (fn: () => Promise<any>, stepName: string, taskId: string, maxRetries = 3) => {
             for (let i = 1; i <= maxRetries; i++) {
+                if (this.stoppedTaskIds.has(taskId)) throw new Error("CANCELLED");
                 try {
+
                     const result = await fn();
                     if (result && (result.success !== false)) return result; // Thành công thì trả về luôn
                     throw new Error(result?.message || `Lỗi tại bước ${stepName}`);
@@ -159,6 +162,83 @@ export class TaskRunner {
                     if (resultGenPrompt.length < task.outputCount) {
                         throw new Error("Số phân cảnh tạo không đủ")
                     }
+
+                    // --- CHẶNG 3: INIT GROK & VẼ ẢNH ---
+                    const imageAIPath = await retryStep(async () => {
+                        if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
+
+                        // --- KHỐI 1: LẤY HEADER (CẦN PROFILE) ---
+                        let profileIdForInit = "";
+                        try {
+                            profileIdForInit = await grokManager.getAvailableProfile();
+                            const port = 5000 + (index % 100);
+                            const profileNum = (index % profiles_grok.length) + 1;
+
+                            const initRes = await grokService.initHeaderGrok(
+                                this.event, profileNum, task.id, grokService,
+                                gpmClient, profileIdForInit, port
+                            );
+
+                            if (!initRes.success) throw new Error("Init Grok thất bại");
+
+                            logger.info(`✅ Đã bốc được Header cho Task ${task.id}, chuẩn bị nhả Profile ${profileIdForInit}`);
+
+                        } catch (err) {
+                            throw err; // Ném lỗi để retryStep bắt được
+                        } finally {
+                            // 🔓 GIẢI PHÓNG SỚM TẠI ĐÂY: Dù init thành công hay lỗi đều nhả Profile
+                            if (profileIdForInit) {
+                                await grokManager.releaseProfile(profileIdForInit);
+                                logger.info(`🔓 Profile ${profileIdForInit} đã trống cho task khác.`);
+                            }
+                        }
+
+                        // --- KHỐI 2: VẼ ẢNH (CHỈ DÙNG HTTP REQUEST, KHÔNG CẦN PROFILE) ---
+                        if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
+
+                        let genderPrompt = voice_code.includes("female") ? "realistic female host" : "realistic male host";
+
+                        const imgRes = await grokService.generateReviewVideoImage(
+                            prompt_image + `\n ${genderPrompt}`,
+                            productInfo.productPathImage,
+                            (index % profiles_grok.length) + 1, // Vẫn truyền profileNum để lấy đúng Header đã lưu
+                            save_path_project,
+                            task.id
+                        );
+
+                        if (!imgRes.success) throw new Error("Grok không vẽ được ảnh");
+
+                        return imgRes.filePath;
+
+                    }, "Khởi tạo & Vẽ ảnh Grok", task.id);
+
+                    // --- CHẶNG 4: RENDER VIDEO (Khâu hay lỗi nhất) ---
+                    const finalVideoPath = await retryStep(async () => {
+                        if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
+
+                        const profileNum = (index % profiles_grok.length) + 1;
+                        const resVideo = await grokService.createVideoForPromptCore(
+                            this.event,
+                            resultGenPrompt,
+                            task.id,
+                            prompt_video,
+                            save_path_project,
+                            profileNum,
+                            imageAIPath,
+                            task.outputCount
+                        );
+
+                        if (!resVideo.success) throw new Error("Render Video thất bại");
+
+                        this.event.sender.send('video:task-log', {
+                            status: 'proccessing',
+                            message: `✅Tạo AI Video: ${resVideo.filename}`,
+                            data: { videoAIPath: resVideo.filename },
+                            taskId: task.id,
+                            index
+                        });
+                        return resVideo.filename;
+                    }, "Render Video Final", task.id);
                     // --- CHẶNG 2.5: TẠO ÂM THANH, GIỌNG ĐỌC ---
                     const audioFiles = await retryStep(async () => {
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
@@ -210,80 +290,10 @@ export class TaskRunner {
 
 
                     const finalScenes = audioFiles;
-                    // --- CHẶNG 3: INIT GROK & VẼ ẢNH ---
-                    const imageAIPath = await retryStep(async () => {
-                        if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
-                        if (!productInfo?.productPathImage) throw new Error("Không tìm thấy ảnh gốc Shopee");
-
-                        currentProfileGrokId = await grokManager.getAvailableProfile();
-                        const port = 5000 + (index % 100);
-                        const profileNum = (index % profiles_grok.length) + 1;
-
-                        // Init Header
-                        const initRes = await grokService.initHeaderGrok(this.event, profileNum, task.id, grokService, gpmClient, currentProfileGrokId, port);
-                        if (!initRes.success) {
-                            await grokManager.releaseProfile(currentProfileGrokId);
-                            throw new Error("Init Grok thất bại");
-                        }
-
-
-
-                        let genderPrompt = "realistic male host"; // Mặc định là Nam
-
-                        // Sửa lỗi chính tả: includes (có chữ 'l')
-                        if (voice_code.includes("female")) {
-                            genderPrompt = "realistic female host"; // Chuyển sang Nữ
-                        }
-
-                        const imgRes = await grokService.generateReviewVideoImage(
-                            prompt_image + `\n ${genderPrompt}`,
-                            productInfo.productPathImage,
-                            profileNum,
-                            save_path_project,
-                            task.id
-                        );
-
-                        await grokManager.releaseProfile(currentProfileGrokId); // Xong việc là nhả ngay
-                        currentProfileGrokId = "";
-
-                        if (!imgRes.success) throw new Error("Grok không vẽ được ảnh");
-
-                        this.event.sender.send('video:task-log', { status: 'processing', message: `🎨 Đã vẽ xong ảnh AI`, data: { imageAIPath: imgRes.filePath }, taskId: task.id });
-                        return imgRes.filePath;
-                    }, "Khởi tạo & Vẽ ảnh Grok", task.id);
-
-                    // --- CHẶNG 4: RENDER VIDEO (Khâu hay lỗi nhất) ---
-                    const finalVideoPath = await retryStep(async () => {
-                        if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
-
-                        const profileNum = (index % profiles_grok.length) + 1;
-                        const resVideo = await grokService.createVideoForPromptCore(
-                            this.event,
-                            resultGenPrompt,
-                            task.id,
-                            prompt_video,
-                            save_path_project,
-                            profileNum,
-                            imageAIPath,
-                            task.outputCount
-                        );
-
-                        if (!resVideo.success) throw new Error("Render Video thất bại");
-
-                        this.event.sender.send('video:task-log', {
-                            status: 'proccessing',
-                            message: `✅Tạo AI Video: ${resVideo.filename}`,
-                            data: { videoAIPath: resVideo.filename },
-                            taskId: task.id,
-                            index
-                        });
-                        return resVideo.filename;
-                    }, "Render Video Final", task.id);
-
                     // --- CHẶNG 5: EDIT VIDEO ----
                     this.event.sender.send('video:task-log', { status: 'processing', message: '🎙️ Đang lồng tiếng...', taskId: task.id });
                     const GoodVideo = await mergeAudioToVideo(finalVideoPath, finalScenes, path.join(save_path_project, `video_good_${task.id}_${Date.now()}.mp4`))
-                    let finalFile=""
+                    let finalFile = ""
                     if (isEnabledLogo && fs.existsSync(logoPath)) {
                         this.event.sender.send('video:task-log', { status: 'processing', message: '🎨 Đang chèn Logo bản quyền...', taskId: task.id });
 

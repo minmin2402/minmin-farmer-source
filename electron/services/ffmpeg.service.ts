@@ -2,6 +2,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import path from 'path'
 import fs from 'fs'
+import { logger } from '../utils/logger';
 
 const pathFFmpeg = ffmpegPath.path.replace('app.asar', 'app.asar.unpacked');
 ffmpeg.setFfmpegPath(pathFFmpeg);
@@ -52,7 +53,7 @@ export async function mergeAudioToVideo(videoPath: string, audioFiles: string[],
                     '-c:a aac',
                     '-b:a 192k'
                 ])
-                .on('start', (cmd) => console.log('🚀 Chạy lệnh FFmpeg:', cmd))
+                .on('start', (cmd) => logger.info('🚀 Chạy lệnh FFmpeg:', cmd))
                 .on('error', (err) => reject(err))
                 .on('end', () => resolve(outputPath))
                 .save(outputPath);
@@ -78,7 +79,7 @@ export async function addLogoToVideo(videoPath: string, logoPath: string, output
                 '-crf 23',      // Chất lượng cân bằng
                 '-c:a copy'      // Audio đã làm ở bước trước nên chỉ cần copy qua
             ])
-            .on('start', (cmd) => console.log('🚀 Đang đóng dấu Logo:', cmd))
+            .on('start', (cmd) => logger.info('🚀 Đang đóng dấu Logo:', cmd))
             .on('error', (err) => reject(err))
             .on('end', () => resolve(outputPath))
             .save(outputPath);

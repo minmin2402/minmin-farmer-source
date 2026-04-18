@@ -1,3 +1,5 @@
+import { logger } from "../utils/logger";
+
 export class GeminiKeyManager {
   private keys: string[];
   private currentIndex: number = 0;
@@ -36,7 +38,7 @@ export class GeminiKeyManager {
       status.isLocked = false;
       if (isRateLimited) {
         status.isLocked = true;
-        console.log(`⚠️ Key ${key.substring(0, 5)}... bị Rate Limit. Khóa 60s.`);
+        logger.info(`⚠️ Key ${key.substring(0, 5)}... bị Rate Limit. Khóa 60s.`);
         setTimeout(() => { status.isLocked = false; }, 60000); // Khóa 1 phút
       }
     }

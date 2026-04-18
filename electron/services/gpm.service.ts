@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { GPMLoginGlobalClient } from '../gpm-login-global';
 import { GpmOldClient } from './gpmold.service';
+import { logger } from '../utils/logger';
 
 export class GpmService {
 
@@ -22,7 +23,7 @@ export class GpmService {
         try {
             if (this.isGlobal) {
                 // Thử gọi lấy danh sách profiles với timeout ngắn (2 giây) để check kết nối
-                console.log("Check GPM tại " + url)
+                logger.info("Check GPM tại " + url)
                 const res = await axios.get(url, { timeout: 2000 });
                 if (res.data.success === true) {
                     return { success: true, message: "Kết nối GPM thành công!" };
@@ -30,7 +31,7 @@ export class GpmService {
                     return { success: false, message: "Không thể kết nối tới GPM. Hãy đảm bảo App GPM đã bật!" };
                 }
             } else {
-                console.log("Check GPM tại " + url)
+                logger.info("Check GPM tại " + url)
                 const res = await axios.get(url, { timeout: 2000 });
                 if (res.data === "GPM-Login") {
                     return { success: true, message: "Kết nối GPM thành công!" };
@@ -55,7 +56,7 @@ export class GpmService {
         try {
 
 
-            console.log(`\nStarting profile ${id} …`);
+            logger.info(`\nStarting profile ${id} …`);
             if (this.isGlobal) {
                 const startResult = await this.client.profiles.start(id, {
                     windowSize: '-2000,0',
@@ -104,7 +105,7 @@ export class GpmService {
                 await this.client.stop(id);
             }
         } catch (error) {
-            console.error("❌ Lỗi đóng profile:", error);
+            logger.error("❌ Lỗi đóng profile:", error);
         }
 
 

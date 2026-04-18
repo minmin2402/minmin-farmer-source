@@ -1,5 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
+import { logger } from "./utils/logger";
 
 export class GeminiService {
     private genAI: GoogleGenAI;
@@ -72,7 +73,7 @@ export class GeminiService {
 
             return { success: false };
         } catch (error: any) {
-            console.error("❌ Lỗi Gemini:", error.message);
+            logger.error("❌ Lỗi Gemini:", error.message);
             return { success: false, data: prompt_review };
 
         }

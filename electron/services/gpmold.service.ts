@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { logger } from '../utils/logger';
 
 export class GpmOldClient {
     private axiosInstance: AxiosInstance;
@@ -30,7 +31,7 @@ export class GpmOldClient {
             });
             return res.data; 
         } catch (error) {
-            console.error("❌ GPM Old Start Error:", error);
+            logger.error("❌ GPM Old Start Error:", error);
             throw error;
         }
     }

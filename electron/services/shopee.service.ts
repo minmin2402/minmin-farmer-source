@@ -1,3 +1,4 @@
+import { logger } from './../utils/logger';
 import puppeteer from 'puppeteer-core';
 import { GpmService } from './gpm.service';
 import { IpcMainInvokeEvent } from "electron";
@@ -34,7 +35,7 @@ export const getShopeeIds = (url: string): ShopeeProductIds | null => {
 
         return null;
     } catch (error) {
-        console.error("❌ Lỗi parse Shopee URL:", error);
+        logger.error("❌ Lỗi parse Shopee URL:", error);
         return null;
     }
 };
@@ -49,7 +50,7 @@ async function getInfoProduct(port: number, data: any) {
             defaultViewport: null // Giữ nguyên kích thước cửa sổ của GPM
         });
 
-        console.log("🔗 Đã kết nối thành công vào trình duyệt GPM!");
+        logger.info("🔗 Đã kết nối thành công vào trình duyệt GPM!");
 
         // 2. Lấy danh sách các Tab (Pages)
         const pages = await browser.pages();
@@ -57,7 +58,7 @@ async function getInfoProduct(port: number, data: any) {
         const page = pages.length > 0 ? pages[0] : await browser.newPage();
 
         // 3. Thực hiện lệnh "Vít ga" điều hướng
-        console.log("🚚 Đang đi đến Shopee để cào dữ liệu...");
+        logger.info("🚚 Đang đi đến Shopee để cào dữ liệu...");
         await page.goto('https://shopee.vn', {
             waitUntil: data.configVideoMKT?.method_load_page ?? "load", // Đợi mạng ổn định mới làm tiếp
             timeout: data.configVideoMKT?.time_loading_page ?? 60            // Chờ tối đa 60s
@@ -92,10 +93,10 @@ async function getInfoProduct(port: number, data: any) {
                 return result ? result.textContent?.trim() : "Không tìm thấy tiêu đề";
             }, "//div[@role='main']/section/section[2]/div/div/h1");
             /* javascript-obfuscator:enable */
-            console.log("💎 Tiêu đề sản phẩm lấy được:", productTitle);
+            logger.info("💎 Tiêu đề sản phẩm lấy được:", productTitle);
 
         } catch (error) {
-            console.error("❌ Lỗi: Chờ quá lâu mà không thấy tiêu đề đâu!", error);
+            logger.error("❌ Lỗi: Chờ quá lâu mà không thấy tiêu đề đâu!", error);
         }
 
 
@@ -119,14 +120,14 @@ async function getInfoProduct(port: number, data: any) {
                 return element ? element.textContent?.trim() : "Không tìm thấy mô tả";
             }, "//div[@class='product-detail page-product__detail']/section[2]//p[1]");
             /* javascript-obfuscator:enable */
-            console.log("💎 mô tả sản phẩm lấy được:", productDesc);
+            logger.info("💎 mô tả sản phẩm lấy được:", productDesc);
 
         } catch (error) {
-            console.error("❌ Lỗi: Chờ quá lâu mà không thấy mô tả đâu!", error);
+            logger.error("❌ Lỗi: Chờ quá lâu mà không thấy mô tả đâu!", error);
         }
 
 
-        console.log("✅ Đã tìm kiếm xong!");
+        logger.info("✅ Đã tìm kiếm xong!");
 
         const xpathSource = '//div[not(.//img[@alt="icon video play"])]/div/picture/source[@type="image/webp"]/following-sibling::img[1]';
         const xpathSelectorSource = `xpath/${xpathSource}`;
@@ -153,7 +154,7 @@ async function getInfoProduct(port: number, data: any) {
             }, xpathSource);
             /* javascript-obfuscator:enable */
             if (rawSrcset) {
-                console.log("🔗 Link ảnh lấy được:", rawSrcset);
+                logger.info("🔗 Link ảnh lấy được:", rawSrcset);
                 const highRawSrcset = rawSrcset.replace("resize_w82", "resize_w780")
                 // Tiến hành tải ảnh (Bước 2 bên dưới)
                 const resultSaveImage = await downloadImage(highRawSrcset, data.task.save_path_project);
@@ -171,13 +172,13 @@ async function getInfoProduct(port: number, data: any) {
                         try {
                             if (fs.existsSync(oldImg)) {
                                 fs.unlinkSync(oldImg);
-                                console.log(`🗑️ Đã dọn dẹp file cũ: ${oldImg}`);
+                                logger.info(`🗑️ Đã dọn dẹp file cũ: ${oldImg}`);
                             }
                         } catch (err) {
-                            console.error("❌ Không xóa được file:", err);
+                            logger.error("❌ Không xóa được file:", err);
                         }
                     } catch (err) {
-                        console.error("❌ Lỗi xử lý ảnh 9:16:", err);
+                        logger.error("❌ Lỗi xử lý ảnh 9:16:", err);
                         
                     }
 
@@ -237,7 +238,7 @@ export async function shopeeService(_event: IpcMainInvokeEvent,gpmClient: GpmSer
         // QUAN TRỌNG: Xong việc với Browser là ĐÓNG NGAY để nhả Profile cho task tiếp theo
         await gpmClient.stopProfile(profileId);
         await sleep(delay_between * 1000);
-        console.log(`🔓 Nhả Profile ${profileId} cho luồng khác.`);
+        logger.info(`🔓 Nhả Profile ${profileId} cho luồng khác.`);
         return result
     }
 

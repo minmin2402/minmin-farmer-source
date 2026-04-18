@@ -3,6 +3,7 @@ import net from 'net';
 import path from 'path';
 import { app } from 'electron';
 import { streamServer } from './socket-server';
+import { logger } from './utils/logger';
 
 const isDev = !app.isPackaged;
 const binPath = isDev
@@ -18,7 +19,7 @@ export const startDeviceStream = async (deviceId: string) => {
   const localPort = 1234; 
 
   try {
-    console.log(`🧹 [${deviceId}] Cleaning up old processes...`);
+    logger.info(`🧹 [${deviceId}] Cleaning up old processes...`);
     
     // BƯỚC QUAN TRỌNG: Diệt sạch scrcpy-server cũ trên điện thoại này
     // Lệnh này tìm và kill tất cả tiến trình có tên scrcpy-server
@@ -43,11 +44,11 @@ export const startDeviceStream = async (deviceId: string) => {
       ]);
 
       // Lắng nghe xem server Android có báo lỗi gì không
-      adbServer.stderr.on('data', (data) => console.error(`[Android Error]: ${data}`));
+      adbServer.stderr.on('data', (data) => logger.error(`[Android Error]: ${data}`));
 
       // 4. Đợi một lát rồi mới Forward và Connect
       setTimeout(() => {
-        console.log(`🔗 [${deviceId}] Forwarding port...`);
+        logger.info(`🔗 [${deviceId}] Forwarding port...`);
         spawn('adb', ['-s', deviceId, 'forward', `tcp:${localPort}`, 'localabstract:scrcpy']);
 
         const client = new net.Socket();
@@ -55,15 +56,15 @@ export const startDeviceStream = async (deviceId: string) => {
         // Thêm cơ chế tự kết nối lại nếu bị từ chối lần đầu
         const connectWithRetry = (retries = 5) => {
           client.connect(localPort, '127.0.0.1', () => {
-            console.log(`✅ [${deviceId}] TCP Connected!`);
+            logger.info(`✅ [${deviceId}] TCP Connected!`);
           });
 
           client.once('error', (err: any) => {
             if (err.code === 'ECONNREFUSED' && retries > 0) {
-              console.log(`🔄 [${deviceId}] Retrying connection (${retries} left)...`);
+              logger.info(`🔄 [${deviceId}] Retrying connection (${retries} left)...`);
               setTimeout(() => connectWithRetry(retries - 1), 500);
             } else {
-              console.error(`❌ [${deviceId}] Final Socket Error:`, err.message);
+              logger.error(`❌ [${deviceId}] Final Socket Error:`, err.message);
             }
           });
         };
@@ -84,6 +85,6 @@ export const startDeviceStream = async (deviceId: string) => {
     });
 
   } catch (error) {
-    console.error(`❌ Fatal Error:`, error);
+    logger.error(`❌ Fatal Error:`, error);
   }
 };

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { machineIdSync } from 'node-machine-id';
 import crypto from 'crypto';
+import { logger } from '../utils/logger';
 
 // ĐỊNH NGHĨA THÔNG TIN GIẤY PHÉP
 export interface LicenseInfo {
@@ -71,7 +72,7 @@ A5bn46e7LlUg9Nh4H3e+tsYSyWk2QJD+g7rt0FMXcxQeElsiRFtGIzyngiYcpc2C
       return {...licenseData};
 
     } catch (error: any) {
-      console.error("Lỗi xác thực:", error.message);
+      logger.error("Lỗi xác thực:", error.message);
       return {
         status: false,
         deviceId: '',

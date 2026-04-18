@@ -1,6 +1,7 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import { logger } from '../utils/logger';
 
 
 export async function downloadImage(url: string, save_path:string): Promise<{ success: boolean; name: string }> {
@@ -30,16 +31,16 @@ export async function downloadImage(url: string, save_path:string): Promise<{ su
 
         return new Promise((resolve) => {
             writer.on('finish', () => {
-                console.log(`✅ Đã tải: ${fileName}`);
+                logger.info(`✅ Đã tải: ${fileName}`);
                 resolve({ success: true, name: fileName }); // Trả về đúng format MinMin cần
             });
             writer.on('error', (err) => {
-                console.error("❌ Lỗi ghi file:", err);
+                logger.error("❌ Lỗi ghi file:", err);
                 resolve({ success: false, name: "" });
             });
         });
     } catch (error) {
-        console.error("❌ Lỗi download:", error);
+        logger.error("❌ Lỗi download:", error);
         return { success: false, name: "" };
     }
 }
@@ -61,10 +62,10 @@ export const saveImageLocally = async (imageBuffer: ArrayBuffer, folderPath: str
         const buffer = Buffer.from(imageBuffer);
         fs.writeFileSync(fullPath, buffer);
 
-        console.log(`✅ Đã lưu ảnh tại: ${fullPath}`);
+        logger.info(`✅ Đã lưu ảnh tại: ${fullPath}`);
         return fullPath; // Trả về đường dẫn để ông lưu vào DB nếu cần
     } catch (error) {
-        console.error("❌ Lỗi khi lưu file:", error);
+        logger.error("❌ Lỗi khi lưu file:", error);
         return null;
     }
 };

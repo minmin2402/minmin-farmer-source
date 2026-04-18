@@ -6,6 +6,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { GpmService } from './gpm.service';
 import puppeteer from 'puppeteer-core';
+import { logger } from '../utils/logger';
 
 export class GrokService {
     private MIN_IMAGE_SIZE_KB = 50;
@@ -28,7 +29,7 @@ export class GrokService {
             fs.mkdirSync(this.headersDir, { recursive: true });
         }
 
-        console.log("📂 Thư mục cấu hình tại:", this.headersDir);
+        logger.info("📂 Thư mục cấu hình tại:", this.headersDir);
     }
 
     async initHeaderGrok(_event: IpcMainInvokeEvent, profileNum: number, taskId: string, grokService: GrokService, gpmClient: GpmService, gpmProfileId: string, port: number) {
@@ -98,10 +99,10 @@ export class GrokService {
             });
 
             // 3. Điều hướng và đợi (Y hệt driver.get + time.sleep(8))
-            console.log("🚀 Đang truy cập Grok...");
+            logger.info("🚀 Đang truy cập Grok...");
             await page.goto('https://grok.com/', { waitUntil: 'domcontentloaded' });
 
-            console.log("⏳ Chờ trang load và API calls (8 giây)...");
+            logger.info("⏳ Chờ trang load và API calls (8 giây)...");
             await new Promise(r => setTimeout(r, 8000));
 
             // 4. Hàm Merge Header (Copy y xì logic merge_headers của Python)
@@ -145,12 +146,12 @@ export class GrokService {
                 throw new Error("❌ Không tìm thấy API suggestions/profile trong logs.");
             }
 
-            console.log(`✅ Đã trích xuất xong: ${Object.keys(finalProfileHeaders).length} keys`);
+            logger.info(`✅ Đã trích xuất xong: ${Object.keys(finalProfileHeaders).length} keys`);
             await browser.disconnect();
             return finalProfileHeaders;
 
         } catch (error: any) {
-            console.error("❌ Lỗi trích xuất:", error.message);
+            logger.error("❌ Lỗi trích xuất:", error.message);
             if (browser) await browser.disconnect();
             throw error;
         }
@@ -215,7 +216,7 @@ export class GrokService {
         const rawHeaders = this.getHeadersFromLocal(profileNum);
 
         if (!rawHeaders) {
-            console.warn(`⚠️ Không tìm thấy raw headers cho Profile ${profileNum}, dùng default.`);
+            logger.warn(`⚠️ Không tìm thấy raw headers cho Profile ${profileNum}, dùng default.`);
             return this.getDefaultHeaders();
         }
 
@@ -249,7 +250,7 @@ export class GrokService {
     saveNewHeaders(profileNum: number, headers: any) {
         const filePath = path.join(this.headersDir, `profile_${profileNum}.json`);
         fs.writeFileSync(filePath, JSON.stringify(headers, null, 2));
-        console.log(`✅ Đã lưu Header mới cho Profile ${profileNum}`);
+        logger.info(`✅ Đã lưu Header mới cho Profile ${profileNum}`);
     }
 
     /**
@@ -299,7 +300,7 @@ export class GrokService {
 
             return { success: true, filePath: finalPath };
         } catch (error: any) {
-            console.log(error.message)
+            logger.info(error.message)
             return { success: false, message: error.message };
         }
     }
@@ -340,14 +341,14 @@ export class GrokService {
                 const { fileMetadataId, fileUri } = resp.data;
 
                 if (fileMetadataId && fileUri) {
-                    console.log(`✅ Upload thành công! ID: ${fileMetadataId}`);
+                    logger.info(`✅ Upload thành công! ID: ${fileMetadataId}`);
                     return { fileMetadataId, fileUri };
                 }
             }
 
             return null;
         } catch (error: any) {
-            console.error("❌ Lỗi upload_image:", error.response?.data || error.message);
+            logger.error("❌ Lỗi upload_image:", error.response?.data || error.message);
             return null;
         }
     }
@@ -383,7 +384,7 @@ export class GrokService {
                 }
 
                 if (postId) {
-                    console.log(`✅ Đã tạo Media Post thành công với ảnh SP: ${postId}`);
+                    logger.info(`✅ Đã tạo Media Post thành công với ảnh SP: ${postId}`);
                     return postId;
                 }
             }
@@ -391,7 +392,7 @@ export class GrokService {
             return null;
         } catch (error: any) {
             // Log chi tiết lỗi để ông dễ soi
-            console.error("❌ Lỗi create_media_post:", error.response?.data || error.message);
+            logger.error("❌ Lỗi create_media_post:", error.response?.data || error.message);
             return null;
         }
     }
@@ -488,7 +489,7 @@ export class GrokService {
                             }
                         } catch (e) { }
                     }
-                    console.log(`🎨 Grok đã vẽ xong ${imageUrls.length} ảnh.`);
+                    logger.info(`🎨 Grok đã vẽ xong ${imageUrls.length} ảnh.`);
                     resolve(imageUrls);
                 });
 
@@ -496,7 +497,7 @@ export class GrokService {
             });
 
         } catch (error: any) {
-            console.error("❌ Lỗi sendImageEditRequest:", error.response?.data || error.message);
+            logger.error("❌ Lỗi sendImageEditRequest:", error.response?.data || error.message);
             return [];
         }
     }
@@ -542,7 +543,7 @@ export class GrokService {
         let bestContent: Buffer | null = null;
         let maxSizeKb = -1;
 
-        console.log(`🔍 Đang quét ${imageUrls.length} ảnh để tìm tấm chất lượng nhất...`);
+        logger.info(`🔍 Đang quét ${imageUrls.length} ảnh để tìm tấm chất lượng nhất...`);
 
         for (const url of imageUrls) {
             try {
@@ -555,10 +556,10 @@ export class GrokService {
                 if (sizeKb > maxSizeKb) {
                     maxSizeKb = sizeKb;
                     bestContent = content;
-                    console.log(`📸 Tìm thấy ảnh tốt hơn: ${sizeKb.toFixed(2)} KB`);
+                    logger.info(`📸 Tìm thấy ảnh tốt hơn: ${sizeKb.toFixed(2)} KB`);
                 }
             } catch (error) {
-                console.error(`❌ Lỗi khi check ảnh ${url}:`, error);
+                logger.error(`❌ Lỗi khi check ảnh ${url}:`, error);
             }
         }
 
@@ -571,12 +572,12 @@ export class GrokService {
 
             // 5. Lúc này mới thực sự ghi file tấm xịn nhất xuống ổ cứng
             fs.writeFileSync(finalPath, bestContent);
-            console.log(`✅ Đã chọn tấm ảnh "khủng" nhất: ${finalPath} (${maxSizeKb.toFixed(2)} KB)`);
+            logger.info(`✅ Đã chọn tấm ảnh "khủng" nhất: ${finalPath} (${maxSizeKb.toFixed(2)} KB)`);
 
             return finalPath;
         }
 
-        console.log("⚠️ Không tìm thấy ảnh nào đủ chất lượng.");
+        logger.info("⚠️ Không tìm thấy ảnh nào đủ chất lượng.");
         return null;
     }
 
@@ -597,7 +598,7 @@ export class GrokService {
 
             // 4. Nếu ảnh quá bé -> bỏ qua (if size_kb < MIN_IMAGE_SIZE_KB)
             if (sizeKb < this.MIN_IMAGE_SIZE_KB) { // Giả sử MIN_IMAGE_SIZE_KB = 50
-                console.log(`⚠️ Bỏ qua ảnh chất lượng thấp: ${sizeKb.toFixed(2)} KB`);
+                logger.info(`⚠️ Bỏ qua ảnh chất lượng thấp: ${sizeKb.toFixed(2)} KB`);
                 continue;
             }
 
@@ -608,7 +609,7 @@ export class GrokService {
             const finalPath = path.join(outputFolder, fileName);
 
             fs.writeFileSync(finalPath, content);
-            console.log(`✅ Đã tải và lưu ảnh thành công: ${finalPath} (${sizeKb.toFixed(2)} KB)`);
+            logger.info(`✅ Đã tải và lưu ảnh thành công: ${finalPath} (${sizeKb.toFixed(2)} KB)`);
 
             return finalPath; // Trả về đường dẫn ngay khi tải được 1 tấm ngon
         }
@@ -657,7 +658,7 @@ export class GrokService {
     ) {
         const log = (msg: string) => {
             if (logCallback) logCallback(msg);
-            console.log(msg);
+            logger.info(msg);
         };
         const headers = this.buildRequestHeaders(profileNum);
 
@@ -682,7 +683,7 @@ export class GrokService {
                 log(`[P${profileNum}] Bước 0: Upload ảnh làm gốc...`);
                 // Sử dụng hàm uploadImage anh em mình đã viết ở trên
                 // Giả định hàm uploadImage trả về { fileMetadataId, fileUri }
-                console.log(imagePath)
+                logger.info(imagePath)
                 const uploadRes = await this.uploadImage(imagePath, uploadheader);
                 if (uploadRes) {
                     fileUri = uploadRes.fileUri; // Grok-3 thường dùng fileUri trực tiếp
@@ -738,7 +739,7 @@ export class GrokService {
             }
 
             if (!postId) {
-                console.log("❌ Nội dung phản hồi thực tế:", res1.data);
+                logger.info("❌ Nội dung phản hồi thực tế:", res1.data);
                 throw new Error("Không tìm thấy post_id trong phản hồi từ Grok");
             }
 
@@ -808,7 +809,7 @@ export class GrokService {
                     }
                 });
                 res2.data.on('end', () => {
-                    console.log(`✅ Đã bóc tách xong - URL: ${videoUrlPath}, ID: ${videoId}`);
+                    logger.info(`✅ Đã bóc tách xong - URL: ${videoUrlPath}, ID: ${videoId}`);
                     resolve({ videoUrlPath, videoId });
                 });
                 res2.data.on('error', reject);
@@ -888,7 +889,7 @@ export class GrokService {
                         }
                     });
                     res2video.data.on('end', () => {
-                        console.log(`✅ Đã bóc tách xong - URL: ${videoUrlPath}, ID: ${videoId}`);
+                        logger.info(`✅ Đã bóc tách xong - URL: ${videoUrlPath}, ID: ${videoId}`);
                         _event.sender.send('video:task-log', {
                             status: 'processing',
                             message: `Tạo xong 20s`,
@@ -961,7 +962,7 @@ export class GrokService {
                         }
                     });
                     res2video.data.on('end', () => {
-                        console.log(`✅ Đã bóc tách xong - URL: ${videoUrlPath}, ID: ${videoId}`);
+                        logger.info(`✅ Đã bóc tách xong - URL: ${videoUrlPath}, ID: ${videoId}`);
                         _event.sender.send('video:task-log', {
                             status: 'processing',
                             message: `Tạo xong video thứ 3`,

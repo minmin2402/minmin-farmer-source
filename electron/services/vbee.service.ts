@@ -1,6 +1,7 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import { logger } from '../utils/logger';
 
 export class VbeeService {
     private api_key: string;
@@ -28,12 +29,12 @@ export class VbeeService {
 
           
             if (postRes.data.status !== 1) {
-                console.error("❌ Vbee Post Error:", postRes.data.error_message);
+                logger.error("❌ Vbee Post Error:", postRes.data.error_message);
                 return null;
             }
 
             const requestId = postRes.data.result.request_id;
-            console.log(`📡 Đã lấy được Request ID: ${requestId}. Đang chờ xử lý...`);
+            logger.info(`📡 Đã lấy được Request ID: ${requestId}. Đang chờ xử lý...`);
 
             // 2. Vòng lặp kiểm tra trạng thái (Poll Request)
             const maxRetries = 15; // Chờ tối đa khoảng 30s
@@ -57,21 +58,21 @@ export class VbeeService {
                     const fileStream = await axios.get(audioUrl, { responseType: 'arraybuffer' });
                     
                     fs.writeFileSync(filePath, fileStream.data);
-                    console.log(`✅ [Vbee] Đã tải xong: ${filePath}`);
+                    logger.info(`✅ [Vbee] Đã tải xong: ${filePath}`);
                     return filePath;
                 }
 
                 if (data.result.status === "FAILURE") {
-                    console.error("❌ Vbee xử lý file thất bại");
+                    logger.error("❌ Vbee xử lý file thất bại");
                     return null;
                 }
 
-                console.log(`⏳ Đang xử lý... (${i + 1}/${maxRetries})`);
+                logger.info(`⏳ Đang xử lý... (${i + 1}/${maxRetries})`);
             }
 
             return null;
         } catch (error: any) {
-            console.error("❌ Lỗi Vbee Service:", error.message);
+            logger.error("❌ Lỗi Vbee Service:", error.message);
             return null;
         }
     }

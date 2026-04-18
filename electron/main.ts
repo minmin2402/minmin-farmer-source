@@ -25,6 +25,7 @@ import LicenseService from './services/license.service';
 //import { startDeviceStream } from './adb-manager';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import { logger } from './utils/logger';
 
 const pathFFmpeg = ffmpegPath.path.replace('app.asar', 'app.asar.unpacked');
 ffmpeg.setFfmpegPath(pathFFmpeg);
@@ -89,11 +90,11 @@ ipcMain.handle('adb:mirror-device', async (_event, deviceId: string) => {
   // Thêm --push-target để nó không bị lỗi quyền ghi file
   const command = `"${scrcpyExePtr}" -s ${deviceId} --always-on-top --window-title "MinMin Mirror - ${deviceId}"`;
 
-  console.log("Đang chạy lệnh:", command);
+  logger.info("Đang chạy lệnh:", command);
 
   exec(command, { cwd: binPath }, (error) => {
     if (error) {
-      console.error(`Lỗi Scrcpy: ${error.message}`);
+      logger.error(`Lỗi Scrcpy: ${error.message}`);
     }
   });
 
@@ -123,15 +124,15 @@ ipcMain.handle('adb:viewphone', async (_event, deviceId, x, y, width, height) =>
   const scrcpyProcess = spawn(scrcpyExePtr, args);
   scrcpyProcess.stdout.on('data', (data) => {
     // Nếu thấy dòng "Texture: ..." là chắc chắn đã lên hình
-    console.log(`[Scrcpy Log ${deviceId}]: ${data}`);
+    logger.info(`[Scrcpy Log ${deviceId}]: ${data}`);
 })
   // Giữ lại cái này để theo dõi nếu còn lỗi khác
   scrcpyProcess.stderr.on('data', (data) => {
-    console.error(`[Scrcpy Error ${deviceId}]: ${data}`);
+    logger.error(`[Scrcpy Error ${deviceId}]: ${data}`);
   });
 
   scrcpyProcess.on('close', (code) => {
-    console.log(`Scrcpy ${deviceId} exited with code ${code}`);
+    logger.info(`Scrcpy ${deviceId} exited with code ${code}`);
   });
 });
 
@@ -163,7 +164,7 @@ ipcMain.handle('adb:get-devices', async () => {
     )
     return deviceDetails
   } catch (error) {
-    console.error("ADB Error:", error)
+    logger.error("ADB Error:", error)
     return []
   }
 })
@@ -193,7 +194,7 @@ ipcMain.handle('adb:screencap', async (_event, deviceId: string) => {
       transfer.on('error', reject);
     });
   } catch (err) {
-    console.error("Lỗi chụp ảnh:", err);
+    logger.error("Lỗi chụp ảnh:", err);
     return null;
   }
 });
@@ -225,7 +226,7 @@ ipcMain.handle('adb:dump-ui', async (_event, deviceId: string) => {
     return xmlContent;
 
   } catch (err) {
-    console.error("Lỗi Dump UI:", err);
+    logger.error("Lỗi Dump UI:", err);
     return null;
   }
 });
@@ -272,7 +273,7 @@ ipcMain.handle('adb:list-app', async (_event, deviceId: string) => {
 
     return apps;
   } catch (err) {
-    console.error("Lỗi khi lấy danh sách App:", err);
+    logger.error("Lỗi khi lấy danh sách App:", err);
     return [];
   }
 });
@@ -295,7 +296,7 @@ const getUniqueDeviceId = () => {
     return `MM-${finalId.match(/.{1,6}/g)?.join('-')}`;
     // Kết quả dạng: MM-A1B2C3-D4E5F6-G7H8I9-J0K1L2
   } catch (error) {
-    console.error("Lỗi lấy Device ID:", error);
+    logger.error("Lỗi lấy Device ID:", error);
     return "MM-UNKNOWN-DEVICE-ID";
   }
 };
@@ -315,12 +316,12 @@ async function ensureADBKeyboard(deviceId: string) {
     const installedPackages = execSync(`adb -s ${deviceId} shell pm list packages com.android.adbkeyboard`).toString();
 
     if (!installedPackages.includes('com.android.adbkeyboard')) {
-      console.log(`[${deviceId}] Đang cài đặt ADB Keyboard...`);
+      logger.info(`[${deviceId}] Đang cài đặt ADB Keyboard...`);
       const apkPath = path.join(keyboardPtr, 'keyboard.apk');
 
       // Lệnh cài đặt APK
       execSync(`adb -s ${deviceId} install "${apkPath}"`);
-      console.log(`[${deviceId}] Cài đặt thành công!`);
+      logger.info(`[${deviceId}] Cài đặt thành công!`);
     }
 
 
@@ -330,14 +331,14 @@ async function ensureADBKeyboard(deviceId: string) {
     return { success: true, message: "ADB Keyboard đã sẵn sàng!" };
 
   } catch (error: any) {
-    console.error(`[${deviceId}] Lỗi thiết lập bàn phím:`, error.message);
+    logger.error(`[${deviceId}] Lỗi thiết lập bàn phím:`, error.message);
     return { success: false, message: error.message };
   }
 }
 
 ipcMain.handle('adb:execute', async (_event, { deviceId, action, params }) => {
   try {
-    console.log(`[ADB] Đang thực hiện ${action} trên thiết bị ${deviceId}`);
+    logger.info(`[ADB] Đang thực hiện ${action} trên thiết bị ${deviceId}`);
     const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
     switch (action) {
@@ -353,7 +354,7 @@ ipcMain.handle('adb:execute', async (_event, { deviceId, action, params }) => {
         const x = params.x;
         const y = params.y;
 
-        console.log(`[ADB] 👆 Chạm vào tọa độ: ${x}, ${y}`);
+        logger.info(`[ADB] 👆 Chạm vào tọa độ: ${x}, ${y}`);
 
         // Lệnh click tọa độ thần thánh
         await client.shell(deviceId, `input tap ${x} ${y}`);
@@ -368,7 +369,7 @@ ipcMain.handle('adb:execute', async (_event, { deviceId, action, params }) => {
           await client.shell(deviceId, `rm ${remoteXmlPath}`).then((stream: any) => Adb.util.readAll(stream)).catch(() => { });
 
           // 2. Dump XML mới và đợi lệnh thực thi xong
-          console.log(`[ADB] 🔍 Đang quét màn hình tìm XPath...`);
+          logger.info(`[ADB] 🔍 Đang quét màn hình tìm XPath...`);
           const dumpStream = await client.shell(deviceId, `uiautomator dump ${remoteXmlPath}`);
           await Adb.util.readAll(dumpStream);
 
@@ -403,16 +404,16 @@ ipcMain.handle('adb:execute', async (_event, { deviceId, action, params }) => {
               await client.shell(deviceId, `input tap ${centerX} ${centerY}`);
 
               const logMsg = `Click thành công: ${centerX}, ${centerY}`;
-              console.log(`[ADB] ✅ ${logMsg}`);
+              logger.info(`[ADB] ✅ ${logMsg}`);
               return { success: true, log: logMsg };
             }
           } else {
             const logMsg = `Không tìm thấy: ${targetXpath.substring(0, 20)}...`;
-            console.warn(`[ADB] ⚠️ ${logMsg}`);
+            logger.warn(`[ADB] ⚠️ ${logMsg}`);
             return { success: false, error: "Không tìm thấy phần tử", log: logMsg };
           }
         } catch (err: any) {
-          console.error("[ADB] ❌ Lỗi xử lý XPath cực nặng:", err.message);
+          logger.error("[ADB] ❌ Lỗi xử lý XPath cực nặng:", err.message);
           // Trả về lỗi thay vì để mặc cho app sập
           return {
             success: false,
@@ -441,7 +442,7 @@ ipcMain.handle('adb:execute', async (_event, { deviceId, action, params }) => {
           // Vít ga gửi tiếng Việt qua Broadcast
           await client.shell(deviceId, `am broadcast -a ADB_INPUT_TEXT --es msg '${params.content}'`);
         } catch (error) {
-          console.error("Lỗi gõ tiếng Việt:", error);
+          logger.error("Lỗi gõ tiếng Việt:", error);
           // Fallback: Nếu lỗi thì gõ không dấu chữa cháy
           const noTone = params.content.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
           await client.shell(deviceId, `input text "${noTone}"`);
@@ -469,7 +470,7 @@ ipcMain.handle('adb:execute', async (_event, { deviceId, action, params }) => {
           throw new Error("Thiếu đường dẫn file nguồn hoặc đích!");
         }
 
-        console.log(`[ADB] 📤 Đang đẩy file: ${path_file} -> ${path_phone}`);
+        logger.info(`[ADB] 📤 Đang đẩy file: ${path_file} -> ${path_phone}`);
 
         // 🚀 CÁCH VÍT GA CHUẨN:
         // 1. Tạo một transfer object từ client.push
@@ -478,14 +479,14 @@ ipcMain.handle('adb:execute', async (_event, { deviceId, action, params }) => {
         // 2. Đợi cho đến khi đẩy xong (Sự kiện 'end')
         await new Promise((resolve, reject) => {
           transfer.on('progress', (stats: { bytesTransferred: any; }) => {
-            console.log(`[ADB] Đang đẩy: ${stats.bytesTransferred} bytes`);
+            logger.info(`[ADB] Đang đẩy: ${stats.bytesTransferred} bytes`);
           });
           transfer.on('end', () => {
-            console.log("[ADB] ✅ Đẩy file thành công!");
+            logger.info("[ADB] ✅ Đẩy file thành công!");
             resolve(true);
           });
           transfer.on('error', (err: any) => {
-            console.error("[ADB] ❌ Lỗi khi đẩy file:", err);
+            logger.error("[ADB] ❌ Lỗi khi đẩy file:", err);
             reject(err);
           });
         });
@@ -513,25 +514,25 @@ ipcMain.handle('adb:execute', async (_event, { deviceId, action, params }) => {
         // Công thức: Math.random() * (max - min) + min
         const randomDuration = Math.floor(Math.random() * (ms_max - ms_min + 1)) + ms_min;
 
-        console.log(`[ADB] ⏳ Đang đợi ngẫu nhiên: ${randomDuration}ms (Khoảng: ${ms_min}-${ms_max}ms)`);
+        logger.info(`[ADB] ⏳ Đang đợi ngẫu nhiên: ${randomDuration}ms (Khoảng: ${ms_min}-${ms_max}ms)`);
 
         // 3. Thực hiện đợi
         await sleep(randomDuration);
 
-        console.log(`[ADB] ✅ Đã đợi xong ${randomDuration}ms, chuyển sang bước tiếp theo.`);
+        logger.info(`[ADB] ✅ Đã đợi xong ${randomDuration}ms, chuyển sang bước tiếp theo.`);
         break;
       }
       case 'install_apk': {
         const apkPath = params.path_apk_install;
         if (!apkPath) throw new Error("Chưa chọn file APK!");
 
-        console.log(`[ADB] 📦 Đang đẩy file và cài đặt APK: ${apkPath}`);
+        logger.info(`[ADB] 📦 Đang đẩy file và cài đặt APK: ${apkPath}`);
 
         // 🚀 CÁCH CHUẨN: Dùng hàm install trực tiếp từ client
         // Nó sẽ tự động lo việc push file vào /data/local/tmp rồi chạy pm install
         await client.install(deviceId, apkPath);
 
-        console.log(`[ADB] ✅ Cài đặt hoàn tất: ${apkPath}`);
+        logger.info(`[ADB] ✅ Cài đặt hoàn tất: ${apkPath}`);
         break;
       }
       default:
@@ -548,7 +549,7 @@ export function setupGpmHandlers() {
   // Hứng lệnh lấy danh sách profile
 
   ipcMain.handle('gpm:check-connection', async (_event, url: string) => {
-    console.log(url)
+    logger.info(url)
     return await (new gpmService(url)).checkConnection(url);
   });
 
@@ -558,7 +559,7 @@ export function setupGpmHandlers() {
 
   // Hứng lệnh chạy profile
   ipcMain.handle('gpm:start-profile', async (_event, profileId: string) => {
-    console.log(`🚀 MinMin đang ra lệnh mở Profile: ${profileId}`);
+    logger.info(`🚀 MinMin đang ra lệnh mở Profile: ${profileId}`);
     //return await gpmService.startProfile(profileId);
   });
 
@@ -614,7 +615,7 @@ async function createWindow() {
   if (VITE_DEV_SERVER_URL) {
 
     win.loadURL(VITE_DEV_SERVER_URL)
-    console.log("🛠️ Đang ở chế độ Dev - Bỏ qua check update, vào App sau 2s");
+    logger.info("🛠️ Đang ở chế độ Dev - Bỏ qua check update, vào App sau 2s");
     splashWindow?.webContents.send('status', 'Chế độ Dev: Đang kết nối Server...');
     setTimeout(() => {
       launchMainApp();
@@ -661,7 +662,7 @@ async function createWindow() {
     });
   }
 
-  console.log(await new LicenseService().checkKey())
+  logger.info(await new LicenseService().checkKey())
 
 
 }
