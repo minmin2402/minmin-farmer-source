@@ -176,7 +176,7 @@ export class TaskRunner {
 
                             const initRes = await grokService.initHeaderGrok(
                                 this.event, profileNum, task.id, grokService,
-                                gpmClient, profileIdForInit, port
+                                gpmClient, profileIdForInit, port, delay_between
                             );
 
                             if (!initRes.success) throw new Error("Init Grok thất bại");
@@ -197,6 +197,7 @@ export class TaskRunner {
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
 
                         let genderPrompt = voice_code.includes("female") ? "realistic female host" : "realistic male host";
+                       
 
                         const imgRes = await grokService.generateReviewVideoImage(
                             prompt_image + `\n ${genderPrompt}`,

@@ -20,7 +20,7 @@ export class GrokService {
 
         // 2. Tạo folder cấu hình chung (Ví dụ: MinMinConfig)
         this.configDir = path.join(userDataPath, "configs");
-        
+
         // 3. Folder riêng cho Grok Headers
         this.headersDir = path.join(this.configDir, "grok_headers");
 
@@ -32,7 +32,7 @@ export class GrokService {
         logger.info("📂 Thư mục cấu hình tại:", this.headersDir);
     }
 
-    async initHeaderGrok(_event: IpcMainInvokeEvent, profileNum: number, taskId: string, grokService: GrokService, gpmClient: GpmService, gpmProfileId: string, port: number) {
+    async initHeaderGrok(_event: IpcMainInvokeEvent, profileNum: number, taskId: string, grokService: GrokService, gpmClient: GpmService, gpmProfileId: string, port: number, delay_between: number) {
         try {
             _event.sender.send('video:task-log', {
                 status: 'processing',
@@ -57,10 +57,22 @@ export class GrokService {
                 }
 
             }
-            await gpmClient.stopProfile(gpmProfileId);
+
+            try {
+                await gpmClient.stopProfile(gpmProfileId);
+                await sleep(delay_between * 1000);
+            } catch (error) {
+
+            }
+
             return { success: true, message: "Đã khởi tạo thành công header grok" }
         } catch (error: any) {
-            await gpmClient.stopProfile(gpmProfileId);
+            try {
+                await gpmClient.stopProfile(gpmProfileId);
+                await sleep(delay_between * 1000);
+            } catch (error) {
+
+            }
             return { success: true, message: error?.message ?? "[GrokService]: Khởi tạo header thất bại" }
         }
 
@@ -649,7 +661,7 @@ export class GrokService {
         _event: IpcMainInvokeEvent,
         prompt: any,
         taskId: string,
-        prompt_video:string,
+        prompt_video: string,
         outputDir: string,
         profileNum: number = 1,
         imagePath: string | null = null,
@@ -1008,4 +1020,8 @@ export class GrokService {
     }
 
 
+}
+
+function sleep(arg0: number) {
+    throw new Error('Function not implemented.');
 }

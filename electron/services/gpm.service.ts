@@ -52,8 +52,14 @@ export class GpmService {
     }
 
     // Mở Profile và trả về link debug (để dùng Puppeteer)
-    async startProfile(id: string, remoteDebuggingPort: number) {
+    async startProfile(id: string, remoteDebuggingPort: number): Promise<any> {
         try {
+            try {
+                await this.stopProfile(id)
+                await new Promise(res => setTimeout(res, 3000));
+            } catch (error) {
+
+            }
 
 
             logger.info(`\nStarting profile ${id} …`);
@@ -91,7 +97,9 @@ export class GpmService {
             }
 
         } catch (error: any) {
-            return { success: false, message: error?.message };
+            const errorMsg = error?.message || "";
+            logger.error(`❌ Lỗi mở profile ${id}: ${errorMsg}`);
+            return { success: false, message: errorMsg };
         }
 
     }
@@ -100,7 +108,8 @@ export class GpmService {
     async stopProfile(id: string) {
         try {
             if (this.isGlobal) {
-                await this.client.profiles.stop(id);
+                const res = await this.client.profiles.stop(id);
+                logger.info(res)
             } else {
                 await this.client.stop(id);
             }

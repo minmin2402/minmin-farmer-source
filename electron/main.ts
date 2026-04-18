@@ -662,7 +662,7 @@ async function createWindow() {
     });
   }
 
-  logger.info(await new LicenseService().checkKey())
+  await new LicenseService().checkKey()
 
 
 }
