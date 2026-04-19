@@ -1,22 +1,12 @@
 [
   {
-    "version": "1.2.9",
-    "date": "2026-04-19",
+    "version": "1.3.0",
+    "date": "2026-04-20",
     "content": [
-      "+ Fix li ly thng tin sn phm shopee",
-      "+ Fix li khng ly c full m t sn phm",
-      "+ Fix li render video ai",
-      "+ Thm tnh nng xem changelog update"
-    ]
-  },
-  {
-    "version": "1.2.8",
-    "date": "2026-04-19",
-    "content": [
-      "+ Fix lỗi lấy thông tin sản phẩm shopee",
-      "+ Fix lỗi không lấy được full mô tả sản phẩm",
-      "+ Fix lỗi render video ai",
-      "+ Thêm tính năng xem changelog update"
+      "+ Sửa lỗi lấy thông tin sản phẩm Shopee",
+      "+ Sửa lỗi không lấy được đầy đủ mô tả sản phẩm",
+      "+ Sửa lỗi render video AI",
+      "+ Thêm tính năng xem nhật ký thay đổi (changelog) cập nhật"
     ]
   }
 ]
