@@ -1,7 +1,7 @@
 {
   "name": "minmin-control",
   "private": true,
-  "version": "1.1.6",
+  "version": "1.1.8",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,10 +9,10 @@
     "build": "npm run build:logic && electron-builder --publish always",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "build:test": "npm run build:logic && electron-builder"
+    "build:test": "npm run build:logic && electron-builder",
+    "build:binary": "tsc && vite build && node compile-main.cjs && electron dist-electron/main.js"
   },
   "build": {
-
     "appId": "com.minmin.farmer",
     "productName": "MinMin Farmer Pro",
     "copyright": "Copyright © 2026 MinMin Coder",
@@ -52,7 +52,7 @@
       "runAfterFinish": true,
       "installerIcon": "resources/icon.ico",
       "uninstallerIcon": "resources/icon.ico",
-      "allowElevation": true, 
+      "allowElevation": true,
       "perMachine": true
     },
     "win": {

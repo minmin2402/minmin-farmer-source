@@ -11,21 +11,20 @@ import { DOMParser } from 'xmldom'
 import * as fs from 'fs'; // Dùng cho createWriteStream (Stream)
 import * as fsp from 'fs/promises'; // Dùng cho readFile (Async/Await)
 import * as path from 'path';
-import { machineIdSync } from 'node-machine-id';
-import crypto from 'crypto';
-import os from 'os';
+
 
 
 import { autoUpdater } from "electron-updater";
 
 import { TaskRunner } from './engine/TaskMakeVideoRunner';
 import { gpmService } from './services/gpm.service';
-import LicenseService from './services/license.service';
+import LicenseService, { getUniqueDeviceId } from './services/license.service';
 //import { streamServer } from './socket-server';
 //import { startDeviceStream } from './adb-manager';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { logger } from './utils/logger';
+import { TaskPostReelsRunner } from './engine/TaskPostReelsRunner';
 
 const pathFFmpeg = ffmpegPath.path.replace('app.asar', 'app.asar.unpacked');
 ffmpeg.setFfmpegPath(pathFFmpeg);
@@ -140,6 +139,13 @@ ipcMain.handle('adb:viewphone', async (_event, deviceId, x, y, width, height) =>
 ipcMain.handle('get-version', () => {
   return {
     version: app.getVersion(),// Lấy version từ file package.json
+  }
+});
+
+ipcMain.handle('open-path', (_event, fullPath: string) => {
+  if (fullPath) {
+    // showItemInFolder sẽ mở folder và chọn luôn file đó
+    shell.showItemInFolder(fullPath);
   }
 });
 
@@ -277,29 +283,7 @@ ipcMain.handle('adb:list-app', async (_event, deviceId: string) => {
     return [];
   }
 });
-const getUniqueDeviceId = () => {
-  try {
-    // 1. Lấy ID máy từ thư viện (Dựa trên UUID của OS/Mainboard)
-    const rawId = machineIdSync();
 
-    // 2. Kết hợp thêm tên máy và Username để tăng độ unique
-    const extraInfo = os.hostname() + os.userInfo().username;
-
-    // 3. Hash tất cả lại thành một chuỗi ngắn gọn, chuyên nghiệp (SHA256)
-    const finalId = crypto
-      .createHash('sha256')
-      .update(rawId + extraInfo)
-      .digest('hex')
-      .toUpperCase()
-      .substring(0, 24); // Lấy 24 ký tự cho đẹp: XXXXXX-XXXXXX-XXXXXX
-
-    return `MM-${finalId.match(/.{1,6}/g)?.join('-')}`;
-    // Kết quả dạng: MM-A1B2C3-D4E5F6-G7H8I9-J0K1L2
-  } catch (error) {
-    logger.error("Lỗi lấy Device ID:", error);
-    return "MM-UNKNOWN-DEVICE-ID";
-  }
-};
 ipcMain.handle('get-deviceId', async () => {
   return getUniqueDeviceId();
 });
@@ -566,13 +550,20 @@ export function setupGpmHandlers() {
 
 }
 
-export function setupVideoAffHandle() {
+export function setupTaskAffHandle() {
   // Hứng lệnh lấy danh sách profile
-
 
   ipcMain.handle('video:run-tasks', async (_event: IpcMainInvokeEvent, data: any) => {
     if ((await new LicenseService().checkKey()).status) {
       const runner = new TaskRunner(_event, data);
+      return await runner.execute();
+    }
+
+  });
+
+  ipcMain.handle('reels:run-tasks', async (_event: IpcMainInvokeEvent, data: any) => {
+    if ((await new LicenseService().checkKey()).status) {
+      const runner = new TaskPostReelsRunner(_event, data);
       return await runner.execute();
     }
 
@@ -706,7 +697,7 @@ app.on('activate', () => {
 app.whenReady().then(() => {
 
   setupGpmHandlers()
-  setupVideoAffHandle()
+  setupTaskAffHandle()
   if (app.isPackaged) {
     globalShortcut.register('Control+Shift+I', () => false);
     globalShortcut.register('F12', () => false);

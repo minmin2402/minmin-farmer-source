@@ -12,6 +12,7 @@ import path from "path";
 import { VbeeService } from "../services/vbee.service";
 import { addLogoToVideo, mergeAudioToVideo } from "../services/ffmpeg.service";
 import { logger } from "../utils/logger";
+import { deletePath } from "../utils/file";
 
 export class TaskRunner {
     private stoppedTaskIds: Set<string> = new Set();
@@ -294,6 +295,8 @@ export class TaskRunner {
                     // --- CHẶNG 5: EDIT VIDEO ----
                     this.event.sender.send('video:task-log', { status: 'processing', message: '🎙️ Đang lồng tiếng...', taskId: task.id });
                     const GoodVideo = await mergeAudioToVideo(finalVideoPath, finalScenes, path.join(save_path_project, `video_good_${task.id}_${Date.now()}.mp4`))
+                    await deletePath(path.dirname(finalScenes[0]));
+                    await deletePath(finalVideoPath);
                     let finalFile = ""
                     if (isEnabledLogo && fs.existsSync(logoPath)) {
                         this.event.sender.send('video:task-log', { status: 'processing', message: '🎨 Đang chèn Logo bản quyền...', taskId: task.id });

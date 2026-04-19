@@ -1,10 +1,4 @@
-
-import {
-  X,
-
-  Settings,
-
-} from "lucide-react";
+import { X, Settings, FolderOpen, Video } from "lucide-react";
 import { VideoTask } from "../../types/VideoTask";
 
 interface ConfigModalProps {
@@ -262,6 +256,36 @@ export const ResultTaskVideoModal = ({
                 </div>
               </div>
             </div>
+            {task?.finalVideoPath && (
+              <div className="mt-6 p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <div className="p-1.5 bg-blue-100 text-blue-600 rounded">
+                    <Video size={14} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">
+                      Video Output
+                    </span>
+                    <span className="text-xs font-medium text-slate-600 truncate italic">
+                      {task.finalVideoPath}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    // Gọi API Electron để mở thư mục chứa file
+                    //@ts-ignore
+                    window.electronAPI.openPath(task.finalVideoPath);
+                  }}
+                  className="shrink-0 flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2 py-1.5 rounded-md text-[11px] font-bold shadow-sm transition-all active:scale-95"
+                  title="Mở thư mục chứa video"
+                >
+                  <FolderOpen size={14} className="text-amber-500" />
+                  Mở Folder
+                </button>
+              </div>
+            )}
           </section>
         </div>
 

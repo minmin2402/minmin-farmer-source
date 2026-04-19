@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectFileApk: () => ipcRenderer.invoke('select-file-apk'),
   selectFile: () => ipcRenderer.invoke('select-file'),
   selectFolder: () => ipcRenderer.invoke('select-folder'),
+  openPath: (path: string) => ipcRenderer.invoke('open-path', path),
   openMirror: (deviceId: string) => ipcRenderer.invoke('adb:mirror-device', deviceId), // Thêm dòng này
   openViewPhone: (deviceId:string, x:string, y:string, width:string, height:string) => ipcRenderer.invoke('adb:viewphone', deviceId,x,y,width,height), // Thêm dòng này
   startStream: (deviceId: string) => ipcRenderer.invoke('adb:start-stream', deviceId), // Thêm dòng này
@@ -36,6 +37,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   runTaskAutoVideo: (data:any) => ipcRenderer.invoke('video:run-tasks', data),
   stopTaskAutoVideo: (taskIds:any) => ipcRenderer.send('video:stop-single-task', taskIds),
 
+  runTaskAutoReels: (data:any) => ipcRenderer.invoke('reels:run-tasks', data),
+  stopTaskAutoReels: (taskIds:any) => ipcRenderer.send('reels:stop-single-task', taskIds),
+
   getInfoProduct: (data:any) => ipcRenderer.invoke('video:get-info-product', data),
   
   onTaskLog: (callback: (data: any) => void) => {
@@ -47,6 +51,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Trả về một hàm để "hủy" lắng nghe (Cleanup) tránh rò rỉ bộ nhớ
     return () => {
       ipcRenderer.removeListener('video:task-log', subscription);
+    };
+  },
+
+  onTaskLogReels: (callback: (data: any) => void) => {
+    const subscription = (_event: any, data: any) => callback(data);
+    
+    // Đăng ký lắng nghe sự kiện 'video:task-log'
+    ipcRenderer.on('reels:task-log', subscription);
+
+    // Trả về một hàm để "hủy" lắng nghe (Cleanup) tránh rò rỉ bộ nhớ
+    return () => {
+      ipcRenderer.removeListener('reels:task-log', subscription);
     };
   }
 });

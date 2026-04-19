@@ -52,7 +52,7 @@ export class GpmService {
     }
 
     // Mở Profile và trả về link debug (để dùng Puppeteer)
-    async startProfile(id: string, remoteDebuggingPort: number): Promise<any> {
+    async startProfile(id: string, remoteDebuggingPort: number, windowPosition: string = "-2000,0"): Promise<any> {
         try {
             try {
                 await this.stopProfile(id)
@@ -65,10 +65,10 @@ export class GpmService {
             logger.info(`\nStarting profile ${id} …`);
             if (this.isGlobal) {
                 const startResult = await this.client.profiles.start(id, {
-                    windowSize: '-2000,0',
+                    windowSize: windowPosition,
                     remoteDebuggingPort,
                     addArgs: [
-                        '--headless=new', // Flag mới nhất của Chrome để chạy ẩn
+                        windowPosition.includes('-2000') ? '--headless=new' : '', // Flag mới nhất của Chrome để chạy ẩn
                         '--disable-gpu',  // Thường đi kèm headless để giảm tải CPU
                         '--mute-audio'    // Tiện thể tắt tiếng luôn cho đỡ ồn khi cào data
                     ]
@@ -80,7 +80,7 @@ export class GpmService {
                 const options = {
                     // Nối các args thành một chuỗi cách nhau bởi dấu cách
                     addination_args: '--disable-gpu --mute-audio',
-                    win_size: '-2000,0',
+                    win_size: windowPosition,
 
                 };
 

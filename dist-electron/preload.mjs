@@ -9,6 +9,7 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   selectFileApk: () => electron.ipcRenderer.invoke("select-file-apk"),
   selectFile: () => electron.ipcRenderer.invoke("select-file"),
   selectFolder: () => electron.ipcRenderer.invoke("select-folder"),
+  openPath: (path) => electron.ipcRenderer.invoke("open-path", path),
   openMirror: (deviceId) => electron.ipcRenderer.invoke("adb:mirror-device", deviceId),
   // Thêm dòng này
   openViewPhone: (deviceId, x, y, width, height) => electron.ipcRenderer.invoke("adb:viewphone", deviceId, x, y, width, height),
@@ -33,12 +34,21 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   checkGpmConnection: (url) => electron.ipcRenderer.invoke("gpm:check-connection", url),
   runTaskAutoVideo: (data) => electron.ipcRenderer.invoke("video:run-tasks", data),
   stopTaskAutoVideo: (taskIds) => electron.ipcRenderer.send("video:stop-single-task", taskIds),
+  runTaskAutoReels: (data) => electron.ipcRenderer.invoke("reels:run-tasks", data),
+  stopTaskAutoReels: (taskIds) => electron.ipcRenderer.send("reels:stop-single-task", taskIds),
   getInfoProduct: (data) => electron.ipcRenderer.invoke("video:get-info-product", data),
   onTaskLog: (callback) => {
     const subscription = (_event, data) => callback(data);
     electron.ipcRenderer.on("video:task-log", subscription);
     return () => {
       electron.ipcRenderer.removeListener("video:task-log", subscription);
+    };
+  },
+  onTaskLogReels: (callback) => {
+    const subscription = (_event, data) => callback(data);
+    electron.ipcRenderer.on("reels:task-log", subscription);
+    return () => {
+      electron.ipcRenderer.removeListener("reels:task-log", subscription);
     };
   }
 });
