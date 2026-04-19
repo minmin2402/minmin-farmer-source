@@ -4,10 +4,11 @@ import { logger } from "../utils/logger";
 
 export class GeminiService {
     private genAI: GoogleGenAI;
-    private model = "gemini-2.5-flash";
+    private model: "gemini-2.5-flash" | "gemini-2.0-flash" | "gemini-3-flash-preview" = "gemini-2.5-flash";
 
-    constructor(apiKey: string) {
+    constructor(apiKey: string, model:"gemini-2.5-flash" | "gemini-2.0-flash" | "gemini-3-flash-preview" ="gemini-2.5-flash" ) {
         this.genAI = new GoogleGenAI({ apiKey: apiKey });
+        this.model = model
     }
 
     /**
@@ -74,7 +75,10 @@ export class GeminiService {
             return { success: false };
         } catch (error: any) {
             logger.error("❌ Lỗi Gemini:", error.message);
-            return { success: false, data: prompt_review };
+            if (error.message.includes("Rate Limit")){
+                
+            }
+            return { success: false, data: prompt_review, ratelimit:true };
 
         }
     }

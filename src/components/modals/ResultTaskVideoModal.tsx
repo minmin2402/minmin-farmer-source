@@ -1,19 +1,32 @@
-import { X, Settings, FolderOpen, Video } from "lucide-react";
+import { X, Settings, FolderOpen, Video, Copy } from "lucide-react";
 import { VideoTask } from "../../types/VideoTask";
 
 interface ConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
   task: VideoTask | null;
+  onUpdateTask: (a:VideoTask) => void;
 }
 
 export const ResultTaskVideoModal = ({
   isOpen,
   onClose,
   task,
+  onUpdateTask,
 }: ConfigModalProps) => {
   if (!isOpen) return null; // Nếu không mở thì không render gì cả
+  const handleChangeDesc = (newDesc: string) => {
+    if (!task) return;
 
+    // Tạo object task mới với mô tả đã sửa
+    const updatedTask = {
+      ...task,
+      productDesc: newDesc,
+    };
+
+    // Gọi callback để cập nhật lên cha
+    onUpdateTask(updatedTask);
+  };
   return (
     // 1. Overlay - Lớp nền mờ phía sau
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -109,15 +122,21 @@ export const ResultTaskVideoModal = ({
                   </a>
                 </div>
 
-                {/* Mô tả */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-black text-slate-400 uppercase">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex justify-between">
                     Mô tả tóm tắt
+                    <span className="text-[10px] font-normal lowercase text-blue-500">
+                      (Có thể chỉnh sửa)
+                    </span>
                   </label>
-                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <p className="text-[13px] text-slate-600 leading-relaxed line-clamp-6 italic">
-                      {task?.productDesc || "Không có mô tả cho sản phẩm này."}
-                    </p>
+                  <div className="bg-slate-50 rounded-xl border border-slate-100 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 transition-all">
+                    <textarea
+                      className="w-full bg-transparent p-3 text-[13px] text-slate-600 leading-relaxed italic outline-none resize-none min-h-25"
+                      value={task?.productDesc || ""}
+                      placeholder="Không có mô tả cho sản phẩm này."
+                      onChange={(e) => handleChangeDesc(e.target.value)}
+                      rows={5}
+                    />
                   </div>
                 </div>
               </div>
@@ -132,7 +151,46 @@ export const ResultTaskVideoModal = ({
                 Chi Tiết Video Jobs
               </h4>
             </div>
+            {task?.finalVideoPath && (
+              <div className="mt-6 p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <div className="p-1.5 bg-blue-100 text-blue-600 rounded">
+                    <Video size={14} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">
+                      Video Output
+                    </span>
+                    <span className="text-xs font-medium text-slate-600 truncate italic">
+                      {task.finalVideoPath}
+                    </span>
+                  </div>
+                </div>
 
+                <button
+                  onClick={() => {
+                    // Gọi API Electron để mở thư mục chứa file
+                    //@ts-ignore
+                    window.electronAPI.openPath(task.finalVideoPath);
+                  }}
+                  className="shrink-0 flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2 py-1.5 rounded-md text-[11px] font-bold shadow-sm transition-all active:scale-95"
+                  title="Mở thư mục chứa video"
+                >
+                  <FolderOpen size={14} className="text-amber-500" />
+                  Mở Folder
+                </button>
+                <button
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(task.finalVideoPath);
+                  }}
+                  className="shrink-0 flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2 py-1.5 rounded-md text-[11px] font-bold shadow-sm transition-all active:scale-95"
+                  title="Copy đường dẫn video"
+                >
+                  <Copy size={14} className="text-amber-500" />
+                  Copy Path
+                </button>
+              </div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* CỘT 1 (Rộng nhất - 6/12): PROMPT AI */}
               <div className="lg:col-span-6 space-y-3">
@@ -256,36 +314,6 @@ export const ResultTaskVideoModal = ({
                 </div>
               </div>
             </div>
-            {task?.finalVideoPath && (
-              <div className="mt-6 p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 overflow-hidden">
-                  <div className="p-1.5 bg-blue-100 text-blue-600 rounded">
-                    <Video size={14} />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">
-                      Video Output
-                    </span>
-                    <span className="text-xs font-medium text-slate-600 truncate italic">
-                      {task.finalVideoPath}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    // Gọi API Electron để mở thư mục chứa file
-                    //@ts-ignore
-                    window.electronAPI.openPath(task.finalVideoPath);
-                  }}
-                  className="shrink-0 flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2 py-1.5 rounded-md text-[11px] font-bold shadow-sm transition-all active:scale-95"
-                  title="Mở thư mục chứa video"
-                >
-                  <FolderOpen size={14} className="text-amber-500" />
-                  Mở Folder
-                </button>
-              </div>
-            )}
           </section>
         </div>
 

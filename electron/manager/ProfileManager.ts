@@ -61,45 +61,45 @@ export class ShopeeProfileManager {
 
 
 export class GrokProfileManager {
-  private profiles: string[];
-  private profileStatus: Map<string, { isLocked: boolean; lastUsed: number }>;
-  // Hàng đợi lưu trữ các hàm resolve của Promise đang chờ
-  private waitingQueue: ((value: string) => void)[] = [];
+  // Gộp waitingQueue vào trong từng profile luôn
+  private profileStatus: Map<string, { 
+    isLocked: boolean; 
+    lastUsed: number;
+    waitingQueue: ((value: boolean) => void)[]; // Hàng đợi RIÊNG cho profile này
+  }>;
 
   constructor(profileIds: string[]) {
-    this.profiles = profileIds;
+    // Không cần gán this.profiles = profileIds nữa
     this.profileStatus = new Map();
     profileIds.forEach(id => {
-      this.profileStatus.set(id, { isLocked: false, lastUsed: 0 });
+      this.profileStatus.set(id, { 
+        isLocked: false, 
+        lastUsed: 0,
+        waitingQueue: [] // Khởi tạo hàng đợi rỗng
+      });
     });
   }
 
-  async getAvailableProfile(): Promise<string> {
-    // 1. Thử tìm xem có profile nào rảnh không
-    const freeId = this.findFreeProfile();
-    
-    if (freeId) {
-      return freeId; // Có rảnh thì chiếm luôn
+  // Đổi tên thành lockProfile (hoặc giữ tên cũ tuỳ bạn), truyền id vào
+  async lockProfile(profileId: string): Promise<boolean> {
+    const status = this.profileStatus.get(profileId);
+
+    if (!status) {
+      throw new Error(`[GPM-Grok] ❌ Profile ${profileId} không tồn tại trong Manager`);
     }
 
-    // 2. Nếu không rảnh, tạo một "phiếu chờ" (Promise)
+    // 1. Nếu profile đang rảnh -> Chiếm dụng luôn và trả về true
+    if (!status.isLocked) {
+      status.isLocked = true;
+      logger.info(`[GPM-Grok] 🔒 Đã chiếm quyền Profile: ${profileId}`);
+      return true;
+    }
+
+    // 2. Nếu profile đang bận -> Ném vào hàng đợi CỦA RIÊNG PROFILE ĐÓ
     return new Promise((resolve) => {
-      this.waitingQueue.push(resolve);
-      logger.info(`[GPM-Grok] ⏳ Hết Profile rảnh. Task đã vào hàng đợi (Vị trí: ${this.waitingQueue.length})`);
+      status.waitingQueue.push(resolve);
+      logger.info(`[GPM-Grok] ⏳ Profile ${profileId} đang bận. Task vào hàng đợi (Vị trí: ${status.waitingQueue.length})`);
     });
-  }
-
-  // Hàm phụ trợ để tìm và khóa profile (tránh lặp code)
-  private findFreeProfile(): string | null {
-    for (const id of this.profiles) {
-      const status = this.profileStatus.get(id);
-      if (status && !status.isLocked) {
-        status.isLocked = true;
-        logger.info(`[GPM-Grok] 🔒 Đã chiếm quyền Profile: ${id}`);
-        return id;
-      }
-    }
-    return null;
   }
 
   async releaseProfile(profileId: string, cooldownTime: number = 3000) {
@@ -109,18 +109,22 @@ export class GrokProfileManager {
     logger.info(`[GPM-Grok] ⏳ Đang đợi dọn dẹp Profile ${profileId}...`);
     await new Promise(resolve => setTimeout(resolve, cooldownTime));
 
-    status.isLocked = false;
     status.lastUsed = Date.now();
-    logger.info(`[GPM-Grok] 🔓 Đã nhả Profile: ${profileId}`);
 
-    // 3. QUAN TRỌNG: Khi vừa nhả, kiểm tra xem có ai đang chờ trong hàng đợi không
-    if (this.waitingQueue.length > 0) {
-      const nextTaskResolve = this.waitingQueue.shift(); // Lấy người xếp hàng đầu tiên ra
-      const availableId = this.findFreeProfile(); // Tìm profile vừa nhả
+    // 3. QUAN TRỌNG: Xử lý bàn giao quyền
+    if (status.waitingQueue.length > 0) {
+      // Nếu có người đang đợi đúng profile này, lấy người đầu tiên ra
+      const nextTaskResolve = status.waitingQueue.shift(); 
+      logger.info(`[GPM-Grok] 🔄 Bàn giao Profile ${profileId} cho task tiếp theo trong hàng đợi...`);
       
-      if (nextTaskResolve && availableId) {
-        nextTaskResolve(availableId); // Kích hoạt Promise của task đang chờ
+      if (nextTaskResolve) {
+        // LƯU Ý: Không set isLocked = false, vì ta sang tay luôn (bàn giao chìa khóa)
+        nextTaskResolve(true); 
       }
+    } else {
+      // Nếu không còn ai đợi profile này nữa thì mới mở khóa hoàn toàn
+      status.isLocked = false;
+      logger.info(`[GPM-Grok] 🔓 Đã nhả hoàn toàn Profile: ${profileId}`);
     }
   }
 }

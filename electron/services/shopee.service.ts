@@ -43,7 +43,6 @@ export const getShopeeIds = (url: string): ShopeeProductIds | null => {
 async function getInfoProduct(port: number, data: any) {
     try {
         // 1. Kết nối vào trình duyệt GPM đang mở qua Port
-        // GPM chạy ở local nên mình dùng 127.0.0.1
         await sleep(3000);
         const browser = await puppeteer.connect({
             browserURL: `http://127.0.0.1:${port}`,
@@ -54,152 +53,126 @@ async function getInfoProduct(port: number, data: any) {
 
         // 2. Lấy danh sách các Tab (Pages)
         const pages = await browser.pages();
-        // Nếu có tab đang mở thì dùng luôn, không thì tạo tab mới
         const page = pages.length > 0 ? pages[0] : await browser.newPage();
 
-        // 3. Thực hiện lệnh "Vít ga" điều hướng
-        logger.info("🚚 Đang đi đến Shopee để cào dữ liệu...");
+        // Khai báo sẵn các XPath cần thiết
+        const xpathTitle = '//div[@role="main"]/section/section[2]/div/div/h1';
+        const xpathDesc = '//div[@class="product-detail page-product__detail"]/section[last()]';
+        const xpathImage = '//div[not(.//img[@alt="icon video play"])]/div/picture/source[@type="image/webp"]/following-sibling::img[1]';
+
+        // 3. Mồi trang chủ lấy Trust (Nên có)
+        logger.info("🚚 Đang mồi trang chủ Shopee...");
         await page.goto('https://shopee.vn', {
-            waitUntil: data.configVideoMKT?.method_load_page ?? "load", // Đợi mạng ổn định mới làm tiếp
-            timeout: data.configVideoMKT?.time_loading_page ?? 25            // Chờ tối đa 60s
-        });
+            waitUntil: data.configVideoMKT?.method_load_page ?? "load",
+            timeout: data.configVideoMKT?.time_loading_page ?? 25000
+        }).catch(() => {});
 
-        await page.goto(data.task.productUrl, {
-            waitUntil: data.configVideoMKT?.method_load_page ?? "load", // Đợi mạng ổn định mới làm tiếp
-            timeout: data.configVideoMKT?.time_loading_page ?? 25            // Chờ tối đa 60s
-        });
-        // 1. Chờ cho đến khi cái Selector tương ứng với XPath hiện ra
-        // Lưu ý: Puppeteer hiện đại hỗ trợ cú pháp ::xpath trực tiếp trong waitForSelector
+        // 4. Vít ga "Cướp cò" link sản phẩm
+        logger.info("⚡ Đang phi thẳng vào trang sản phẩm (Chế độ Cướp Cò)...");
         
-        const xpathSelectorTitle = 'xpath///div[@role="main"]/section/section[2]/div/div/h1';
+        // Sửa 'commit' thành 'domcontentloaded'
+        await page.goto(data.task.productUrl, {
+            waitUntil: 'domcontentloaded', 
+            timeout: 15000
+        }).catch(() => {});
 
-        let productTitle = null
+        let productTitle = null;
+        let productDesc = null;
+        let productPathImage = null;
+
         try {
-            // Đợi cái thẻ H1 xuất hiện (timeout theo config của MinMin)
-            await page.waitForSelector(xpathSelectorTitle, {
+            // 5. Đợi khoảnh khắc thẻ H1 vừa hiện lên DOM
+            await page.waitForSelector(`xpath/${xpathTitle}`, {
                 timeout: data.configVideoMKT?.time_wait_getdata ?? 15000
             });
+
+            // 🛑 6. NGAY LẬP TỨC: CHẶN ĐỨNG TRÌNH DUYỆT!
+            // Cắt đứt mọi JS đang chạy ngầm để Shopee không thể redirect sang trang tracking
+            await page.evaluate(() => window.stop());
+            logger.info("🛑 Đã chặn thành công Shopee JS Redirect!");
+
+            // 7. Lấy toàn bộ Data trong 1 lần duy nhất (Title, Desc, Image)
             /* javascript-obfuscator:disable */
-            // 2. Lấy Text Content ra "vít ga"
-            productTitle = await page.evaluate((targetXpath) => {
-                const result = document.evaluate(
-                    targetXpath,
-                    document,
-                    null,
-                    9,
-                    null
-                ).singleNodeValue;
+            const evaluateScript = `
+                (() => {
+                    const getByXpath = (xpath) => document.evaluate(xpath, document, null, 9, null).singleNodeValue;
+                    
+                    const titleEl = getByXpath('${xpathTitle}');
+                    const descEl = getByXpath('${xpathDesc}');
+                    const imgEl = getByXpath('${xpathImage}');
 
-                return result ? result.textContent?.trim() : "Không tìm thấy tiêu đề";
-            }, "//div[@role='main']/section/section[2]/div/div/h1");
-            /* javascript-obfuscator:enable */
-            logger.info("💎 Tiêu đề sản phẩm lấy được:", productTitle);
+                    return {
+                        title: titleEl ? titleEl.textContent.trim() : "Không tìm thấy tiêu đề",
+                        desc: descEl ? descEl.innerText : "Không tìm thấy mô tả",
+                        imgSrcset: imgEl && imgEl.srcset ? imgEl.srcset.split(' ')[0] : null
+                    };
+                })();
+            `;
 
-        } catch (error) {
-            logger.error("❌ Lỗi: Chờ quá lâu mà không thấy tiêu đề đâu!", error);
-        }
+            const productData = await page.evaluate(evaluateScript) as {
+                title: string;
+                desc: string;
+                imgSrcset: string | null;
+            };
 
+            // Gán data (Lúc này TypeScript đã hiểu và hết báo lỗi)
+            productTitle = productData.title;
+            productDesc = productData.desc;
+            
+            logger.info(`💎 Tiêu đề: ${productTitle}`);
+            logger.info(`💎 Mô tả: ${productDesc}`);
 
-        const xpathSelectorDesc = 'xpath///div[@class="product-detail page-product__detail"]/section[2]//p[1]';
-        let productDesc = null
-        try {
-            // Đợi cái thẻ H1 xuất hiện (timeout theo config của MinMin)
-            await page.waitForSelector(xpathSelectorDesc, {
-                timeout: data.configVideoMKT?.time_wait_getdata ?? 15000
-            });
-             /* javascript-obfuscator:disable */
-            // 2. Lấy Text Content ra "vít ga"
-            productDesc = await page.evaluate((xpath) => {
-                const element = document.evaluate(
-                    xpath,
-                    document,
-                    null,
-                    9,
-                    null
-                ).singleNodeValue;
-                return element ? element.textContent?.trim() : "Không tìm thấy mô tả";
-            }, "//div[@class='product-detail page-product__detail']/section[2]//p[1]");
-            /* javascript-obfuscator:enable */
-            logger.info("💎 mô tả sản phẩm lấy được:", productDesc);
-
-        } catch (error) {
-            logger.error("❌ Lỗi: Chờ quá lâu mà không thấy mô tả đâu!", error);
-        }
-
-
-        logger.info("✅ Đã tìm kiếm xong!");
-
-        const xpathSource = '//div[not(.//img[@alt="icon video play"])]/div/picture/source[@type="image/webp"]/following-sibling::img[1]';
-        const xpathSelectorSource = `xpath/${xpathSource}`;
-        let productPathImage = null
-        try {
-            // 1. Đợi thẻ source xuất hiện
-            await page.waitForSelector(xpathSelectorSource, {
-                timeout: data.configVideoMKT?.time_wait_getdata ?? 15000
-            });
-            /* javascript-obfuscator:disable */
-            // 2. Lấy giá trị srcset
-            const rawSrcset = await page.evaluate((xpath) => {
-                const element = document.evaluate(
-                    xpath,
-                    document,
-                    null,
-                    9,
-                    null
-                ).singleNodeValue as HTMLSourceElement;
-
-                if (!element) return null;
-                // srcset có thể là "link1 1x, link2 2x" -> lấy cái đầu tiên
-                return element.srcset.split(' ')[0];
-            }, xpathSource);
-            /* javascript-obfuscator:enable */
-            if (rawSrcset) {
-                logger.info("🔗 Link ảnh lấy được:", rawSrcset);
-                const highRawSrcset = rawSrcset.replace("resize_w82", "resize_w780")
-                // Tiến hành tải ảnh (Bước 2 bên dưới)
+            // 8. Xử lý ảnh và crop 9:16
+            if (productData.imgSrcset) {
+                logger.info(`🔗 Link ảnh gốc: ${productData.imgSrcset}`);
+                const highRawSrcset = productData.imgSrcset.replace("resize_w82", "resize_w780");
+                
+                // Tiến hành tải ảnh
                 const resultSaveImage = await downloadImage(highRawSrcset, data.task.save_path_project);
-  
                 
                 if (resultSaveImage.success) {
                     try {
                         let oldImg = path.join(data.task.save_path_project, resultSaveImage.name);
-    
-                        const imagePathFinally = await processImageTo916(oldImg)
+                        
+                        // Xử lý ảnh 9:16
+                        const imagePathFinally = await processImageTo916(oldImg);
                         if (imagePathFinally) {
-                            productPathImage = path.join(data.task.save_path_project,imagePathFinally)
-
+                            productPathImage = path.join(data.task.save_path_project, imagePathFinally);
                         }
+                        
+                        // Dọn dẹp ảnh cũ
                         try {
                             if (fs.existsSync(oldImg)) {
                                 fs.unlinkSync(oldImg);
                                 logger.info(`🗑️ Đã dọn dẹp file cũ: ${oldImg}`);
                             }
                         } catch (err) {
-                            logger.error("❌ Không xóa được file:", err);
+                            logger.error("❌ Không xóa được file cũ:", err);
                         }
                     } catch (err) {
                         logger.error("❌ Lỗi xử lý ảnh 9:16:", err);
-                        
                     }
-
-
+                } else {
+                    throw new Error("Tải ảnh thất bại");
                 }
-            }else{
-                throw new Error("Không tìm thấy ảnh")
+            } else {
+                throw new Error("Không tìm thấy link ảnh trong DOM");
             }
 
-        } catch (error:any) {
+        } catch (error: any) {
             await browser.disconnect();
-            throw new Error(error?.message ?? "Lỗi shopee service kxd")
+            logger.error(error);
+            throw new Error(error?.message ?? "Lỗi bóc tách dữ liệu Shopee");
         }
 
-        // 5. Ngắt kết nối (Chỉ ngắt kết nối điều khiển, KHÔNG ĐÓNG trình duyệt)
+        // 9. Ngắt kết nối (Chỉ ngắt kết nối điều khiển, KHÔNG ĐÓNG trình duyệt)
         await browser.disconnect();
+        logger.info("✅ Hoàn tất lấy Info Product!");
         
-        return { taskId: data.task.id, productTitle, productDesc, productPathImage }
+        return { taskId: data.task.id, productTitle, productDesc, productPathImage };
 
     } catch (error: any) {
-        throw new Error(error?.message ?? "Lỗi shopee service kxd")
+        throw new Error(error?.message ?? "Lỗi Shopee Service KXD");
     }
 }
 

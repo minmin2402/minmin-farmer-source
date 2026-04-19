@@ -8,6 +8,7 @@ import { GpmService } from './gpm.service';
 import puppeteer from 'puppeteer-core';
 import { logger } from '../utils/logger';
 import { sleep } from './shopee.service';
+import { GrokProfileManager } from '../manager/ProfileManager';
 
 export class GrokService {
     private MIN_IMAGE_SIZE_KB = 50;
@@ -33,47 +34,52 @@ export class GrokService {
         logger.info("📂 Thư mục cấu hình tại:", this.headersDir);
     }
 
-    async initHeaderGrok(_event: IpcMainInvokeEvent, profileNum: number, taskId: string, grokService: GrokService, gpmClient: GpmService, gpmProfileId: string, port: number, delay_between: number) {
+    async initHeaderGrok(_event: IpcMainInvokeEvent, taskId: string, grokService: GrokService, grokManager: GrokProfileManager, gpmClient: GpmService, gpmProfileId: string, port: number, delay_between: number) {
         try {
             _event.sender.send('video:task-log', {
                 status: 'processing',
-                message: `🔍 Đang kiểm tra Grok Profile ${profileNum}`,
+                message: `🔍 Đang kiểm tra Grok Profile ${gpmProfileId}`,
                 taskId: taskId
             });
-            let isLive = await grokService.checkHeaderLive(profileNum);
+            let isLive = await grokService.checkHeaderLive(gpmProfileId);
             if (!isLive) {
-                _event.sender.send('video:task-log', {
-                    status: 'processing',
-                    message: `🔄 Header hết hạn hoặc chưa có! Đang mở GPM để lấy lại...`,
-                    taskId: taskId
-                });
-                const startResultGPMGrok = await gpmClient.startProfile(gpmProfileId, port);
-                if (!startResultGPMGrok.success) throw new Error(startResultGPMGrok.message);
+                try {
+                    _event.sender.send('video:task-log', {
+                        status: 'processing',
+                        message: `🔄 Header hết hạn hoặc chưa có! Đang mở GPM để lấy lại...`,
+                        taskId: taskId
+                    });
+                    await grokManager.lockProfile(gpmProfileId)
+                    const startResultGPMGrok = await gpmClient.startProfile(gpmProfileId, port);
+                    if (!startResultGPMGrok.success) throw new Error(startResultGPMGrok.message);
 
-                if (startResultGPMGrok.data.remote_debugging_port) {
-                    const newHeaders = await grokService.refreshGrokHeaderViaGPM(startResultGPMGrok.data.remote_debugging_port);
+                    if (startResultGPMGrok.data.remote_debugging_port) {
+                        const newHeaders = await grokService.refreshGrokHeaderViaGPM(startResultGPMGrok.data.remote_debugging_port);
 
-                    // BƯỚC 3: LƯU LẠI VÀO C:\Users\Admin\Desktop\TESTGROK\profile_X.json
-                    grokService.saveNewHeaders(profileNum, newHeaders);
+                        // BƯỚC 3: LƯU LẠI VÀO C:\Users\Admin\Desktop\TESTGROK\profile_X.json
+                        grokService.saveNewHeaders(gpmProfileId, newHeaders);
+                    }
+                } catch (error) {
+                    
+                }
+                finally {
+                    try {
+                        await gpmClient.stopProfile(gpmProfileId);
+                        await sleep(delay_between * 1000);
+                    } catch (error) {
+
+                    }
+
+                    await grokManager.releaseProfile(gpmProfileId)
                 }
 
             }
 
-            try {
-                await gpmClient.stopProfile(gpmProfileId);
-                await sleep(delay_between * 1000);
-            } catch (error) {
 
-            }
 
             return { success: true, message: "Đã khởi tạo thành công header grok" }
         } catch (error: any) {
-            try {
-                await gpmClient.stopProfile(gpmProfileId);
-                await sleep(delay_between * 1000);
-            } catch (error) {
-
-            }
+            logger.error(error.message)
             return { success: true, message: error?.message ?? "[GrokService]: Khởi tạo header thất bại" }
         }
 
@@ -170,9 +176,9 @@ export class GrokService {
         }
     }
 
-    async checkHeaderLive(profileNum: number): Promise<boolean> {
+    async checkHeaderLive(profileId: string): Promise<boolean> {
         try {
-            const headers = this.getHeadersFromLocal(profileNum);
+            const headers = this.getHeadersFromLocal(profileId);
             if (!headers) return false;
 
             const res = await axios.get("https://grok.com/rest/suggestions/profile", {
@@ -188,8 +194,8 @@ export class GrokService {
     /**
      * LẤY HEADERS TỪ FILE LOCAL
      */
-    getHeadersFromLocal(profileNum: number): any {
-        const filePath = path.join(this.headersDir, `profile_${profileNum}.json`);
+    getHeadersFromLocal(profileId: string): any {
+        const filePath = path.join(this.headersDir, `profile_${profileId}.json`);
         if (!fs.existsSync(filePath)) return null;
         try {
             const rawHeaders = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
@@ -224,12 +230,12 @@ export class GrokService {
             "x-xai-request-id": uuidv4()
         };
     }
-    private buildRequestHeaders(profileNum: number): any {
+    private buildRequestHeaders(profileId: string): any {
         // 1. Lấy raw headers từ file JSON (đã lưu từ GPM)
-        const rawHeaders = this.getHeadersFromLocal(profileNum);
+        const rawHeaders = this.getHeadersFromLocal(profileId);
 
         if (!rawHeaders) {
-            logger.warn(`⚠️ Không tìm thấy raw headers cho Profile ${profileNum}, dùng default.`);
+            logger.warn(`⚠️ Không tìm thấy raw headers cho Profile ${profileId}, dùng default.`);
             return this.getDefaultHeaders();
         }
 
@@ -260,18 +266,18 @@ export class GrokService {
         return requestHeaders;
     }
 
-    saveNewHeaders(profileNum: number, headers: any) {
-        const filePath = path.join(this.headersDir, `profile_${profileNum}.json`);
+    saveNewHeaders(profileId: string, headers: any) {
+        const filePath = path.join(this.headersDir, `profile_${profileId}.json`);
         fs.writeFileSync(filePath, JSON.stringify(headers, null, 2));
-        logger.info(`✅ Đã lưu Header mới cho Profile ${profileNum}`);
+        logger.info(`✅ Đã lưu Header mới cho Profile ${profileId}`);
     }
 
     /**
      * HÀM CHÍNH TẠO ẢNH (DÙNG CHO TASK)
      */
-    async generateReviewVideoImage(userPrompt: string, productImagePath: string, profileNum: number, outputFolder: string, taskId: string) {
+    async generateReviewVideoImage(userPrompt: string, productImagePath: string, profileId: string, outputFolder: string, taskId: string) {
         try {
-            const headers = this.buildRequestHeaders(profileNum);
+            const headers = this.buildRequestHeaders(profileId);
             if (!headers) throw new Error("Header trống, cần refresh qua GPM");
 
             // 1. Upload ảnh sản phẩm
@@ -306,7 +312,7 @@ export class GrokService {
             if (!imageUrls || imageUrls.length === 0) return { success: false, message: "Grok Không trả về ảnh" };
 
 
-            const finalPath = await this.downloadBestImage(imageUrls, taskId, profileNum, outputFolder);
+            const finalPath = await this.downloadBestImage(imageUrls, taskId, profileId, outputFolder);
             if (!finalPath) {
                 return { success: false, message: "Không tìm thấy image" };
             }
@@ -514,8 +520,8 @@ export class GrokService {
             return [];
         }
     }
-    private buildDownloadHeaders(profileNum: number): any {
-        const cookie = this.parseCookieFromFile(profileNum);
+    private buildDownloadHeaders(profileId: string): any {
+        const cookie = this.parseCookieFromFile(profileId);
         const headers: any = {
             "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
             "accept-encoding": "gzip, deflate, br, zstd",
@@ -536,9 +542,9 @@ export class GrokService {
         }
         return headers;
     }
-    private parseCookieFromFile(profileNum: number): string {
+    private parseCookieFromFile(profileId: string): string {
         // Nếu ông lưu dạng JSON (như anh em mình làm ở trên) thì bốc trực tiếp
-        const jsonPath = path.join(this.headersDir, `profile_${profileNum}.json`);
+        const jsonPath = path.join(this.headersDir, `profile_${profileId}.json`);
 
         if (fs.existsSync(jsonPath)) {
             const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
@@ -547,10 +553,10 @@ export class GrokService {
         return "";
     }
 
-    async downloadBestImage(imageUrls: string[], taskId: number | string, profileNum: number, outputFolder: string): Promise<string | null> {
+    async downloadBestImage(imageUrls: string[], taskId: number | string, profileId: string, outputFolder: string): Promise<string | null> {
         if (!imageUrls || imageUrls.length === 0) return null;
 
-        const downloadHeaders = this.buildDownloadHeaders(profileNum);
+        const downloadHeaders = this.buildDownloadHeaders(profileId);
 
         // 1. Tạo biến để lưu trữ "ứng cử viên" nặng ký nhất
         let bestContent: Buffer | null = null;
@@ -594,11 +600,11 @@ export class GrokService {
         return null;
     }
 
-    async downloadImageForPrompt(imageUrls: string[], taskId: number | string, profileNum: number, outputFolder: string): Promise<string | null> {
+    async downloadImageForPrompt(imageUrls: string[], taskId: number | string, profileId: string, outputFolder: string): Promise<string | null> {
         if (!imageUrls || imageUrls.length === 0) return null;
 
         // 1. Build bộ header tải ảnh (Có Cookie từ GPM để tránh 403)
-        const downloadHeaders = this.buildDownloadHeaders(profileNum);
+        const downloadHeaders = this.buildDownloadHeaders(profileId);
 
         for (const url of imageUrls) {
             // 2. Kiểm tra chất lượng ảnh (Học theo check_image_size)
@@ -665,6 +671,7 @@ export class GrokService {
         prompt_video: string,
         outputDir: string,
         profileNum: number = 1,
+        profileId: string,
         imagePath: string | null = null,
         outputCount: number,
         logCallback?: (msg: string) => void
@@ -673,7 +680,7 @@ export class GrokService {
             if (logCallback) logCallback(msg);
             logger.info(msg);
         };
-        const headers = this.buildRequestHeaders(profileNum);
+        const headers = this.buildRequestHeaders(profileId);
 
         const result: any = {
             prompt, taskId: taskId, profile: profileNum,
@@ -681,7 +688,7 @@ export class GrokService {
             post_id: null, video_url: null, is_429: false
         };
 
-        log(`[P${profileNum}] VIDEO ${taskId}: ...`);
+        log(`[P${profileId}] VIDEO ${taskId}: ...`);
 
         try {
             let fileMetadataId = null;
@@ -693,7 +700,7 @@ export class GrokService {
             // BƯỚC 0: Xử lý và Upload ảnh (Nếu có)
             // Lưu ý: Bước adjust_image_aspect_ratio ông đã làm bằng Sharp ở trên
             if (imagePath && fs.existsSync(imagePath)) {
-                log(`[P${profileNum}] Bước 0: Upload ảnh làm gốc...`);
+                log(`[P${profileId}] Bước 0: Upload ảnh làm gốc...`);
                 // Sử dụng hàm uploadImage anh em mình đã viết ở trên
                 // Giả định hàm uploadImage trả về { fileMetadataId, fileUri }
                 logger.info(imagePath)
@@ -714,7 +721,7 @@ export class GrokService {
                 "x-xai-request-id": uuidv4()
             };
 
-            log(`[P${profileNum}] Bước 1: Tạo media post...`);
+            log(`[P${profileId}] Bước 1: Tạo media post...`);
             const url1 = "https://grok.com/rest/media/post/create";
 
 
@@ -757,10 +764,10 @@ export class GrokService {
             }
 
             result.post_id = postId;
-            log(`✅ [P${profileNum}] Post ID thành công: ${postId}`);
+            log(`✅ [P${profileId}] Post ID thành công: ${postId}`);
 
             // BƯỚC 2: Tạo video (Sử dụng Stream để bóc Url)
-            log(`[P${profileNum}] Bước 2: Tạo video (đợi render)...`);
+            log(`[P${profileId}] Bước 2: Tạo video (đợi render)...`);
             const url2 = "https://grok.com/rest/app-chat/conversations/new";
 
             // Payload Grok-3 đặc chủng của ông
@@ -994,8 +1001,8 @@ export class GrokService {
 
 
             // BƯỚC 4: Download video
-            const downloadHeaders = this.buildDownloadHeaders(profileNum);
-            log(`[P${profileNum}] Bước 3: Download video...`);
+            const downloadHeaders = this.buildDownloadHeaders(profileId);
+            log(`[P${profileId}] Bước 3: Download video...`);
             const downloadUrl = `https://assets.grok.com/${videoUrlPath}?cache=1&dl=1`;
             const finalFilename = path.join(outputDir, `video_${taskId}_${Date.now()}.mp4`);
 
@@ -1006,15 +1013,16 @@ export class GrokService {
             });
 
             fs.writeFileSync(finalFilename, res3.data);
-            log(`✅ [P${profileNum}] Tải xong video: ${path.basename(finalFilename)}`);
+            log(`✅ [P${profileId}] Tải xong video: ${path.basename(finalFilename)}`);
 
             result.success = true;
             result.filename = finalFilename;
 
         } catch (error: any) {
+            logger.error(error.message)
             result.error = error.response?.status === 429 ? "Rate Limit 429" : error.message;
             result.is_429 = error.response?.status === 429;
-            log(`❌ [P${profileNum}] Lỗi: ${result.error}`);
+            log(`❌ [P${profileId}] Lỗi: ${result.error}`);
         }
 
         return result;

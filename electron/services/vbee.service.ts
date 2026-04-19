@@ -13,7 +13,7 @@ export class VbeeService {
         this.app_id = app_id;
     }
 
-    async downloadAudio(text: string, outputFolder: string, voiceCode: string = "s_cantho_female_xanxan_advertise_vc"): Promise<string | null> {
+    async downloadAudio(text: string, outputFolder: string, voiceCode: string = "s_cantho_female_xanxan_advertise_vc",_speed_voice:number=1): Promise<string | null> {
         try {
             // 1. Gửi request POST để lấy request_id
             const postRes = await axios.post(this.base_url, {
@@ -21,6 +21,7 @@ export class VbeeService {
                 input_text: text,
                 voice_code: voiceCode,
                 audio_type: "mp3",
+                speed_rate: String(_speed_voice.toFixed(1)),
                 callbackUrl:"https://mydomain.com/callback",
                 response_type: "indirect" // Dùng indirect để lấy request_id
             }, {

@@ -125,10 +125,10 @@ export const ExcelImportVideoMKT: React.FC<ExcelImportProps> = ({
     </>
   );
 };
-export const HeaderActionButton = ({ icon, label, onClick }: any) => (
+export const HeaderActionButton = ({ icon, label, onClick, className }: any) => (
   <button
     onClick={onClick}
-    className="flex items-center gap-2 text-xs text-blue-600 font-bold px-4 py-2 rounded-xl bg-white border border-gray-200 hover:bg-slate-50 transition-all"
+    className={` ${className} flex items-center gap-2 text-xs text-blue-600 font-bold px-4 py-2 rounded-xl bg-white border border-gray-200 hover:bg-slate-50 transition-all`}
   >
     {React.cloneElement(icon, { size: 15 })}
     {label}

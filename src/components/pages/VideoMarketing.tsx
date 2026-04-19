@@ -53,8 +53,11 @@ interface ConfigVideoMKT {
     | "n_hanoi_female_quangcao02_advertise_vc";
   vbee_app_id: string;
   vbee_app_token: string;
+  speed_voice: 1;
   isEnabledLogo: boolean;
   logoPath: string;
+  isEnabledMusic: boolean;
+  musicPath: string;
 }
 
 export const VideoMarketingPage = () => {
@@ -120,8 +123,11 @@ export const VideoMarketingPage = () => {
       voice_code: "s_cantho_female_xanxan_advertise_vc",
       vbee_app_id: "",
       vbee_app_token: "",
+      speed_voice: 1,
       isEnabledLogo: false,
       logoPath: "",
+      isEnabledMusic: false,
+      musicPath: "",
     };
   });
   const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -327,6 +333,13 @@ export const VideoMarketingPage = () => {
 
     setSelectedIds([]);
   };
+  const handleUpdateTask = (updatedTask: VideoTask) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)),
+    );
+    // Cập nhật luôn task đang chọn để Modal hiển thị đúng dữ liệu mới
+    setSelectedTaskResult(updatedTask);
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#f8f9fa] p-6 text-slate-700 font-sans">
@@ -340,138 +353,150 @@ export const VideoMarketingPage = () => {
         isOpen={isResultModalOpen}
         onClose={() => setIsResultModalOpen(false)}
         task={selectedTaskResult ?? null}
+        onUpdateTask={handleUpdateTask}
       />
       {/* TOOLBAR NÚT BẤM */}
-      <div className="bg-white p-4 rounded-t-xl border border-gray-100 shadow-sm flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="text-[11px] font-bold px-3 py-1.5 border border-gray-200 rounded-lg bg-slate-50 text-slate-500 uppercase tracking-wider">
-            Tổng: {tasks.length}
+      <div className="bg-white p-4 rounded-t-xl border border-gray-100 shadow-sm flex flex-col items-start justify-start">
+        <div className="flex items-center mb-4 justify-between">
+          <div className="flex items-center gap-2 mr-2">
+            <div className="text-[11px] font-bold px-3 py-1.5 border border-gray-200 rounded-lg bg-slate-50 text-slate-500 uppercase tracking-wider">
+              Tổng: {tasks.length}
+            </div>
+
+            {/* 🗑️ NÚT XÓA: Chỉ hiện khi có ít nhất 1 hàng được chọn */}
+            {selectedIds.length > 0 && (
+              <button
+                onClick={deleteSelected}
+                className="flex items-center gap-2 px-4 py-1.5 bg-red-50 text-red-600 border border-red-100 rounded-lg text-xs font-bold hover:bg-red-600 hover:text-white transition-all animate-in fade-in zoom-in duration-200"
+              >
+                <Trash2 size={14} /> Xóa đã chọn ({selectedIds.length})
+              </button>
+            )}
           </div>
-
-          {/* 🗑️ NÚT XÓA: Chỉ hiện khi có ít nhất 1 hàng được chọn */}
-          {selectedIds.length > 0 && (
-            <button
-              onClick={deleteSelected}
-              className="flex items-center gap-2 px-4 py-1.5 bg-red-50 text-red-600 border border-red-100 rounded-lg text-xs font-bold hover:bg-red-600 hover:text-white transition-all animate-in fade-in zoom-in duration-200"
-            >
-              <Trash2 size={14} /> Xóa đã chọn ({selectedIds.length})
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-          <span className="text-xs font-semibold text-gray-600">
-            Đổi mode {selectedIds.length} task:
-          </span>
-
-          <div className="relative">
-            <select
-              // Chúng ta không dùng value cố định vì đây là lệnh thực thi
-              value=""
-              onChange={(e) => {
-                if (e.target.value) {
-                  handleBulkChangeMode(e.target.value);
-                }
-              }}
-              className="appearance-none bg-blue-50 border border-blue-200 rounded-md px-3 py-1 text-xs font-bold text-blue-700 outline-none hover:bg-blue-100 cursor-pointer"
-            >
-              <option value="" disabled>
-                -- Chọn chế độ --
-              </option>
-              <option value="Chỉ lấy thông tin sản phẩm">
-                Chỉ lấy thông tin sản phẩm
-              </option>
-              <option value="Prompt + Ảnh AI + Video">
-                Prompt + Ảnh AI + Video
-              </option>
-              <option value="TT + Prompt + Video + Ảnh AI">
-                TT + Prompt + Video + Ảnh AI
-              </option>
-              <option value="Prompt + Video">Prompt + Video</option>
-            </select>
-          </div>
-
-          {selectedIds.length === 0 && (
-            <span className="text-[10px] text-red-400 italic">
-              * Tích chọn task
+          <div className="flex items-center gap-2 p-1 mr-2 bg-gray-50 rounded-lg border border-gray-200">
+            <span className="text-xs font-semibold text-gray-600">
+              Đổi mode {selectedIds.length} task:
             </span>
-          )}
-        </div>
-        <button
-          onClick={handleDuplicateTasks}
-          disabled={selectedIds.length === 0}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all
+
+            <div className="relative">
+              <select
+                // Chúng ta không dùng value cố định vì đây là lệnh thực thi
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) {
+                    handleBulkChangeMode(e.target.value);
+                  }
+                }}
+                className="appearance-none bg-blue-50 border border-blue-200 rounded-md px-3 py-1 text-xs font-bold text-blue-700 outline-none hover:bg-blue-100 cursor-pointer"
+              >
+                <option value="" disabled>
+                  -- Chọn chế độ --
+                </option>
+                <option value="Chỉ lấy thông tin sản phẩm">
+                  Chỉ lấy thông tin sản phẩm
+                </option>
+                <option value="Prompt + Ảnh AI + Video">
+                  Prompt + Ảnh AI + Video
+                </option>
+                <option value="TT + Prompt + Video + Ảnh AI">
+                  TT + Prompt + Video + Ảnh AI
+                </option>
+                <option value="Prompt + Video">Prompt + Video</option>
+              </select>
+            </div>
+
+            {selectedIds.length === 0 && (
+              <span className="text-[10px] text-red-400 italic">
+                * Tích chọn task
+              </span>
+            )}
+          </div>
+          <button
+            onClick={handleDuplicateTasks}
+            disabled={selectedIds.length === 0}
+            className={`flex items-center gap-1.5 px-3 py-1.5 mr-2 rounded-md text-xs font-bold transition-all
     ${
       selectedIds.length > 0
         ? "bg-purple-600 text-white hover:bg-purple-700 active:scale-95 shadow-sm"
         : "bg-gray-200 text-gray-400 cursor-not-allowed"
     }`}
-        >
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M12 4v16m8-8H4"
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Nhân bản{" "}
+            {selectedIds.length > 0 ? `(${selectedIds.length})` : ""}{" "}
+          </button>
+          <div className="ml-auto flex f">
+            <HeaderActionButton
+              onClick={() => {
+                // Sử dụng window.electron để mở link ra trình duyệt ngoài
+                //@ts-ignore
+                window.electronAPI.openExternal(
+                  "https://docs.google.com/spreadsheets/d/1wtla0qrmZ1TjgGKCH2FpZuPdTXlxr7dUqfek_ZY0TZc/edit?gid=0#gid=0",
+                );
+              }}
+              icon={<Table />}
+              label="Mẫu Excel"
+              className="mr-2"
             />
-          </svg>
-          Nhân bản {selectedIds.length > 0 ? `(${selectedIds.length})` : ""}{" "}
-        </button>
 
-        <div className="flex items-center gap-1.5">
-          <HeaderActionButton
-            onClick={() => {
-              // Sử dụng window.electron để mở link ra trình duyệt ngoài
-              //@ts-ignore
-              window.electronAPI.openExternal(
-                "https://docs.google.com/spreadsheets/d/1wtla0qrmZ1TjgGKCH2FpZuPdTXlxr7dUqfek_ZY0TZc/edit?gid=0#gid=0",
-              );
-            }}
-            icon={<Table />}
-            label="Mẫu Excel"
-          />
+            <HeaderActionButton
+              className="mr-2"
+              icon={<BookOpenText />}
+              label="Hướng dẫn"
+            />
 
-          <HeaderActionButton icon={<BookOpenText />} label="Hướng dẫn" />
+            <HeaderActionButton
+              className="mr-2"
+              onClick={() => setIsConfigOpen(true)}
+              icon={<Settings2 />}
+              label="Cấu hình"
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => handleRunSelectedTaskAuto(null)}
+              className="bg-[#0eb27e] text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:opacity-90 shadow-sm"
+            >
+              <Play size={14} className="fill-white" /> Chạy
+            </button>
 
-          <HeaderActionButton
-            onClick={() => setIsConfigOpen(true)}
-            icon={<Settings2 />}
-            label="Cấu hình"
-          />
+            <button
+              onClick={() => handlePauseSelectedTaskAuto(null)}
+              className="bg-orange-500 text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:bg-orange-600 transition-all shadow-sm"
+            >
+              <Pause size={14} className="fill-white" /> Dừng
+            </button>
 
-          <button
-            onClick={() => handleRunSelectedTaskAuto(null)}
-            className="bg-[#0eb27e] text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:opacity-90 shadow-sm"
-          >
-            <Play size={14} className="fill-white" /> Chạy
-          </button>
+            <ExcelImportVideoMKT onImportSuccess={handleImport} />
+            <HeaderColoredButton
+              icon={<FileSpreadsheet />}
+              label="Xuất Excel"
+              bgColor="#e87717"
+              onClick={handleExportExcel}
+            />
 
-          <button
-            onClick={() => handlePauseSelectedTaskAuto(null)}
-            className="bg-orange-500 text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:bg-orange-600 transition-all shadow-sm"
-          >
-            <Pause size={14} className="fill-white" /> Dừng
-          </button>
-
-          <ExcelImportVideoMKT onImportSuccess={handleImport} />
-          <HeaderColoredButton
-            icon={<FileSpreadsheet />}
-            label="Xuất Excel"
-            bgColor="#e87717"
-            onClick={handleExportExcel}
-          />
-
-          {/* ➕ NÚT THÊM: Kích nổ thêm hàng mới */}
-          <button
-            onClick={handleAddTask}
-            className="bg-blue-600 text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 active:scale-95 transition-all"
-          >
-            <Plus size={16} /> Thêm
-          </button>
+            {/* ➕ NÚT THÊM: Kích nổ thêm hàng mới */}
+            <button
+              onClick={handleAddTask}
+              className="bg-blue-600 text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 active:scale-95 transition-all"
+            >
+              <Plus size={16} /> Thêm
+            </button>
+          </div>
         </div>
       </div>
 

@@ -3,6 +3,9 @@ import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import path from 'path'
 import fs from 'fs'
 import { logger } from '../utils/logger';
+import { promises as fsc } from 'fs';
+
+
 
 const pathFFmpeg = ffmpegPath.path.replace('app.asar', 'app.asar.unpacked');
 ffmpeg.setFfmpegPath(pathFFmpeg);
@@ -31,17 +34,17 @@ export async function mergeAudioToVideo(videoPath: string, audioFiles: string[],
             audioFiles.forEach((_, i) => {
                 const delayMs = i * 10000;
                 const label = `a${i}`;
-                filter += `[${i + 1}:a]adelay=${delayMs}|${delayMs}[${label}];`;
+                // Thêm volume=2.0 vào đây để kích âm thanh to lên ngay từ đầu
+                filter += `[${i + 1}:a]adelay=${delayMs}|${delayMs},volume=2.0[${label}];`;
                 mixLabels += `[${label}]`;
             });
 
-            // 🔥 SỬA LẠI ĐOẠN NÀY ĐỂ TRÁNH LỖI "Option not found"
             if (audioFiles.length > 1) {
-                // Nhiều file thì mới amix, bỏ normalize=0 đi
-                filter += `${mixLabels}amix=inputs=${audioFiles.length}:dropout_transition=0[outa]`;
+                // Thêm volume=inputs để bù đắp việc amix tự động giảm âm lượng
+                filter += `${mixLabels}amix=inputs=${audioFiles.length}:dropout_transition=0,volume=${audioFiles.length}[outa]`;
             } else {
-                // Chỉ 1 file thì gán thẳng label đó sang outa, không amix gì cả
-                filter += `[a0]anull[outa]`;
+                // Chỉ 1 file thì vẫn nên giữ volume cao
+                filter += `[a0]volume=1.0[outa]`; // Bạn có thể tăng lên volume=1.5 nếu vẫn thấy nhỏ
             }
 
             command
@@ -85,3 +88,69 @@ export async function addLogoToVideo(videoPath: string, logoPath: string, output
             .save(outputPath);
     });
 }
+
+export async function addBackgroundMusic(videoPath: string, audioPath: string, outputPath: string, volume = 0.6) {
+    return new Promise((resolve, reject) => {
+        ffmpeg(videoPath)
+            .input(audioPath)
+            .complexFilter([
+                // [0:a] là audio gốc của video, [1:a] là audio của nhạc nền
+                // volume=0.6 chỉnh nhạc nền nhỏ xuống 60%
+                `[1:a]volume=${volume}[bgm]; [0:a][bgm]amix=inputs=2:duration=first[a]`
+            ])
+            .outputOptions([
+                '-map 0:v',        // Lấy video từ file gốc
+                '-map [a]',        // Lấy audio sau khi đã mix
+                '-c:v copy',       // Copy video codec để xử lý cực nhanh (không encode lại video)
+                '-shortest'        // Cắt nhạc theo file có thời lượng ngắn hơn (là video)
+            ])
+            .save(outputPath)
+            .on('end', resolve)
+            .on('error', reject);
+    });
+}
+
+export const addLogoAndMusic = async (inputVideo: string, logoPath: string, musicPath: string, outputPath: string, isLogo: boolean, isMusic: boolean) => {
+
+    // --- BƯỚC 1: Xử lý Video (Logo) ---
+    if (isLogo && fs.existsSync(logoPath)) {
+        await addLogoToVideo(inputVideo, logoPath, outputPath)
+    }
+
+
+    // --- BƯỚC 2: Xử lý Audio (Nhạc nền) ---
+    if (isMusic && fs.existsSync(musicPath)) {
+        // 1. Xác định thư mục của file gốc để tạo file temp cùng chỗ
+        const folder = path.dirname(inputVideo);
+        const tempOutput = path.join(folder, `temp_${Date.now()}_video.mp4`); // Dùng Date.now() để tên file là duy nhất
+
+        try {
+            // 2. Kiểm tra nếu file temp đã tồn tại từ trước thì xóa
+            if (fs.existsSync(tempOutput)) {
+                await fsc.unlink(tempOutput);
+            }
+
+            // 3. Chạy FFmpeg: Input là outputPath (file hiện tại), Output là tempOutput
+            // Lưu ý: videoPath lúc này là outputPath
+            await addBackgroundMusic(outputPath, musicPath, tempOutput);
+
+            // 4. Xử lý tráo đổi file:
+            // Xóa file outputPath cũ
+            await fsc.unlink(outputPath);
+
+            // Đổi tên file temp thành tên file outputPath chính thức
+            await fsc.rename(tempOutput, outputPath);
+
+            logger.info("Thêm nhạc nền và cập nhật file thành công!");
+        } catch (error) {
+            logger.error("Lỗi trong quá trình xử lý:", error);
+            // Nếu lỗi, thử xóa file temp nếu nó đã lỡ tạo ra
+            if (fs.existsSync(tempOutput)) {
+                await fsc.unlink(tempOutput).catch(() => { });
+            }
+        }
+    }
+
+
+
+};

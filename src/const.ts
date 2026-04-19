@@ -10,6 +10,8 @@ export const prompt_video = `Mô tả nhân vật/sản phẩm: Lấy y nguyên 
 Nhân vật không cần nói chuyện tôi sẽ chèn giọng nói sau . Nhân vật phải hoạt động hết khoảng thời gian của video, không bị đứng hình .
 
 Đừng chèn chữ hay subtitle vào video
+Nhân vật phải hoạt động hết khoảng thời gian của video, không bị đứng hình .
+
 
 Bối cảnh: Trong một studio chuyên về quảng cáo sản phẩm phù hợp với thông tin sản phẩm bên dưới.
 

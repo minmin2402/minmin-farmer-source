@@ -10,7 +10,7 @@ import { GrokProfileManager, ShopeeProfileManager } from "../manager/ProfileMana
 import fs from 'fs';
 import path from "path";
 import { VbeeService } from "../services/vbee.service";
-import { addLogoToVideo, mergeAudioToVideo } from "../services/ffmpeg.service";
+import { addLogoAndMusic, mergeAudioToVideo } from "../services/ffmpeg.service";
 import { logger } from "../utils/logger";
 import { deletePath } from "../utils/file";
 
@@ -53,7 +53,7 @@ export class TaskRunner {
     async execute() {
 
         const { tasks, configVideoMKT } = this.data;
-        const { prompt_review, voice_code, vbee_app_token, isEnabledLogo, logoPath, vbee_app_id, save_shopid_productid, profiles_aff, thread, apikey_gemini, delay_between, profiles_grok, prompt_image, output_video, prompt_video } = configVideoMKT;
+        const { prompt_review, voice_code, vbee_app_token, isEnabledLogo, isEnabledMusic, musicPath, logoPath, vbee_app_id, save_shopid_productid, profiles_aff, thread, apikey_gemini, delay_between, profiles_grok, prompt_image, output_video, prompt_video, speed_voice } = configVideoMKT;
 
         // Cho phép chạy tối đa số thread người dùng nhập, không quan tâm có bao nhiêu profile
         const maxThreads = thread || 1;
@@ -120,20 +120,20 @@ export class TaskRunner {
 
                 let currentProfileId = "";
                 let currentProfileGrokId = "";
-
+                const profileNum = index% profiles_grok.length
                 try {
                     // --- CHẶNG 1: LẤY DATA SHOPEE ---
                     this.event.sender.send('video:task-log', {
-                            status: 'processing',
-                            message: `Bắt đầu`,
-                            taskId: task.id
-                        });
-                   
+                        status: 'processing',
+                        message: `Bắt đầu`,
+                        taskId: task.id
+                    });
+
                     const productInfo = await retryStep(async () => {
-                        if (!(task.mode === "Chỉ lấy thông tin sản phẩm" || task.mode.includes("TT"))){
+                        if (!(task.mode === "Chỉ lấy thông tin sản phẩm" || task.mode.includes("TT"))) {
                             return {
                                 productTitle: task.productName,
-                                productDesc:  task.productDesc,
+                                productDesc: task.productDesc,
                                 productPathImage: task.productPathImg
                             }
                         }
@@ -152,9 +152,9 @@ export class TaskRunner {
                         return res.data;
                     }, "Cào dữ liệu Shopee", task.id);
 
-                    
 
-                    if (!productInfo.productTitle  || !productInfo.productPathImage || !fs.existsSync(productInfo.productPathImage)){
+
+                    if (!productInfo.productTitle || !productInfo.productPathImage || !fs.existsSync(productInfo.productPathImage)) {
                         this.event.sender.send('video:task-log', { status: 'error', message: 'Thiếu dữ liệu sản phẩm, hãy thử lại!', taskId: task.id });
                         return null;
                     }
@@ -173,13 +173,30 @@ export class TaskRunner {
                         const geminiService = new GeminiService(currentKey);
                         const res = await geminiService.generateVideoPrompt(productInfo.productTitle, productInfo.productDesc, prompt_review, task.outputCount);
 
-                        keyManager.releaseKey(currentKey);
-                        if (!res.success) throw new Error("Gemini không tạo được prompt");
+
+                        if (!res.success) {
+                            if (res.ratelimit) {
+                                keyManager.releaseKey(currentKey, true);
+                                this.event.sender.send('video:task-log', {
+                                    status: 'processing',
+                                    message: `Gemini bị rate limit`,
+                                    taskId: task.id,
+
+                                });
+                                return null
+                            }
+                            throw new Error("Gemini không tạo được prompt");
+                        } else {
+                            keyManager.releaseKey(currentKey);
+                        }
 
                         this.event.sender.send('video:task-log', { status: 'processing', message: `✅ Prompt thành công`, data: { prompt: prompt_video }, taskId: task.id });
                         return res.data;
                     }, "Tạo Prompt AI", task.id);
 
+                    if (!resultGenPrompt) {
+                        return null
+                    }
                     if (resultGenPrompt.length < task.outputCount) {
                         throw new Error("Số phân cảnh tạo không đủ")
                     }
@@ -188,46 +205,36 @@ export class TaskRunner {
                     const imageAIPath = await retryStep(async () => {
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
 
-                        if (!task.mode.includes('Ảnh AI')){
+                        if (!task.mode.includes('Ảnh AI')) {
                             return task.aiImagePath
                         }
 
-                        // --- KHỐI 1: LẤY HEADER (CẦN PROFILE) ---
-                        let profileIdForInit = "";
-                        try {
-                            profileIdForInit = await grokManager.getAvailableProfile();
-                            const port = 5000 + (index % 100);
-                            const profileNum = (index % profiles_grok.length) + 1;
+                        
+                        this.event.sender.send('video:task-log', {
+                            status: 'processing',
+                            message: `Chuẩn bị tạo ảnh từ grok ${profiles_grok[profileNum]}`,
+                            taskId: task.id,
 
-                            const initRes = await grokService.initHeaderGrok(
-                                this.event, profileNum, task.id, grokService,
-                                gpmClient, profileIdForInit, port, delay_between
-                            );
+                        });
 
-                            if (!initRes.success) throw new Error("Init Grok thất bại");
+                        const port = 5000 + (index % 100);
 
-                            logger.info(`✅ Đã bốc được Header cho Task ${task.id}, chuẩn bị nhả Profile ${profileIdForInit}`);
 
-                        } catch (err) {
-                            throw err; // Ném lỗi để retryStep bắt được
-                        } finally {
-                            // 🔓 GIẢI PHÓNG SỚM TẠI ĐÂY: Dù init thành công hay lỗi đều nhả Profile
-                            if (profileIdForInit) {
-                                await grokManager.releaseProfile(profileIdForInit);
-                                logger.info(`🔓 Profile ${profileIdForInit} đã trống cho task khác.`);
-                            }
-                        }
+                        const initRes = await grokService.initHeaderGrok(
+                            this.event, task.id, grokService,
+                            grokManager, gpmClient, profiles_grok[profileNum], port, delay_between
+                        );
 
-                        // --- KHỐI 2: VẼ ẢNH (CHỈ DÙNG HTTP REQUEST, KHÔNG CẦN PROFILE) ---
-                        if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
+                        if (!initRes.success) throw new Error("Init Grok thất bại");
 
+                        logger.info(`✅ Đã bốc được Header cho Task ${task.id}, chuẩn bị nhả Profile ${profiles_grok[profileNum]}`);
                         let genderPrompt = voice_code.includes("female") ? "realistic female host" : "realistic male host";
-                       
+
 
                         const imgRes = await grokService.generateReviewVideoImage(
                             prompt_image + `\n ${genderPrompt}`,
                             productInfo.productPathImage,
-                            (index % profiles_grok.length) + 1, // Vẫn truyền profileNum để lấy đúng Header đã lưu
+                            profiles_grok[profileNum], // Vẫn truyền profileNum để lấy đúng Header đã lưu
                             save_path_project,
                             task.id
                         );
@@ -238,15 +245,15 @@ export class TaskRunner {
 
                     }, "Khởi tạo & Vẽ ảnh Grok", task.id);
 
-                    if (!imageAIPath || !fs.existsSync(imageAIPath)){
+                    if (!imageAIPath || !fs.existsSync(imageAIPath)) {
                         this.event.sender.send('video:task-log', { status: 'error', message: 'Thiếu dữ liệu ảnh AI thử lại', taskId: task.id });
                         return null;
-                    }else{
+                    } else {
                         this.event.sender.send('video:task-log', {
                             status: 'processing',
                             message: `Cập nhật ảnh AI`,
                             taskId: task.id,
-                            data:{
+                            data: {
                                 imageAIPath: imageAIPath
                             }
                         });
@@ -256,7 +263,28 @@ export class TaskRunner {
                     const finalVideoPath = await retryStep(async () => {
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
 
-                        const profileNum = (index % profiles_grok.length) + 1;
+
+                     
+                        this.event.sender.send('video:task-log', {
+                            status: 'processing',
+                            message: `Chuẩn bị tạo video từ grok ${profiles_grok[profileNum]}`,
+                            taskId: task.id,
+
+                        });
+
+                        const port = 5000 + (index % 100);
+
+
+                        const initRes = await grokService.initHeaderGrok(
+                            this.event, task.id, grokService,
+                            grokManager, gpmClient, profiles_grok[profileNum], port, delay_between
+                        );
+
+                        if (!initRes.success) throw new Error("Init Grok thất bại");
+
+                        logger.info(`✅ Đã bốc được Header cho Task ${task.id}, chuẩn bị nhả Profile ${profiles_grok[profileNum]}`);
+
+
                         const resVideo = await grokService.createVideoForPromptCore(
                             this.event,
                             resultGenPrompt,
@@ -264,9 +292,22 @@ export class TaskRunner {
                             prompt_video,
                             save_path_project,
                             profileNum,
+                            profiles_grok[profileNum],
                             imageAIPath,
                             task.outputCount
                         );
+
+                        logger.info(resVideo)
+
+                        if (resVideo.error == "Rate Limit 429") {
+                            this.event.sender.send('video:task-log', {
+                                status: 'error',
+                                message: `Profile ${profiles_grok[profileNum]} grok đã bị rate limit`,
+                                taskId: task.id,
+                                index
+                            });
+                            return null
+                        }
 
                         if (!resVideo.success) throw new Error("Render Video thất bại");
 
@@ -279,6 +320,11 @@ export class TaskRunner {
                         });
                         return resVideo.filename;
                     }, "Render Video Final", task.id);
+
+
+                    if (!finalVideoPath) {
+                        return null;
+                    }
                     // --- CHẶNG 2.5: TẠO ÂM THANH, GIỌNG ĐỌC ---
                     const audioFiles = await retryStep(async () => {
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
@@ -307,7 +353,8 @@ export class TaskRunner {
                             const filePath = await vbeeService.downloadAudio(
                                 scene.voice_content,
                                 tempAudioFolder,
-                                voice_code
+                                voice_code,
+                                speed_voice
                             );
 
                             if (!filePath) throw new Error(`Lỗi tải giọng đọc ở phân cảnh ${i + 1}`);
@@ -332,28 +379,41 @@ export class TaskRunner {
                     const finalScenes = audioFiles;
                     // --- CHẶNG 5: EDIT VIDEO ----
                     this.event.sender.send('video:task-log', { status: 'processing', message: '🎙️ Đang lồng tiếng...', taskId: task.id });
-                    const GoodVideo = await mergeAudioToVideo(finalVideoPath, finalScenes, path.join(save_path_project, `video_good_${task.id}_${Date.now()}.mp4`))
+
+                    const GoodVideo = await mergeAudioToVideo(finalVideoPath, finalScenes, path.join(save_path_project, `temp_voice_${task.id}.mp4`));
+
                     await deletePath(path.dirname(finalScenes[0]));
                     await deletePath(finalVideoPath);
-                    let finalFile = ""
-                    if (isEnabledLogo && fs.existsSync(logoPath)) {
-                        this.event.sender.send('video:task-log', { status: 'processing', message: '🎨 Đang chèn Logo bản quyền...', taskId: task.id });
 
-                        const brandedVideo = path.join(save_path_project, `video_good_${task.id}_${Date.now()}.mp4`);
+                    // --- CHẶNG 6: HOÀN THIỆN (LOGO & BGM) ----
+                    let finalFile = path.join(save_path_project, `video_good_${task.id}_${Date.now()}.mp4`);
 
-                        await addLogoToVideo(GoodVideo, logoPath, brandedVideo);
+                    // Giả sử các biến isEnabledLogo, isEnabledMusic, logoPath, backgroundMusicPath đã có sẵn
+                    if (isEnabledLogo || isEnabledMusic) {
+                        const msg = (isEnabledLogo && isEnabledMusic) ? '🎨 Đang chèn Logo và Nhạc nền...' : (isEnabledLogo ? '🎨 Đang chèn Logo...' : '🎵 Đang trộn nhạc nền...');
+                        this.event.sender.send('video:task-log', { status: 'processing', message: msg, taskId: task.id });
 
-                        // Xóa file tạm sau khi đã có video dán logo
-                        if (fs.existsSync(GoodVideo)) fs.unlinkSync(GoodVideo);
+                        try {
+                            await addLogoAndMusic(
+                                GoodVideo,
+                                logoPath,
+                                musicPath, // Đường dẫn file nhạc nền của bạn
+                                finalFile,
+                                isEnabledLogo,
+                                isEnabledMusic
+                            );
 
-                        finalFile = brandedVideo;
+                            // Xóa file lồng tiếng tạm sau khi xong
+                            if (fs.existsSync(GoodVideo)) fs.unlinkSync(GoodVideo);
+                        } catch (error) {
+                            console.error("Lỗi edit cuối:", error);
+                            // Fallback: nếu lỗi thì lấy luôn video lồng tiếng làm final
+                            fs.renameSync(GoodVideo, finalFile);
+                        }
                     } else {
-                        // Nếu không có logo, đổi tên file temp thành file chính thức
-                        const finalPath = path.join(save_path_project, `video_good_${task.id}_${Date.now()}.mp4`);
-                        fs.renameSync(GoodVideo, finalPath);
-                        finalFile = finalPath;
+                        // Nếu không có logo hay nhạc, đổi tên file lồng tiếng thành file chính thức
+                        fs.renameSync(GoodVideo, finalFile);
                     }
-
                     this.event.sender.send('video:task-log', {
                         status: 'success',
                         message: `Hoàn thiện video`,

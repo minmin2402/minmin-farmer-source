@@ -136,7 +136,7 @@ export const AboutPage = () => {
             </h1>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-md">
-                V 1.0.6
+                
               </span>
               <span className="text-green-500 text-[10px] font-bold flex items-center gap-1">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />{" "}
@@ -180,7 +180,7 @@ export const AboutPage = () => {
                 <Mail size={14} /> crasmaverkgkg@gmail.com
               </div>
               <div className="flex items-center gap-3 text-slate-500 text-sm hover:text-blue-600 cursor-pointer transition-colors">
-                <Globe size={14} /> nhhtool.id.vn
+                <Globe size={14} /> auto.minmintool.site
               </div>
             </div>
           </div>

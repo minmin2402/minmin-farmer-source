@@ -378,16 +378,15 @@ export const ConfigModalVideoMKT = ({
                 href="https://your-instruction-link.com"
                 target="_blank"
                 rel="noreferrer"
-                style={{display:"inline-block", marginLeft:'20px'}}
+                style={{ display: "inline-block", marginLeft: "20px" }}
                 onClick={(e) => {
                   // Nếu là Electron, dùng shell để mở trình duyệt bên ngoài
-                  
-                    e.preventDefault();
-                    //@ts-ignore
-                    window.electronAPI.openExternal(
-                      "https://www.youtube.com/watch?v=JZCjL3hrvcY",
-                    );
-                  
+
+                  e.preventDefault();
+                  //@ts-ignore
+                  window.electronAPI.openExternal(
+                    "https://www.youtube.com/watch?v=JZCjL3hrvcY",
+                  );
                 }}
                 className="text-[10px] font-bold text-blue-500 hover:text-blue-600 uppercase flex items-center gap-1 transition-colors cursor-pointer"
               >
@@ -456,64 +455,93 @@ export const ConfigModalVideoMKT = ({
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-2 space-y-2">
-              <label className="text-[11px] font-black text-slate-400 uppercase">
-                Giọng Đọc Review
-              </label>
-
+            <div className="flex flex-col gap-4">
+              {/* Phần chọn giọng nói */}
               <div className="relative">
-                <select
-                  value={configVideoMKT.voice_code}
-                  className="w-full p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-medium"
+                <label className="block mb-1.5 text-sm font-semibold text-slate-700">
+                  Giọng đọc
+                </label>
+                <div className="relative">
+                  <select
+                    value={configVideoMKT.voice_code}
+                    className="w-full p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-medium"
+                    onChange={(e) => {
+                      setConfigVideoMKT({
+                        ...configVideoMKT,
+                        voice_code: e.target.value,
+                      });
+                    }}
+                  >
+                    <option value="s_hochiminh_male_nguoikechuyenbali2_advertise_vc">
+                      Nam - Hồ Chí Minh
+                    </option>
+                    <option value="n_hanoi_male_quangquangcao_advertise_vc">
+                      Nam - Hà Nội
+                    </option>
+                    <option value="s_cantho_female_xanxan_advertise_vc">
+                      Nữ - Cần Thơ
+                    </option>
+                    <option value="n_hanoi_female_quangcao02_advertise_vc">
+                      Nữ - Hà Nội
+                    </option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg
+                      className="w-4 h-4 text-slate-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Phần chỉnh tốc độ giọng nói */}
+              <div className="flex flex-col">
+                <label className="block mb-1.5 text-sm font-semibold text-slate-700">
+                  Tốc độ (0.1 - 1.9)
+                </label>
+                <input
+                  type="number"
+                  min="0.1"
+                  max="1.9"
+                  step="0.1"
+                  value={configVideoMKT.speed_voice || 1.0}
+                  className="w-full p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium"
+                  placeholder="Ví dụ: 1.0"
                   onChange={(e) => {
+                    let val = parseFloat(e.target.value);
+                    // Ràng buộc giá trị không vượt quá min/max khi người dùng nhập tay
+                    if (val > 1.9) val = 1.9;
+                    if (val < 0.1) val = 0.1;
+
                     setConfigVideoMKT({
                       ...configVideoMKT,
-                      voice_code: e.target.value,
+                      speed_voice: val,
                     });
                   }}
-                >
-                  <option value="s_hochiminh_male_nguoikechuyenbali2_advertise_vc">
-                    Nam-Hồ Chí Minh
-                  </option>
-                  <option value="n_hanoi_male_quangquangcao_advertise_vc">
-                    Nam-Hà Nội
-                  </option>
-                  <option value="s_cantho_female_xanxan_advertise_vc">
-                    Nữ-Cần Thơ
-                  </option>
-                  <option value="n_hanoi_female_quangcao02_advertise_vc">
-                    Nữ-Hà Nội
-                  </option>
-                </select>
-
-                {/* Icon mũi tên xuống (SVG) để trông chuyên nghiệp hơn */}
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <svg
-                    className="w-4 h-4 text-slate-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
+                />
+                <p className="mt-1 text-xs text-slate-400 italic">
+                  Mặc định thường là 1.0 (Bình thường)
+                </p>
               </div>
             </div>
             {/* Cấu hình Vbee API */}
 
             <div className="grid grid-cols-2 gap-4 mb-0 mt-4">
-              
               {/* Input App ID */}
               <div className="flex flex-col gap-2">
                 <label className="text-[11px] font-black text-slate-400 uppercase">
                   Vbee App ID
                 </label>
-                
+
                 <input
                   type="text"
                   placeholder="Nhập App ID..."
@@ -548,37 +576,36 @@ export const ConfigModalVideoMKT = ({
               </div>
             </div>
             <a
-                href="https://your-instruction-link.com"
-                target="_blank"
-                rel="noreferrer"
-                style={{display:"inline-block", }}
-                onClick={(e) => {
-                  // Nếu là Electron, dùng shell để mở trình duyệt bên ngoài
-                  
-                    e.preventDefault();
-                    //@ts-ignore
-                    window.electronAPI.openExternal(
-                      "https://vbee.vn/api-docs?srsltid=AfmBOoq5xkNfeZ5611bnxqUUtAj4wy4I3YCMcMBFUtUj9RXKFfSkugcU",
-                    );
-                  
-                }}
-                className="text-[10px] font-bold text-blue-500 hover:text-blue-600 uppercase flex items-center gap-1 transition-colors cursor-pointer"
+              href="https://your-instruction-link.com"
+              target="_blank"
+              rel="noreferrer"
+              style={{ display: "inline-block" }}
+              onClick={(e) => {
+                // Nếu là Electron, dùng shell để mở trình duyệt bên ngoài
+
+                e.preventDefault();
+                //@ts-ignore
+                window.electronAPI.openExternal(
+                  "https://vbee.vn/api-docs?srsltid=AfmBOoq5xkNfeZ5611bnxqUUtAj4wy4I3YCMcMBFUtUj9RXKFfSkugcU",
+                );
+              }}
+              className="text-[10px] font-bold text-blue-500 hover:text-blue-600 uppercase flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="Step 13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Hướng dẫn Vbee AI
-              </a>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="Step 13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Hướng dẫn Vbee AI
+            </a>
 
             <div className="space-y-3">
               <label className="text-[11px] font-black text-slate-400 uppercase">
@@ -650,10 +677,10 @@ export const ConfigModalVideoMKT = ({
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <label className="text-xs font-bold text-slate-700">
-                    Chèn Logo vào ảnh
+                    Chèn Logo vào video
                   </label>
                   <p className="text-[10px] text-slate-400 italic">
-                    Tự động đóng dấu logo vào ảnh sản phẩm
+                    Tự động đóng dấu logo vào video
                   </p>
                 </div>
 
@@ -720,6 +747,87 @@ export const ConfigModalVideoMKT = ({
                         });
                     }}
                     className="px-4 py-2 bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+                  >
+                    Chọn file
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="bg-slate-50/50 p-4 rounded-2xl space-y-4 border border-slate-100">
+              {/* Row 1: Công tắc bật/tắt chèn Nhạc nền */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label className="text-xs font-bold text-slate-700">
+                    Chèn nhạc nền vào video
+                  </label>
+                  <p className="text-[10px] text-slate-400 italic">
+                    Thêm âm thanh hoặc nhạc nền cho video
+                  </p>
+                </div>
+
+                {/* Switch Toggle */}
+                <button
+                  onClick={() =>
+                    setConfigVideoMKT({
+                      ...configVideoMKT,
+                      isEnabledMusic: !configVideoMKT.isEnabledMusic,
+                    })
+                  }
+                  className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${
+                    configVideoMKT.isEnabledMusic
+                      ? "bg-emerald-500" // Đổi sang màu xanh lá cho khác biệt với Logo
+                      : "bg-slate-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                      configVideoMKT.isEnabledMusic
+                        ? "translate-x-6"
+                        : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Row 2: Chọn File Nhạc (Chỉ hiện khi bật công tắc) */}
+              <div
+                className={`space-y-2 transition-all duration-300 ${
+                  configVideoMKT.isEnabledMusic
+                    ? "opacity-100 max-h-40"
+                    : "opacity-40 pointer-events-none max-h-0 overflow-hidden"
+                }`}
+              >
+                <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                  Đường dẫn file nhạc (.mp3, .wav)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={configVideoMKT.musicPath || ""}
+                    placeholder="Chưa chọn file nhạc..."
+                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-600 outline-none"
+                  />
+                  <button
+                    onClick={async () => {
+                      // Gọi IPC xuống Electron để mở Dialog chọn file nhạc
+                      // @ts-ignore
+                      const path = await window.electronAPI.selectFile({
+                        title: "Chọn Nhạc nền của bạn",
+                        filters: [
+                          {
+                            name: "Audio",
+                            extensions: ["mp3", "wav", "m4a", "aac"],
+                          },
+                        ],
+                      });
+                      if (path)
+                        setConfigVideoMKT({
+                          ...configVideoMKT,
+                          musicPath: path,
+                        });
+                    }}
+                    className="px-4 py-2 bg-white border border-slate-200 hover:border-emerald-300 hover:text-emerald-600 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
                   >
                     Chọn file
                   </button>
