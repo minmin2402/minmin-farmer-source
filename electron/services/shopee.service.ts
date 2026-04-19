@@ -61,12 +61,12 @@ async function getInfoProduct(port: number, data: any) {
         logger.info("🚚 Đang đi đến Shopee để cào dữ liệu...");
         await page.goto('https://shopee.vn', {
             waitUntil: data.configVideoMKT?.method_load_page ?? "load", // Đợi mạng ổn định mới làm tiếp
-            timeout: data.configVideoMKT?.time_loading_page ?? 60            // Chờ tối đa 60s
+            timeout: data.configVideoMKT?.time_loading_page ?? 25            // Chờ tối đa 60s
         });
 
         await page.goto(data.task.productUrl, {
             waitUntil: data.configVideoMKT?.method_load_page ?? "load", // Đợi mạng ổn định mới làm tiếp
-            timeout: data.configVideoMKT?.time_loading_page ?? 60            // Chờ tối đa 60s
+            timeout: data.configVideoMKT?.time_loading_page ?? 25            // Chờ tối đa 60s
         });
         // 1. Chờ cho đến khi cái Selector tương ứng với XPath hiện ra
         // Lưu ý: Puppeteer hiện đại hỗ trợ cú pháp ::xpath trực tiếp trong waitForSelector

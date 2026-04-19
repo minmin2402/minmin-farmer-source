@@ -144,7 +144,7 @@ export class TaskPostReelsRunner {
             if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
             // Sửa lại như thế này:
-            const switchBtn = await page.$("xpath///span[text()='Chuyển ngay']");
+            const switchBtn = await page.$("xpath///span[text()='Chuyển ngay' or text()='Switch Now']");
             if (switchBtn) {
                 await switchBtn.click();
                 await page.waitForNavigation({ waitUntil: "networkidle2" });
@@ -173,7 +173,7 @@ export class TaskPostReelsRunner {
             }
             if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
-            const postBtnW = "xpath///span[text()='Tiếp']";
+            const postBtnW = "xpath///span[text()='Tiếp' or text()='Next']";
             const postBtn = await page.waitForSelector(postBtnW, { visible: true, timeout: 30000 });
             if (postBtn) {
                 await postBtn.click();
@@ -192,14 +192,14 @@ export class TaskPostReelsRunner {
 
             this.sendLog(task.id, `Nhập title`);
 
-            const postAreaBtnModal = 'xpath///div[@contenteditable="true" and @role="textbox" and contains(@aria-placeholder, "Mô tả thước phim của bạn...")]';
+            const postAreaBtnModal = 'xpath///div[@contenteditable="true" and @role="textbox" and (contains(@aria-placeholder, "Mô tả thước phim của bạn...") or contains(@aria-placeholder, "Describe your reel...") )]';
             await page.waitForSelector(postAreaBtnModal, { visible: true, timeout: 30000 });
             await page.click(postAreaBtnModal);
             await page.keyboard.type(task.description, { delay: 50 });
 
             if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
-            const postBtnW2 = "xpath///span[text()='Tiếp']";
+            const postBtnW2 = "xpath///span[text()='Tiếp' or text()='Next']";
             const postBtn2 = await page.waitForSelector(postBtnW2, { visible: true, timeout: 30000 });
             if (postBtn2) {
                 await postBtn2.click();
@@ -209,7 +209,7 @@ export class TaskPostReelsRunner {
             await new Promise(resolve => setTimeout(resolve, 10000));
             if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
-            const postBtnW3 = "xpath///span[text()='Đăng']";
+            const postBtnW3 = "xpath///span[text()='Đăng' or text()='Post']";
             const postBtn3 = await page.waitForSelector(postBtnW3, { visible: true, timeout: 30000 });
             if (postBtn3) {
                 await postBtn3.click();
@@ -244,7 +244,7 @@ export class TaskPostReelsRunner {
 
                 // 4. Tìm ô "Viết bình luận" (Cái đầu tiên thường là bài mới nhất)
                 // Selector này bắt ô comment của Facebook mới nhất
-                const commentBoxSelector = 'xpath///div[contains(text(), "Bình luận dưới tên")]';
+                const commentBoxSelector = 'xpath///div[contains(text(), "Bình luận dưới tên") or contains(text(), "Viết bình luận") or contains(text(), "Comment as") or contains(text(), "Comment")]';
 
                 await page.waitForSelector(commentBoxSelector, { visible: true, timeout: 15000 });
                 const commentBoxes = await page.$$(commentBoxSelector);

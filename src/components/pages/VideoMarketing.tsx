@@ -127,6 +127,14 @@ export const VideoMarketingPage = () => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isResultModalOpen, setIsResultModalOpen] = useState(false);
 
+  const handleBulkChangeMode = (newMode: any) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        // Nếu task nằm trong danh sách được chọn, thì update mode mới
+        selectedIds.includes(task.id) ? { ...task, mode: newMode } : task,
+      ),
+    );
+  };
   async function handleRunSelectedTaskAuto(task: VideoTask | null) {
     try {
       //@ts-ignore
@@ -290,6 +298,36 @@ export const VideoMarketingPage = () => {
     }
   };
 
+  const handleDuplicateTasks = () => {
+    if (selectedIds.length === 0) {
+      alert("Vui lòng chọn ít nhất một task để nhân bản!");
+      return;
+    }
+
+    // 1. Lọc ra dữ liệu các task đang chọn và tạo Object mới
+    const clonedTasks = tasks
+      .filter((task) => selectedIds.includes(task.id))
+      .map((task) => ({
+        ...task, // Copy toàn bộ thuộc tính cũ
+        id: Date.now() + Math.random(), // QUAN TRỌNG: Tạo ID mới để không bị trùng key
+        status: "none" as "error" | "processing" | "success" | "none", // Reset trạng thái về sẵn sàng (nếu cần)
+        log: "Bản sao mới", // Thông báo log mới
+        // Giữ nguyên các trường bạn yêu cầu:
+        productUrl: task.productUrl,
+        productName: task.productName,
+        productPathImg: task.productPathImg,
+        productDesc: task.productDesc,
+        mode: task.mode,
+        outputCount: task.outputCount,
+        resultVideoCount: task.resultVideoCount,
+      }));
+
+    // 2. Cập nhật vào danh sách tasks hiện tại
+    setTasks((prevTasks) => [...prevTasks, ...clonedTasks]);
+
+    setSelectedIds([]);
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#f8f9fa] p-6 text-slate-700 font-sans">
       <ConfigModalVideoMKT
@@ -320,6 +358,69 @@ export const VideoMarketingPage = () => {
             </button>
           )}
         </div>
+        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+          <span className="text-xs font-semibold text-gray-600">
+            Đổi mode {selectedIds.length} task:
+          </span>
+
+          <div className="relative">
+            <select
+              // Chúng ta không dùng value cố định vì đây là lệnh thực thi
+              value=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleBulkChangeMode(e.target.value);
+                }
+              }}
+              className="appearance-none bg-blue-50 border border-blue-200 rounded-md px-3 py-1 text-xs font-bold text-blue-700 outline-none hover:bg-blue-100 cursor-pointer"
+            >
+              <option value="" disabled>
+                -- Chọn chế độ --
+              </option>
+              <option value="Chỉ lấy thông tin sản phẩm">
+                Chỉ lấy thông tin sản phẩm
+              </option>
+              <option value="Prompt + Ảnh AI + Video">
+                Prompt + Ảnh AI + Video
+              </option>
+              <option value="TT + Prompt + Video + Ảnh AI">
+                TT + Prompt + Video + Ảnh AI
+              </option>
+              <option value="Prompt + Video">Prompt + Video</option>
+            </select>
+          </div>
+
+          {selectedIds.length === 0 && (
+            <span className="text-[10px] text-red-400 italic">
+              * Tích chọn task
+            </span>
+          )}
+        </div>
+        <button
+          onClick={handleDuplicateTasks}
+          disabled={selectedIds.length === 0}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all
+    ${
+      selectedIds.length > 0
+        ? "bg-purple-600 text-white hover:bg-purple-700 active:scale-95 shadow-sm"
+        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+    }`}
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Nhân bản {selectedIds.length > 0 ? `(${selectedIds.length})` : ""}{" "}
+        </button>
 
         <div className="flex items-center gap-1.5">
           <HeaderActionButton
@@ -347,6 +448,13 @@ export const VideoMarketingPage = () => {
             className="bg-[#0eb27e] text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:opacity-90 shadow-sm"
           >
             <Play size={14} className="fill-white" /> Chạy
+          </button>
+
+          <button
+            onClick={() => handlePauseSelectedTaskAuto(null)}
+            className="bg-orange-500 text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:bg-orange-600 transition-all shadow-sm"
+          >
+            <Pause size={14} className="fill-white" /> Dừng
           </button>
 
           <ExcelImportVideoMKT onImportSuccess={handleImport} />

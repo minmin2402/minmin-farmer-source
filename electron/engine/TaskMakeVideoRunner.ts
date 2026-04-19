@@ -105,7 +105,7 @@ export class TaskRunner {
                 }
             }
         };
-
+        logger.info(tasks)
         const promises = tasks.map((task: any, index: number) => {
             return limit(async () => {
                 let save_path_project = output_video;
@@ -123,6 +123,11 @@ export class TaskRunner {
 
                 try {
                     // --- CHẶNG 1: LẤY DATA SHOPEE ---
+                    this.event.sender.send('video:task-log', {
+                            status: 'processing',
+                            message: `Bắt đầu`,
+                            taskId: task.id
+                        });
                    
                     const productInfo = await retryStep(async () => {
                         if (!(task.mode === "Chỉ lấy thông tin sản phẩm" || task.mode.includes("TT"))){
@@ -236,6 +241,15 @@ export class TaskRunner {
                     if (!imageAIPath || !fs.existsSync(imageAIPath)){
                         this.event.sender.send('video:task-log', { status: 'error', message: 'Thiếu dữ liệu ảnh AI thử lại', taskId: task.id });
                         return null;
+                    }else{
+                        this.event.sender.send('video:task-log', {
+                            status: 'processing',
+                            message: `Cập nhật ảnh AI`,
+                            taskId: task.id,
+                            data:{
+                                imageAIPath: imageAIPath
+                            }
+                        });
                     }
 
                     // --- CHẶNG 4: RENDER VIDEO (Khâu hay lỗi nhất) ---

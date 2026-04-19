@@ -1,3 +1,9 @@
+type TaskMode = 
+  | 'TT + Prompt + Video + Ảnh AI' 
+  | 'Chỉ lấy thông tin sản phẩm' 
+  | 'Prompt + Ảnh AI + Video' 
+  | 'Prompt + Video'; // Thêm dòng này
+
 export interface VideoTask {
   id: number;
   productUrl: string;
@@ -7,7 +13,7 @@ export interface VideoTask {
   prompt:string;
   aiImagePath:string;
   finalVideoPath:string;
-  mode: 'TT + Prompt + Video + Ảnh AI' | 'Chỉ lấy thông tin sản phẩm' | 'Prompt + Ảnh AI + Video' | 'Prompt + Video';
+  mode: TaskMode;
   outputCount: number;
   resultVideoCount: number | null;
   log: string;
