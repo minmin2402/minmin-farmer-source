@@ -9,9 +9,12 @@ import {
   Square,
   Pause,
   Table,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import {  HeaderActionButton } from "../tools/Button";
+import { useState, useEffect} from "react";
+import {  ExcelImportAutoReels, HeaderActionButton } from "../tools/Button";
 import { ConfigReels, ReelsTask } from "../../types/ReelsTask";
 import toast from "react-hot-toast";
 
@@ -24,12 +27,15 @@ export const ReelsFacebook = () => {
     const savedTasks = localStorage.getItem("cfg_reels_fb");
     return savedTasks ? JSON.parse(savedTasks) : [];
   });
-
+  const handleImport = (newTasks: ReelsTask[]) => {
+      // Gộp task cũ và task mới từ Excel
+      setTasks((prev) => [...prev, ...newTasks]);
+    };
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-
-  const isStoppingTaskRef = useRef<number[]>([]);
-
+  const [statusGPMAPI, setStatusGPMAPI] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       // Nếu tích vào -> Lấy tất cả ID của tasks hiện có bỏ vào mảng
@@ -49,16 +55,7 @@ export const ReelsFacebook = () => {
           : [...prev, id], // Chưa có thì thêm vào
     );
   };
-  const updateTaskStatus = (
-    id: number,
-    status: "pending" | "running" | "done" | "error",
-  ) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === id ? { ...task, status: status } : task,
-      ),
-    );
-  };
+
   const handleSelectFile = async (taskId: number) => {
     // 1. Kiểm tra nếu đang chạy thì không cho chọn file mới
     const currentTask = tasks.find((t) => t.id === taskId);
@@ -73,21 +70,33 @@ export const ReelsFacebook = () => {
       updateTask(taskId, "videoPath", filePath);
     }
   };
-  const stopTaskSelected = () => {
-    if (selectedIds.length === 0) return;
-
-    if (window.confirm(`Dừng khẩn cấp ${selectedIds.length} máy đang chạy?`)) {
-      // Thêm tất cả ID đang chọn vào danh sách dừng
-      isStoppingTaskRef.current = [
-        ...isStoppingTaskRef.current,
-        ...selectedIds,
-      ];
-
-      // Cập nhật giao diện về trạng thái ban đầu
-      selectedIds.forEach((id) => updateTaskStatus(id, "pending"));
-
-      setSelectedIds([]);
+  async function handlePauseSelectedTaskAuto(task: ReelsTask | null) {
+      try {
+        //@ts-ignore
+        const result = await window.electronAPI.stopTaskAutoReels(
+          task ? [task.id] : selectedIds,
+        );
+      } catch (error) {}
     }
+    const handleCheckGPMAPI = async () => {
+    setStatusGPMAPI("loading");
+
+    // Gọi xuống Backend thông qua Preload API
+    //@ts-ignore
+    const result = await window.electronAPI.checkGpmConnection(
+      config.api_gpm,
+    );
+
+    if (result.success) {
+      setStatusGPMAPI("success");
+      alert("✅ Ngon lành! Kết nối GPM OK.");
+    } else {
+      setStatusGPMAPI("error");
+      alert("❌ Lỗi rồi MinMin ơi: " + result.message);
+    }
+
+    // Reset trạng thái sau 3 giây
+    setTimeout(() => setStatusGPMAPI("idle"), 2000);
   };
 
   useEffect(() => {
@@ -103,7 +112,7 @@ export const ReelsFacebook = () => {
       // Cập nhật vào mảng logs để hiển thị lên màn hình
       setTasks((prev) =>
         prev.map((task) =>
-          task.id === logData.taskId
+          task.id === logData.id
             ? {
                 ...task,
                 log: logData?.message ?? task.log,
@@ -199,10 +208,7 @@ export const ReelsFacebook = () => {
       console.log("✅ Đã tiễn biệt các task được chọn!");
     }
   };
-  /* const handleImport = (newTasks: ReelsTask[]) => {
-    // Gộp task cũ và task mới từ Excel
-    setTasks((prev) => [...prev, ...newTasks]);
-  }; */
+
 
   return (
     <div className="p-6 w-full space-y-4 bg-slate-50 min-h-screen select-none">
@@ -225,14 +231,14 @@ export const ReelsFacebook = () => {
               // Sử dụng window.electron để mở link ra trình duyệt ngoài
               //@ts-ignore
               window.electronAPI.openExternal(
-                "https://docs.google.com/spreadsheets/d/1Dmldo8ZtqIjydFQ3-8O9jCBnR3FJPYRMndrY0HXKYFw/edit?usp=sharing",
+                "https://docs.google.com/spreadsheets/d/1ZShX4xalBQn53hsOAMx5yl5QTS4Fd-6B3e8L6JViJas/edit?usp=sharing",
               );
             }}
             icon={<Table />}
             label="Mẫu Excel"
           />
           <HeaderButton icon={<Download size={14} />} label="Xuất Excel" />
-          {/* <ExcelImportAutoPost onImportSuccess={handleImport} /> */}
+          <ExcelImportAutoReels onImportSuccess={handleImport} />
         </div>
       </div>
 
@@ -251,7 +257,7 @@ export const ReelsFacebook = () => {
           <Play size={16} /> Chạy Đã Chọn
         </button>
         <button
-          onClick={stopTaskSelected}
+          onClick={()=>handlePauseSelectedTaskAuto(null)}
           className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all"
         >
           <Pause size={16} /> Dừng Đã Chọn
@@ -319,12 +325,18 @@ export const ReelsFacebook = () => {
               className="w-32 bg-transparent text-xs font-medium outline-none"
             />
             <button
+            disabled={statusGPMAPI === "loading"}
               className="bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded text-[10px] font-bold transition-colors"
-              onClick={() => {
-                /* Logic check API GPM */
-              }}
+              onClick={handleCheckGPMAPI}
             >
-              CHECK
+              {statusGPMAPI === "loading" ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : statusGPMAPI === "success" ? (
+                    <CheckCircle2 size={14} />
+                  ) : statusGPMAPI === "error" ? (
+                    <AlertCircle size={14} />
+                  ) : null}
+                  {statusGPMAPI === "loading" ? "Đang check..." : "Check"}
             </button>
           </div>
         </div>
@@ -551,10 +563,7 @@ export const ReelsFacebook = () => {
                     {task.status === "running" ? (
                       <button
                         onClick={() =>
-                          (isStoppingTaskRef.current = [
-                            ...isStoppingTaskRef.current,
-                            task.id,
-                          ])
+                          handlePauseSelectedTaskAuto(task)
                         }
                         className="p-1.5 hover:bg-rose-50 rounded transition-all group/stop"
                         title="Dừng khẩn cấp"

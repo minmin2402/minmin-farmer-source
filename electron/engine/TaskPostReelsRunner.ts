@@ -3,6 +3,7 @@ import pLimit from "p-limit";
 import { GpmService } from "../services/gpm.service";
 
 import puppeteer from "puppeteer-core";
+import { logger } from "../utils/logger";
 
 // Interface cho dữ liệu đầu vào
 interface PostReelsTask {
@@ -44,7 +45,7 @@ export class TaskPostReelsRunner {
         return unlock!;
     }
 
-    private sendLog(taskId: string, message: string, status: "info" | "success" | "warning" | "error" = "info") {
+    private sendLog(taskId: string, message: string, status: "pending" | "error" | "done" | "running" = "running") {
         this.event.sender.send("reels:task-log", { id: taskId, message, status });
     }
 
@@ -55,23 +56,25 @@ export class TaskPostReelsRunner {
             thread: number;
             delay_between: number;
         };
-
+        logger.info(String(thread))
         const limit = pLimit(thread);
 
         const taskPromises = tasks.map((task, index) =>
             limit(async () => {
                 if (this.stoppedTaskIds.has(task.id)) return this.handleCancel(task.id);
 
+
                 // 1. Đợi nếu Profile ID đang bị chiếm dụng
-                this.sendLog(task.id, `⏳ Đang đợi Profile ${task.profile_id} rảnh...`, "warning");
+                this.sendLog(task.id, `⏳ Đang đợi Profile ${task.profile_id} rảnh...`, "running");
                 const unlock = await this.waitAndLockProfile(task.profile_id);
 
                 try {
                     const port = 5000 + (index % 100);
-                    const pos = this.getWindowPosition(index);
-                    const windowSize = `${pos.x},${pos.y},${pos.width},${pos.height}`;
-                    await this.processSingleTask(task, api_gpm, port, windowSize);
-                    this.sendLog(task.id, `✅ Hoàn thành Task!`, "success");
+                    const posData = this.getWindowPosition(index);
+                    await this.processSingleTask(task, api_gpm, port, posData.sizeStr,
+                        posData.posStr,
+                        posData.scale);
+                    this.sendLog(task.id, `✅ Hoàn thành Task!`, "done");
                 } catch (error: any) {
                     this.sendLog(task.id, `❌ Lỗi: ${error.message}`, "error");
                 } finally {
@@ -87,16 +90,29 @@ export class TaskPostReelsRunner {
         await Promise.all(taskPromises);
     }
     private getWindowPosition(index: number) {
-        const width = 400;  // Chiều rộng cửa sổ GPM
-        const height = 500; // Chiều cao cửa sổ GPM
-        const cols = 4;     // Số cột tối đa trên màn hình
+        const width = 800;  // Tăng lên 800 để FB hiện giao diện Desktop
+        const height = 900; // Tăng chiều cao để thấy nút "Đăng"
+        const cols = 5;     // Tùy theo màn hình khách hàng mà chỉnh số cột
+        const scale = "0.7"; // Scale nhỏ lại để vừa mắt nhưng vẫn là Desktop Mode
 
-        const x = (index % cols) * width;
-        const y = Math.floor(index / cols) * height;
+        // Tính toán tọa độ x, y
+        const x = (index % cols) * (width * parseFloat(scale));
+        const y = Math.floor(index / cols) * (height * parseFloat(scale));
 
-        return { x, y, width, height };
+        return {
+            x: Math.floor(x),
+            y: Math.floor(y),
+            width,
+            height,
+            scale,
+            // Trả về sẵn format string để ném thẳng vào service
+            sizeStr: `${width},${height}`,
+            posStr: `${Math.floor(x)},${Math.floor(y)}`
+        };
     }
-    private async processSingleTask(task: PostReelsTask, api_gpm: string, port: number, windowSize: string) {
+    private async processSingleTask(task: PostReelsTask, api_gpm: string, port: number, windowSize: string, // Mặc định size
+        windowPos: string,      // Mặc định tọa độ 0,0
+        windowScale: string) {
         this.sendLog(task.id, `🚀 Đang mở trình duyệt GPM...`);
 
         // Mở GPM Browser
@@ -105,25 +121,27 @@ export class TaskPostReelsRunner {
         if (!await gpmClient.checkConnection(api_gpm)) {
 
         }
-        const profile = await gpmClient.startProfile(task.profile_id, port, windowSize);
+        const profile = await gpmClient.startProfile(task.profile_id, port, windowSize, windowPos, windowScale);
         if (!profile.success) throw new Error(profile.message);
 
         if (!profile.data.remote_debugging_port) {
 
         }
+
         const browser = await puppeteer.connect({
             browserURL: `http://127.0.0.1:${profile.data.remote_debugging_port}`,
             defaultViewport: null // Giữ nguyên kích thước cửa sổ của GPM
         });
 
-
         try {
             const pages = await browser.pages();
             const page = pages.length > 0 ? pages[0] : await browser.newPage();
 
+
             // Bước 1: Truy cập Link Page & Chuyển Page
             await page.goto(task.link_page, { waitUntil: "networkidle2" });
             this.sendLog(task.id, `🔍 Kiểm tra nút Chuyển ngay...`);
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
             // Sửa lại như thế này:
             const switchBtn = await page.$("xpath///span[text()='Chuyển ngay']");
@@ -132,6 +150,7 @@ export class TaskPostReelsRunner {
                 await page.waitForNavigation({ waitUntil: "networkidle2" });
                 this.sendLog(task.id, `🔄 Đã chuyển sang Page.`);
             }
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
             // Bước 2: Vào Feed để đăng
             await page.goto("https://www.facebook.com/reels/create", { waitUntil: "networkidle2" });
@@ -152,6 +171,7 @@ export class TaskPostReelsRunner {
                 await videoInput.uploadFile(task.videoPath);
                 this.sendLog(task.id, `✅ Đã đẩy video vào input thành công!`);
             }
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
             const postBtnW = "xpath///span[text()='Tiếp']";
             const postBtn = await page.waitForSelector(postBtnW, { visible: true, timeout: 30000 });
@@ -160,11 +180,15 @@ export class TaskPostReelsRunner {
                 this.sendLog(task.id, `Đã tiếp`);
 
             }
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
             await new Promise(resolve => setTimeout(resolve, 5000));
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
+
 
 
             // Bước 3: Nhập title
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
             this.sendLog(task.id, `Nhập title`);
 
@@ -172,6 +196,8 @@ export class TaskPostReelsRunner {
             await page.waitForSelector(postAreaBtnModal, { visible: true, timeout: 30000 });
             await page.click(postAreaBtnModal);
             await page.keyboard.type(task.description, { delay: 50 });
+
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
             const postBtnW2 = "xpath///span[text()='Tiếp']";
             const postBtn2 = await page.waitForSelector(postBtnW2, { visible: true, timeout: 30000 });
@@ -181,6 +207,8 @@ export class TaskPostReelsRunner {
 
             }
             await new Promise(resolve => setTimeout(resolve, 10000));
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
+
             const postBtnW3 = "xpath///span[text()='Đăng']";
             const postBtn3 = await page.waitForSelector(postBtnW3, { visible: true, timeout: 30000 });
             if (postBtn3) {
@@ -196,19 +224,23 @@ export class TaskPostReelsRunner {
             // Logic tìm bài viết đầu tiên và cmt...
             // (Phần này Hoàng cần soi Selector chính xác của FB tại thời điểm đó)
             this.sendLog(task.id, `💬 Bắt đầu quy trình bình luận bài viết...`);
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
             // 1. Đợi một chút để Facebook xử lý video (Reels thường mất 15-30s để hiện lên wall)
             this.sendLog(task.id, `⏳ Đợi 20s cho Facebook xử lý video...`);
             await new Promise(r => setTimeout(r, 20000));
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
             // 2. Quay lại trang Page/Profile để tìm bài
             await page.goto(task.link_page, { waitUntil: "networkidle2" });
             this.sendLog(task.id, `🔍 Đang tìm bài viết mới nhất...`);
+            if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
             try {
                 // 3. Cuộn xuống một chút để kích hoạt load bài viết
                 await page.evaluate(() => window.scrollBy(0, 500));
                 await new Promise(r => setTimeout(r, 2000));
+                if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
                 // 4. Tìm ô "Viết bình luận" (Cái đầu tiên thường là bài mới nhất)
                 // Selector này bắt ô comment của Facebook mới nhất
@@ -228,12 +260,13 @@ export class TaskPostReelsRunner {
                     // 6. Nhấn Enter để gửi
                     await page.keyboard.press('Enter');
 
-                    this.sendLog(task.id, `✅ Đã gửi bình luận: "${task.affiliate}"`, "success");
+                    this.sendLog(task.id, `✅ Đã gửi bình luận: "${task.affiliate}"`, "done");
+                    if (this.stoppedTaskIds.has(task.id)) { this.handleCancel(task.id); throw new Error("Task đã dừng"); };
 
                     // Đợi 2s xác nhận cmt đã bay đi
-                    await new Promise(r => setTimeout(r, 2000));
+                    await new Promise(r => setTimeout(r, 10000));
                 } else {
-                    this.sendLog(task.id, `⚠️ Không tìm thấy ô bình luận nào trên trang.`, "warning");
+                    this.sendLog(task.id, `⚠️ Không tìm thấy ô bình luận nào trên trang.`, "running");
                 }
 
             } catch (error) {
