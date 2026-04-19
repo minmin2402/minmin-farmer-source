@@ -13,9 +13,14 @@ import {
   Loader2,
   ExternalLink,
   Smartphone,
-
+  History,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+
+// Thêm dòng này ở nhóm các dòng import đầu file
+import changelogData from "../../resources/changelog.json";
+
+// Nếu TypeScript báo lỗi không hiểu file JSON, hãy khai báo interface cho nó
 
 // Định nghĩa lại Interface để khớp với Backend
 interface LicenseInfo {
@@ -135,9 +140,7 @@ export const AboutPage = () => {
               MinMinFarmer
             </h1>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-md">
-                
-              </span>
+              <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-md"></span>
               <span className="text-green-500 text-[10px] font-bold flex items-center gap-1">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />{" "}
                 ONLINE
@@ -319,7 +322,58 @@ export const AboutPage = () => {
           </div>
         </div>
       </div>
+      {/* Changelog Section - Thêm vào trên phần Footer Disclaimer */}
+      <div className="bg-white p-7 rounded-4xl border border-slate-100 shadow-sm space-y-8">
+        <div className="space-y-1">
+          <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            {/* Bọc icon vào span để tránh lỗi thuộc tính của thư viện icon */}
+            <span className="text-blue-500">
+              <History />
+            </span>
+            System Changelog
+          </h2>
+          <p className="text-[11px] text-slate-400 font-medium italic">
+            Lịch sử cập nhật và nâng cấp tính năng hệ thống
+          </p>
+        </div>
 
+        <div className="relative pl-8 space-y-10 before:content-[''] before:absolute before:left-2.75 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+          {changelogData.map((item, index) => (
+            <div key={item.version} className="relative group">
+              {/* Dot trên Timeline */}
+              <div className="absolute -left-6.25 top-1.5 w-4 h-4 rounded-full bg-white border-4 border-slate-200 group-hover:border-blue-500 transition-colors z-10" />
+
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-black text-slate-800 tracking-tight">
+                    Version {item.version}
+                  </span>
+                  <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-black rounded-md uppercase">
+                    {item.date}
+                  </span>
+                  {index === 0 && (
+                    <span className="px-2 py-0.5 bg-green-500 text-white text-[8px] font-black rounded-md animate-pulse">
+                      LATEST
+                    </span>
+                  )}
+                </div>
+
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                  {item.content.map((log, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2 text-slate-500 text-[11px] font-medium leading-relaxed"
+                    >
+                      <div className="mt-1.5 w-1 h-1 rounded-full bg-slate-300 shrink-0" />
+                      {log}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
       {/* Footer Disclaimer */}
       <div className="flex flex-col items-center gap-4 pt-8">
         <div className="h-px w-20 bg-slate-200" />

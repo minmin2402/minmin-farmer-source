@@ -1,0 +1,28 @@
+[
+  {
+    "version": "1.2.7",
+    "date": "2026-04-19",
+    "content": [
+      "+ Fix L?i L?y Th�ng Tin SP Shopee",
+      "+ L?y Full M� T? S?n Ph?m",
+      "+Fix L?i Render Video AI"
+    ]
+  },
+  {
+    "version": "1.2.6",
+    "date": "2026-04-20",
+    "content": [
+      "Fix lỗi resize GPM",
+      "Thêm tính năng Kho sản phẩm",
+      "Tối ưu tốc độ post Reels"
+    ]
+  },
+  {
+    "version": "1.0.4",
+    "date": "2026-04-15",
+    "content": [
+      "Thêm log realtime",
+      "Sửa lỗi login Facebook"
+    ]
+  }
+]

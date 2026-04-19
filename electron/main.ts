@@ -648,8 +648,12 @@ async function createWindow() {
     autoUpdater.on('download-progress', (progressObj) => {
       let log_message = "Tốc độ: " + Math.floor(progressObj.bytesPerSecond / 1024) + "KB/s";
       log_message = log_message + ' - Đã tải ' + Math.floor(progressObj.percent) + '%';
-      // Gửi tiến độ tải về Splash cho khách đỡ sốt ruột
+      
+      // Gửi text status cho khách đọc
       splashWindow?.webContents.send('status', log_message);
+      
+      // 🚀 THÊM DÒNG NÀY: Bắn đúng số % sang để thanh tiến trình vít ga chạy
+      splashWindow?.webContents.send('download-progress', progressObj.percent);
     });
   }
 
