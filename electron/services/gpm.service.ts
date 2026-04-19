@@ -54,7 +54,7 @@ export class GpmService {
     // Mở Profile và trả về link debug (để dùng Puppeteer)
     async startProfile(id: string, remoteDebuggingPort: number, windowSize: string = "-2000,0", // Mặc định size
         windowPos: string = "0,0",      // Mặc định tọa độ 0,0
-        windowScale: string = "1.0"): Promise<any> {
+        windowScale: string = "0"): Promise<any> {
         logger.info('[GPM] chạy với windowsize', windowSize)
   
 
@@ -68,8 +68,8 @@ export class GpmService {
 
             const optClient = {
                     windowSize: windowSize,
-                    windowScale:"",
-                    windowPos:"",
+                    windowScale:windowScale,
+                    windowPos:windowPos,
                     remoteDebuggingPort,
                     addArgs: [
 
@@ -79,10 +79,7 @@ export class GpmService {
                     ]
 
                 }
-            if (!windowSize.includes('-2000')){
-                optClient.windowScale = windowScale
-                optClient.windowPos= windowPos
-            }
+            
             logger.info(`\nStarting profile ${id} …`);
             if (this.isGlobal) {
                 const startResult = await this.client.profiles.start(id, optClient);
