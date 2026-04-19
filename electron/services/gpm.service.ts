@@ -66,13 +66,10 @@ export class GpmService {
 
             }
 
-
-            logger.info(`\nStarting profile ${id} …`);
-            if (this.isGlobal) {
-                const startResult = await this.client.profiles.start(id, {
+            const optClient = {
                     windowSize: windowSize,
-                    windowScale: windowScale,
-                    windowPos: windowPos,
+                    windowScale:"",
+                    windowPos:"",
                     remoteDebuggingPort,
                     addArgs: [
 
@@ -81,7 +78,14 @@ export class GpmService {
                         '--mute-audio'    // Tiện thể tắt tiếng luôn cho đỡ ồn khi cào data
                     ]
 
-                });
+                }
+            if (!windowSize.includes('-2000')){
+                optClient.windowScale = windowScale
+                optClient.windowPos= windowPos
+            }
+            logger.info(`\nStarting profile ${id} …`);
+            if (this.isGlobal) {
+                const startResult = await this.client.profiles.start(id, optClient);
                 return { success: true, data: startResult };
             } else {
                 // 🔥 LOGIC BẢN CŨ ĐÃ THÊM ARGS

@@ -7,7 +7,7 @@ export interface VideoTask {
   prompt:string;
   aiImagePath:string;
   finalVideoPath:string;
-  mode: 'TT + Prompt + Video + Ảnh AI' | 'Chỉ lấy thông tin sản phẩm';
+  mode: 'TT + Prompt + Video + Ảnh AI' | 'Chỉ lấy thông tin sản phẩm' | 'Prompt + Ảnh AI + Video' | 'Prompt + Video';
   outputCount: number;
   resultVideoCount: number | null;
   log: string;

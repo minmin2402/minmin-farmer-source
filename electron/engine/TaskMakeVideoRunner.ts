@@ -5,7 +5,7 @@ import { gpmService } from "../services/gpm.service";
 import { getShopeeIds, shopeeService } from "../services/shopee.service";
 import { GrokService } from "../services/grok.service";
 import { GeminiKeyManager } from "../manager/GeminiKeyManager";
-import { GeminiService } from "../gemini.service";
+import { GeminiService } from "../services/gemini.service";
 import { GrokProfileManager, ShopeeProfileManager } from "../manager/ProfileManager";
 import fs from 'fs';
 import path from "path";
@@ -123,7 +123,15 @@ export class TaskRunner {
 
                 try {
                     // --- CHẶNG 1: LẤY DATA SHOPEE ---
+                   
                     const productInfo = await retryStep(async () => {
+                        if (!(task.mode === "Chỉ lấy thông tin sản phẩm" || task.mode.includes("TT"))){
+                            return {
+                                productTitle: task.productName,
+                                productDesc:  task.productDesc,
+                                productPathImage: task.productPathImg
+                            }
+                        }
                         currentProfileId = await shopeeManager.getAvailableProfile();
                         const port = 5000 + (index % 100);
 
@@ -138,6 +146,13 @@ export class TaskRunner {
                         if (!res.success) throw new Error(res.message || "Lỗi cào Shopee");
                         return res.data;
                     }, "Cào dữ liệu Shopee", task.id);
+
+                    
+
+                    if (!productInfo.productTitle || !productInfo.productDesc || !productInfo.productPathImage || !fs.existsSync(productInfo.productPathImage)){
+                        this.event.sender.send('video:task-log', { status: 'error', message: 'Thiếu dữ liệu sản phẩm, hãy thử lại!', taskId: task.id });
+                        return null;
+                    }
 
                     // Checkpoint: Nếu chỉ lấy thông tin thì dừng tại đây
                     if (task.mode === "Chỉ lấy thông tin sản phẩm") {
@@ -167,6 +182,10 @@ export class TaskRunner {
                     // --- CHẶNG 3: INIT GROK & VẼ ẢNH ---
                     const imageAIPath = await retryStep(async () => {
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
+
+                        if (!task.mode.includes('Ảnh AI')){
+                            return task.aiImagePath
+                        }
 
                         // --- KHỐI 1: LẤY HEADER (CẦN PROFILE) ---
                         let profileIdForInit = "";
@@ -213,6 +232,11 @@ export class TaskRunner {
                         return imgRes.filePath;
 
                     }, "Khởi tạo & Vẽ ảnh Grok", task.id);
+
+                    if (!imageAIPath || !fs.existsSync(imageAIPath)){
+                        this.event.sender.send('video:task-log', { status: 'error', message: 'Thiếu dữ liệu ảnh AI thử lại', taskId: task.id });
+                        return null;
+                    }
 
                     // --- CHẶNG 4: RENDER VIDEO (Khâu hay lỗi nhất) ---
                     const finalVideoPath = await retryStep(async () => {

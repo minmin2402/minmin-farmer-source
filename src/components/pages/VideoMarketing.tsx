@@ -174,7 +174,7 @@ export const VideoMarketingPage = () => {
     const dataToExport = selectedTasks.map((task, index) => ({
       STT: index + 1,
       "Tên Sản Phẩm": task.productName,
-      "Link Shopee": task.productUrl,
+      "Link SP": task.productUrl,
       "Trạng Thái": task.status,
       "Đường Dẫn Video": task.finalVideoPath || "N/A",
     }));
@@ -243,8 +243,8 @@ export const VideoMarketingPage = () => {
     const newTask: VideoTask = {
       id: Date.now(), // Dùng timestamp làm ID duy nhất
       productUrl: "",
-      productName: "-",
-      productDesc: "-",
+      productName: "",
+      productDesc: "",
       productPathImg: "",
       mode: "TT + Prompt + Video + Ảnh AI",
       outputCount: 2,
@@ -392,6 +392,15 @@ export const VideoMarketingPage = () => {
                 Tên SP
               </th>
               <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                Mô Tả
+              </th>
+              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                Ảnh SP
+              </th>
+              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                Ảnh AI
+              </th>
+              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                 Chế độ xử lý
               </th>
               <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
@@ -447,23 +456,42 @@ export const VideoMarketingPage = () => {
                     {task.productName}
                   </div>
                 </td>
+                <td className="p-4 text-center text-xs font-semibold text-black max-w-50">
+                  <div className="truncate" title={task.productDesc}>
+                    {task.productDesc && "Có"}
+                  </div>
+                </td>
+                <td className="p-4 text-center text-xs font-semibold text-black max-w-50">
+                  <div className="truncate" title={task.productPathImg}>
+                    {task.productPathImg && "Có"}
+                  </div>
+                </td>
+                <td className="p-4 text-center text-xs font-semibold text-black max-w-50">
+                  <div className="truncate" title={task.aiImagePath}>
+                    {task.aiImagePath && "Có"}
+                  </div>
+                </td>
+
                 <td className="p-4">
                   <div className="relative group">
                     <select
                       value={task.mode}
                       onChange={(e) => {
                         const newTasks = [...tasks];
-                        newTasks[index].mode =
-                          e.target.value == "TT + Prompt + Video + Ảnh AI"
-                            ? "TT + Prompt + Video + Ảnh AI"
-                            : "Chỉ lấy thông tin sản phẩm";
+                        // Cast the string to your specific type
+                        newTasks[index].mode = e.target.value as
+                          | "Chỉ lấy thông tin sản phẩm"
+                          | "Prompt + Ảnh AI + Video"
+                          | "TT + Prompt + Video + Ảnh AI"
+                          | "Prompt + Video";
+
                         setTasks(newTasks);
                       }}
                       className="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-[11px] font-medium text-black outline-none hover:border-blue-200 cursor-pointer"
                     >
                       <option>Chỉ lấy thông tin sản phẩm</option>
-                      {/* <option>Thông tin + Prompt</option>
-                      <option>Thông tin + Prompt + Ảnh AI</option> */}
+                      <option>Prompt + Video</option>
+                      <option>Prompt + Ảnh AI + Video</option>
                       <option>TT + Prompt + Video + Ảnh AI</option>
                     </select>
                     <ChevronDown
@@ -491,7 +519,7 @@ export const VideoMarketingPage = () => {
                     ? "..."
                     : `${task.resultVideoCount}/${task.outputCount}`}
                 </td>
-                <td className="p-4 text-center font-mono text-xs font-bold text-blue-600">
+                <td className="p-4 text-center font-mono text-xs font-bold text-blue-600 max-w-50 wrap-break-word whitespace-normal">
                   {task.log}
                 </td>
 

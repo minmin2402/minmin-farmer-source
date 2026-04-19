@@ -51,23 +51,37 @@ export const ExcelImportVideoMKT: React.FC<ExcelImportProps> = ({
           // Cột C: row[2] (Chế độ)
 
           const rawUrl = String(row[0] || "").trim();
-          const rawCount = parseInt(row[1]) || 1;
-          const rawMode = String(row[2] || "").toLowerCase();
+          const rawName = String(row[1] || "");
+          const rawDesc = String(row[2] || "");
+          const rawPathImg = String(row[3] || "").trim();
+          const rawAIImg = String(row[4] || "").trim();
 
+          const rawMode = String(row[5] || "").toLowerCase().trim();
+          const rawCount = parseInt(row[6]) || 1;
+          let mode = "TT + Prompt + Video + Ảnh AI";
+          if (rawMode == "1"){
+            mode = "Chỉ lấy thông tin sản phẩm"
+          }else if (rawMode == "2"){
+            mode = "Prompt + Video"
+          }else if (rawMode == "3"){
+            mode = "Prompt + Ảnh AI + Video"
+          }
+          
           return {
             id: Date.now() + index,
             productUrl: rawUrl,
-            productName: "-",
-            productDesc: "-",
-            productPathImg: "",
+            productName: rawName,
+            productDesc: rawDesc,
+            productPathImg: rawPathImg,
             // Logic cột C: Nếu chứa chữ 'video' thì set mode full, ngược lại chỉ lấy info
-            mode: rawMode.includes("video")
-              ? "TT + Prompt + Video + Ảnh AI"
-              : "Chỉ lấy thông tin sản phẩm",
+            mode: mode as | "Chỉ lấy thông tin sản phẩm"
+                          | "Prompt + Ảnh AI + Video"
+                          | "TT + Prompt + Video + Ảnh AI"
+                          | "Prompt + Video",
             outputCount: rawCount,
             status: "none",
             log: "",
-            aiImagePath: "",
+            aiImagePath: rawAIImg,
             finalVideoPath: "",
             prompt: "",
             resultVideoCount: null,
