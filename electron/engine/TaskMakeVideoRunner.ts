@@ -154,7 +154,7 @@ export class TaskRunner {
 
                     
 
-                    if (!productInfo.productTitle || !productInfo.productDesc || !productInfo.productPathImage || !fs.existsSync(productInfo.productPathImage)){
+                    if (!productInfo.productTitle  || !productInfo.productPathImage || !fs.existsSync(productInfo.productPathImage)){
                         this.event.sender.send('video:task-log', { status: 'error', message: 'Thiếu dữ liệu sản phẩm, hãy thử lại!', taskId: task.id });
                         return null;
                     }
