@@ -1,5 +1,5 @@
-import { B as Browser, d as detectBrowserPlatform, r as resolveDefaultUserDataDir } from "./main-BS_prEXG.js";
-import { a, b, C, c, e, I, P, T, W, f, g, h, i, j, l, k, u } from "./main-BS_prEXG.js";
+import { B as Browser, d as detectBrowserPlatform, r as resolveDefaultUserDataDir } from "./main-BCewLyVg.js";
+import { a, b, C, c, e, I, P, T, W, f, g, h, i, j, l, k, u } from "./main-BCewLyVg.js";
 import "node:process";
 import "node:readline";
 export {

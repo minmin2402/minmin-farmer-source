@@ -11,11 +11,11 @@ interface KeyStatus {
 export class GeminiService {
     private keys: KeyStatus[];
     private models: string[] = [
- // Ưu tiên bản Lite vì Rate Limit cực cao cho MMO
-        "gemini-2.0-flash",
-        "gemini-2.5-flash",
-        "gemini-1.5-flash-8b",
-        "gemini-flash-latest"
+        "gemini-3.1-flash-lite-preview", // Đỉnh nhất cho MMO: Nhẹ, Rate Limit thoáng nhất 2026
+        "gemini-3.1-pro-preview",      // Thông minh nhất, dùng cho script khó
+        "gemini-2.5-flash",            // Bản Stable, cực kỳ nhanh
+        "gemini-2.0-flash",            // Bản quốc dân đời trước
+        "gemini-flash-lite-latest"     // Bản "vét" cuối cùng, luôn luôn sống
     ];
 
     // Băng chuyền Promise để xử lý đa luồng
@@ -90,12 +90,13 @@ export class GeminiService {
             while (attempts < maxTotalAttempts) {
                 const currentKey = this.getBestKey();
                 const modelName = this.models[attempts % this.models.length];
+                const cleanModelName = modelName.replace("models/", "");
 
                 try {
                     const genAI = new GoogleGenerativeAI(currentKey);
 
                     const model = genAI.getGenerativeModel(
-                        { model: modelName },
+                        { model: cleanModelName },
                         { apiVersion: "v1beta" }
                     );
 
