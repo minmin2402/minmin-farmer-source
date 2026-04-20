@@ -11,13 +11,12 @@ interface KeyStatus {
 export class GeminiService {
     private keys: KeyStatus[];
     private models: string[] = [
-        "models/gemini-3-flash-preview", // Ưu tiên bản Lite vì Rate Limit cực cao cho MMO
+ // Ưu tiên bản Lite vì Rate Limit cực cao cho MMO
         "gemini-3.1-flash",
         "gemini-2.0-flash",
         "gemini-2.5-flash",
         "gemini-1.5-flash-8b",
-        "gemini-flash-latest",
-        "models/gemini-2.5-pro",
+        "gemini-flash-latest"
     ];
 
     // Băng chuyền Promise để xử lý đa luồng
