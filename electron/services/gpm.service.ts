@@ -56,7 +56,7 @@ export class GpmService {
         windowPos: string = "0,0",      // Mặc định tọa độ 0,0
         windowScale: string = "0"): Promise<any> {
         logger.info('[GPM] chạy với windowsize', windowSize)
-  
+
 
         try {
             try {
@@ -67,19 +67,19 @@ export class GpmService {
             }
 
             const optClient = {
-                    windowSize: windowSize,
-                    windowScale:windowScale,
-                    windowPos:windowPos,
-                    remoteDebuggingPort,
-                    addArgs: [
+                windowSize: windowSize,
+                windowScale: windowScale,
+                windowPos: windowPos,
+                remoteDebuggingPort,
+                addArgs: [
 
-                        windowSize.includes('-2000') ? '--headless=new' : '', // Flag mới nhất của Chrome để chạy ẩn
-                        '--disable-gpu',  // Thường đi kèm headless để giảm tải CPU
-                        '--mute-audio'    // Tiện thể tắt tiếng luôn cho đỡ ồn khi cào data
-                    ]
+                    windowSize.includes('-2000') ? '--headless=new' : '', // Flag mới nhất của Chrome để chạy ẩn
+                    '--disable-gpu',  // Thường đi kèm headless để giảm tải CPU
+                    '--mute-audio'    // Tiện thể tắt tiếng luôn cho đỡ ồn khi cào data
+                ]
 
-                }
-            
+            }
+
             logger.info(`\nStarting profile ${id} …`);
             if (this.isGlobal) {
                 const startResult = await this.client.profiles.start(id, optClient);
@@ -129,6 +129,35 @@ export class GpmService {
 
 
     }
+    async createProfile() {
+        try {
+            if (this.isGlobal) {
+                const res = await this.client.profiles.create({
+                    name: `tiktok_${Date.now()}`,
+                    
+                });
+                logger.info(res)
+                return res
+            }
+            return null;
+        } catch (error) {
+            logger.error("❌ Lỗi tạo profiles:", error);
+        }
+    }
+
+    async deleteProfile(id: string, mode:string='soft') {
+        try {
+            if (this.isGlobal) {
+                const res = await this.client.profiles.delete(id, mode);
+                logger.info(res)
+                return res
+            }
+            return null
+        } catch (error) {
+            logger.error("❌ Lỗi xoá profiles:", error);
+        }
+    }
+
 }
 
 // Khởi tạo một bản dùng chung

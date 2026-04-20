@@ -58,8 +58,9 @@ interface ConfigVideoMKT {
   logoPath: string;
   isEnabledMusic: boolean;
   musicPath: string;
+  omo_api_key:string;
 }
-
+let isAppInitialized = false;
 export const VideoMarketingPage = () => {
   // 1. Quản lý danh sách Task
   const [tasks, setTasks] = useState<VideoTask[]>(() => {
@@ -69,18 +70,23 @@ export const VideoMarketingPage = () => {
     try {
       const parsedTasks: VideoTask[] = JSON.parse(savedTasks);
 
-      // Map qua danh sách task để reset trạng thái khi load app
-      return parsedTasks.map((task) => {
-        // Nếu status là các trạng thái đang chạy dở, reset về none
+      if (isAppInitialized) {
+        return parsedTasks;
+      }
+
+      const cleanedTasks = parsedTasks.map((task) => {
         if (task.status === "processing") {
           return {
             ...task,
-            status: "none", // Hoặc 'failed' tùy Hoàng muốn
+            status: "none", // Ở đây TS đang hiểu là string
             log: "Đã dừng do đóng ứng dụng",
-          };
+          } as VideoTask; // Ép kiểu ở đây để TS yên tâm
         }
         return task;
       });
+
+      isAppInitialized = true;
+      return cleanedTasks;
     } catch (error) {
       console.error("❌ Lỗi parse task từ localStorage:", error);
       return [];
@@ -128,6 +134,7 @@ export const VideoMarketingPage = () => {
       logoPath: "",
       isEnabledMusic: false,
       musicPath: "",
+      omo_api_key:""
     };
   });
   const [isConfigOpen, setIsConfigOpen] = useState(false);

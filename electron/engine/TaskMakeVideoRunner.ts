@@ -13,6 +13,8 @@ import { VbeeService } from "../services/vbee.service";
 import { addLogoAndMusic, mergeAudioToVideo } from "../services/ffmpeg.service";
 import { logger } from "../utils/logger";
 import { deletePath } from "../utils/file";
+import { isLinkShopee, isLinkTiktok } from "../utils/tool";
+import { TiktokService } from "../services/tiktok.service";
 
 export class TaskRunner {
     private stoppedTaskIds: Set<string> = new Set();
@@ -120,7 +122,7 @@ export class TaskRunner {
 
                 let currentProfileId = "";
                 let currentProfileGrokId = "";
-                const profileNum = index% profiles_grok.length
+                const profileNum = index % profiles_grok.length
                 try {
                     // --- CHẶNG 1: LẤY DATA SHOPEE ---
                     this.event.sender.send('video:task-log', {
@@ -137,17 +139,28 @@ export class TaskRunner {
                                 productPathImage: task.productPathImg
                             }
                         }
-                        currentProfileId = await shopeeManager.getAvailableProfile();
+
                         const port = 5000 + (index % 100);
 
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
 
-                        const res = await shopeeService(this.event, gpmClient, currentProfileId, port, delay_between, this.data, task);
+                        let res = null;
+                        if (await isLinkShopee(task.productUrl)) {
+                            currentProfileId = await shopeeManager.getAvailableProfile();
+                            res = await shopeeService(this.event, gpmClient, currentProfileId, port, delay_between, this.data, task);
+                            await shopeeManager.releaseProfile(currentProfileId);
 
-                        // Nhả profile ngay sau khi xong chặng Shopee
-                        await shopeeManager.releaseProfile(currentProfileId);
+                        } else if (await isLinkTiktok(task.productUrl)) {
+
+                            res = await TiktokService.getInfoProduct(this.event, gpmClient, port, delay_between, this.data, task);
+                        } else {
+                            this.event.sender.send('video:task-log', { status: 'error', message: 'Sai link sản phẩm', taskId: task.id });
+                            return null
+                        }
+
+
                         currentProfileId = "";
-
+                        logger.info(res)
                         if (!res.success) throw new Error(res.message || "Lỗi cào Shopee");
                         return res.data;
                     }, "Cào dữ liệu Shopee", task.id);
@@ -209,7 +222,7 @@ export class TaskRunner {
                             return task.aiImagePath
                         }
 
-                        
+
                         this.event.sender.send('video:task-log', {
                             status: 'processing',
                             message: `Chuẩn bị tạo ảnh từ grok ${profiles_grok[profileNum]}`,
@@ -264,7 +277,7 @@ export class TaskRunner {
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
 
 
-                     
+
                         this.event.sender.send('video:task-log', {
                             status: 'processing',
                             message: `Chuẩn bị tạo video từ grok ${profiles_grok[profileNum]}`,

@@ -271,6 +271,46 @@ export const ConfigModalVideoMKT = ({
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-black text-slate-400 uppercase">
+                API KEY OMOCAPTCHA
+              </label>
+              <a
+                href="https://your-instruction-link.com"
+                target="_blank"
+                rel="noreferrer"
+                style={{ display: "inline-block", marginLeft: "20px" }}
+                onClick={(e) => {
+                  // Nếu là Electron, dùng shell để mở trình duyệt bên ngoài
+
+                  e.preventDefault();
+                  //@ts-ignore
+                  window.electronAPI.openExternal(
+                    "https://auto.minmintool.site/?page=doc#cao-san-pham-titkok",
+                  );
+                }}
+                className="text-[10px] font-bold text-blue-500 hover:text-blue-600 uppercase flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                
+                Hướng dẫn lấy Key
+              </a>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={configVideoMKT.omo_api_key}
+                  onChange={(e) =>
+                    setConfigVideoMKT({
+                      ...configVideoMKT,
+                      omo_api_key: e.target.value,
+                    })
+                  }
+                  placeholder=""
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-500 transition-all"
+                />
+                
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-black text-slate-400 uppercase">
                 Danh sách Profile ID đang login Shopee/Tiktok
               </label>
               <textarea
@@ -287,6 +327,8 @@ export const ConfigModalVideoMKT = ({
                 Đã nhập: {configVideoMKT.profiles_aff.length} Profile
               </div>
             </div>
+
+            
 
             <div className="space-y-2">
               <label className="text-[11px] font-black text-slate-400 uppercase">
