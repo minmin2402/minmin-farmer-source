@@ -1,22 +1,146 @@
-
 import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "../utils/logger";
 
-export class GeminiService {
-    private genAI: GoogleGenAI;
-    private model: "gemini-2.5-flash" | "gemini-2.0-flash" | "gemini-3-flash-preview" = "gemini-2.5-flash";
+interface KeyStatus {
+    key: string;
+    lastUsed: number;
+    isCooldown: boolean;
+    failCount: number;
+}
 
-    constructor(apiKey: string, model:"gemini-2.5-flash" | "gemini-2.0-flash" | "gemini-3-flash-preview" ="gemini-2.5-flash" ) {
-        this.genAI = new GoogleGenAI({ apiKey: apiKey });
-        this.model = model
+export class GeminiService {
+    private keys: KeyStatus[];
+    private models: string[] = [
+        "models/gemini-3-flash-preview", // Ưu tiên bản Lite vì Rate Limit cực cao cho MMO
+        "gemini-3.1-flash",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash",
+        "gemini-1.5-flash-8b",
+        "gemini-flash-latest",
+        "models/gemini-2.5-pro",
+    ];
+
+    // Băng chuyền Promise để xử lý đa luồng
+    private queue: Promise<any> = Promise.resolve();
+
+    // Giãn cách tối thiểu giữa các request (ms). 
+    // 400ms = ~150 request/phút. Nếu bạn có 10 keys, có thể giảm xuống 100-200ms.
+    private readonly REQUEST_DELAY = 400;
+
+    constructor(apiKeys: string[]) {
+        this.keys = apiKeys.map(key => ({
+            key,
+            lastUsed: 0,
+            isCooldown: false,
+            failCount: 0
+        }));
     }
 
     /**
-     * Biến ý tưởng thô thành Prompt Video chuyên nghiệp
+     * Cơ chế hàng đợi: Ép các luồng gọi tới phải xếp hàng nhả dần
      */
+    private async addToQueue<T>(task: () => Promise<T>): Promise<T> {
+        this.queue = this.queue.then(async () => {
+            await new Promise(resolve => setTimeout(resolve, this.REQUEST_DELAY));
+            return task();
+        }).catch((err) => {
+            // Tránh treo hàng đợi nếu một task bị crash
+            logger.error("❌ Queue Task Error:", err.message);
+            return task();
+        });
+        return this.queue;
+    }
+
+    private getBestKey(): string {
+        const now = Date.now();
+        // Sắp xếp lấy key rảnh nhất và không trong thời gian phạt cooldown (60s)
+        const availableKeys = [...this.keys].sort((a, b) => {
+            if (a.isCooldown !== b.isCooldown) return a.isCooldown ? 1 : -1;
+            return a.lastUsed - b.lastUsed;
+        });
+
+        const bestKey = availableKeys[0];
+        // Nếu key tốt nhất vẫn đang bị phạt nhưng đã quá 60s thì thả xích
+        if (bestKey.isCooldown && (now - bestKey.lastUsed > 60000)) {
+            bestKey.isCooldown = false;
+        }
+
+        return bestKey.key;
+    }
+
+    private markKeyStatus(key: string, success: boolean) {
+        const k = this.keys.find(item => item.key === key);
+        if (k) {
+            k.lastUsed = Date.now();
+            if (success) {
+                k.isCooldown = false;
+                k.failCount = 0;
+            } else {
+                k.isCooldown = true;
+                k.failCount++;
+            }
+        }
+    }
+
     async generateVideoPrompt(productTitle: string, productDesc: string, prompt_review: string, outputCount: number): Promise<any> {
-        try {
-            const systemPrompt = `
+        // Đưa vào hàng đợi để xử lý tuần tự, tránh dồn dập vào cùng 1 thời điểm
+        return this.addToQueue(async () => {
+            let attempts = 0;
+            // Thử tối đa qua 2 vòng Keys để đảm bảo tỉ lệ thành công cao nhất
+            const maxTotalAttempts = this.keys.length * 2;
+
+            while (attempts < maxTotalAttempts) {
+                const currentKey = this.getBestKey();
+                const modelName = this.models[attempts % this.models.length];
+
+                try {
+                    const genAI = new GoogleGenerativeAI(currentKey);
+
+                    const model = genAI.getGenerativeModel(
+                        { model: modelName },
+                        { apiVersion: "v1beta" }
+                    );
+
+                    const systemPrompt = this.buildPrompt(productTitle, productDesc, prompt_review, outputCount);
+                    const result = await model.generateContent({
+                        contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            temperature: 0.7,
+                        }
+                    });
+
+                    const response = await result.response;
+                    const text = response.text();
+
+                    this.markKeyStatus(currentKey, true);
+                    return { success: true, data: JSON.parse(text || "[]") };
+
+                } catch (error: any) {
+                    attempts++;
+                    this.markKeyStatus(currentKey, false);
+
+                    const isRateLimit = error.message.includes("429") || error.message.includes("Rate Limit") || error.message.includes("503");
+
+                    if (isRateLimit) {
+                        logger.warn(`⚠️ Lần thử ${attempts}: Key bận hoặc Server quá tải. Đang đổi sang Key/Model tiếp theo...`);
+                        // Nếu đã thử hết sạch Key trong 1 vòng mà vẫn lỗi, cho hệ thống nghỉ 2s
+                        if (attempts === this.keys.length) {
+                            await new Promise(r => setTimeout(r, 2000));
+                        }
+                    } else {
+                        // Lỗi nội dung (Safety) hoặc lỗi logic thì trả về luôn để sửa prompt
+                        return { success: false, error: error.message };
+                    }
+                }
+            }
+            return { success: false, ratelimit: true, data: prompt_review };
+        });
+    }
+
+    private buildPrompt(productTitle: string, productDesc: string, prompt_review: string, outputCount: number): string {
+        return `
     Bạn là chuyên gia điều phối Video Script cho AI Video.
     Sản phẩm: ${productTitle}
     Mô tả: ${productDesc}
@@ -57,29 +181,5 @@ export class GeminiService {
       Chỉ trả về JSON, không kèm theo bất kỳ văn bản giải thích nào.
     
 `;
-
-
-
-            const result = await this.genAI.models.generateContent({
-                model: this.model,
-                contents: systemPrompt,
-                config: {
-        responseMimeType: "application/json",
-    }
-            });
-
-            if (result) {
-                return { success: true, data: JSON.parse(result?.text || "") }
-            }
-
-            return { success: false };
-        } catch (error: any) {
-            logger.error("❌ Lỗi Gemini:", error.message);
-            if (error.message.includes("Rate Limit")){
-                
-            }
-            return { success: false, data: prompt_review, ratelimit:true };
-
-        }
     }
 }

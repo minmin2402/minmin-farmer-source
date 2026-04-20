@@ -349,7 +349,7 @@ export const VideoMarketingPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f8f9fa] p-6 text-slate-700 font-sans">
+    <div className="flex flex-col h-screen w-full bg-[#f8f9fa] p-6 text-slate-700 font-sans">
       <ConfigModalVideoMKT
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}
@@ -363,7 +363,7 @@ export const VideoMarketingPage = () => {
         onUpdateTask={handleUpdateTask}
       />
       {/* TOOLBAR NÚT BẤM */}
-      <div className="bg-white p-4 rounded-t-xl border border-gray-100 shadow-sm flex flex-col items-start justify-start">
+      <div className="flex-none bg-white p-4 rounded-t-xl border border-gray-100 shadow-sm flex flex-col items-start justify-start">
         <div className="flex items-center mb-4 justify-between">
           <div className="flex items-center gap-2 mr-2">
             <div className="text-[11px] font-bold px-3 py-1.5 border border-gray-200 rounded-lg bg-slate-50 text-slate-500 uppercase tracking-wider">
@@ -508,9 +508,10 @@ export const VideoMarketingPage = () => {
       </div>
 
       {/* BẢNG DỮ LIỆU */}
-      <div className="bg-white rounded-b-xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-[#edf1f5] border-b border-gray-100">
+      <div className="flex-1 min-h-0 bg-white rounded-b-xl border border-gray-100 shadow-sm flex flex-col">
+        <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar">
+        <table className="w-full text-left ">
+          <thead className="bg-[#edf1f5] sticky top-0 z-30 shadow-sm">
             <tr>
               <th className="p-4 w-12 text-center">
                 <input
@@ -699,7 +700,7 @@ export const VideoMarketingPage = () => {
             ))}
           </tbody>
         </table>
-
+</div>
         {tasks.length === 0 && (
           <div className="p-20 text-center text-slate-300 flex flex-col items-center gap-2">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">

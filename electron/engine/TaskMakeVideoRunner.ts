@@ -61,7 +61,8 @@ export class TaskRunner {
         const maxThreads = thread || 1;
         const limit = pLimit(maxThreads);
 
-        const keyManager = new GeminiKeyManager(apikey_gemini);
+        //const keyManager = new GeminiKeyManager(apikey_gemini);
+        const geminiService = new GeminiService(apikey_gemini);
         const shopeeManager = new ShopeeProfileManager(profiles_aff);
         const grokManager = new GrokProfileManager(profiles_grok);
 
@@ -107,7 +108,7 @@ export class TaskRunner {
                 }
             }
         };
-        logger.info(tasks)
+        
         const promises = tasks.map((task: any, index: number) => {
             return limit(async () => {
                 let save_path_project = output_video;
@@ -160,10 +161,10 @@ export class TaskRunner {
 
 
                         currentProfileId = "";
-                        logger.info(res)
-                        if (!res.success) throw new Error(res.message || "Lỗi cào Shopee");
+                        
+                        if (!res.success) throw new Error(res.message || "Lỗi cào");
                         return res.data;
-                    }, "Cào dữ liệu Shopee", task.id);
+                    }, "Cào dữ liệu", task.id);
 
 
 
@@ -182,14 +183,13 @@ export class TaskRunner {
                     const resultGenPrompt = await retryStep(async () => {
                         if (this.stoppedTaskIds.has(task.id)) throw new Error("CANCELLED");
 
-                        const currentKey = await keyManager.getAvailableKey();
-                        const geminiService = new GeminiService(currentKey);
+
                         const res = await geminiService.generateVideoPrompt(productInfo.productTitle, productInfo.productDesc, prompt_review, task.outputCount);
 
 
                         if (!res.success) {
                             if (res.ratelimit) {
-                                keyManager.releaseKey(currentKey, true);
+                               
                                 this.event.sender.send('video:task-log', {
                                     status: 'processing',
                                     message: `Gemini bị rate limit`,
@@ -198,10 +198,9 @@ export class TaskRunner {
                                 });
                                 return null
                             }
-                            throw new Error("Gemini không tạo được prompt");
-                        } else {
-                            keyManager.releaseKey(currentKey);
-                        }
+                            
+                            throw new Error(res.error);
+                        } 
 
                         this.event.sender.send('video:task-log', { status: 'processing', message: `✅ Prompt thành công`, data: { prompt: prompt_video }, taskId: task.id });
                         return res.data;
