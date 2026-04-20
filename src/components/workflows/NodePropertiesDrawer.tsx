@@ -159,6 +159,28 @@ const NODE_FIELDS_CONFIG: Record<
     ],
     // Không có showInspector -> Sẽ không hiện nút
   },
+  opencv_find_and_tap: {
+    fields: [
+      {
+        name: "templateName",
+        label: "Tên file ảnh mẫu (trong thư mục templates)",
+        type: "text",
+        placeholder: "icon_tivi.png",
+      },
+      {
+        name: "threshold",
+        label: "Độ chính xác (0.1 đến 1.0)",
+        type: "number",
+        placeholder: "0.8",
+      },
+      {
+        name: "mode",
+        label: "icon || text",
+        type: "text",
+        placeholder: "icon",
+      },
+    ],
+  },
   // ... các node khác tương tự
 };
 
@@ -440,7 +462,7 @@ export const NodePropertiesDrawer = ({
               <label className="text-[10px] font-bold text-slate-500 block mb-1.5 ml-1 italic">
                 Chiến lược khi lỗi
               </label>
-              <select className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none cursor-pointer">
+              <select onChange={(e) => updateNodeData("handleError", e.target.value)}  value={node.data.handleError} className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none cursor-pointer">
                 <option>Stop workflow</option>
                 <option>Ignore and continue</option>
                 <option>Retry 3 times</option>

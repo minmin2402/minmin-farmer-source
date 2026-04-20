@@ -1,5 +1,17 @@
 [
   {
+    "version": "1.3.9",
+    "date": "2026-04-20",
+    "content": [
+      "+ Tự dừng task, và reset trạng thái khi tắt ứng dụng",
+      "+ Thêm bộ lọc trạng thái video để dễ quản lý",
+      "+ Thêm chế độ Review không cần dùng VBeeAI TTS",
+      "+ Tạo và lưu được nhiều bộ prompt mẫu",
+      "+ Thay đổi cơ chế tạo video trên 10s giảm thiểu lỗi"
+
+    ]
+  },
+  {
     "version": "1.3.8",
     "date": "2026-04-20",
     "content": [

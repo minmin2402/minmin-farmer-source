@@ -2,7 +2,7 @@
 import { app, BrowserWindow, dialog, globalShortcut, ipcMain, IpcMainInvokeEvent, shell } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { exec, execSync, spawn } from 'node:child_process';
+import { exec, execFile, execSync, spawn } from 'node:child_process';
 import xpath from 'xpath';
 import { DOMParser } from 'xmldom'
 
@@ -40,6 +40,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const Adb = require('adbkit')
 
 
+
 process.env.APP_ROOT = path.join(__dirname, '..')
 
 
@@ -56,6 +57,16 @@ const adbExePtr = path.join(binPath, 'adb.exe');
 const keyboardPtr = path.join(binPath, 'apk');
 const client = Adb.createClient({ bin: adbExePtr });
 
+const visionExePath = path.join(binPath, 'minmin_vision.exe')
+
+process.on('uncaughtException', (error) => {
+  // Chỉ in ra console để ông debug, không hiện popup lên màn hình khách hàng
+  console.log('⚠️ [Bỏ qua lỗi ngầm]:', error.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.log('⚠️ [Promise từ chối ngầm]:', reason);
+});
 
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
@@ -124,7 +135,7 @@ ipcMain.handle('adb:viewphone', async (_event, deviceId, x, y, width, height) =>
   scrcpyProcess.stdout.on('data', (data) => {
     // Nếu thấy dòng "Texture: ..." là chắc chắn đã lên hình
     logger.info(`[Scrcpy Log ${deviceId}]: ${data}`);
-})
+  })
   // Giữ lại cái này để theo dõi nếu còn lỗi khác
   scrcpyProcess.stderr.on('data', (data) => {
     logger.error(`[Scrcpy Error ${deviceId}]: ${data}`);
@@ -342,6 +353,75 @@ ipcMain.handle('adb:execute', async (_event, { deviceId, action, params }) => {
 
         // Lệnh click tọa độ thần thánh
         await client.shell(deviceId, `input tap ${x} ${y}`);
+        break;
+      }
+      case 'opencv_find_and_tap': {
+        // Cấp ngay một giá trị mặc định cho an toàn (0.7 hoặc 0.8)
+        const thresholdVal = params.threshold ? params.threshold.toString() : "0.7";
+        const modeVal = params.mode ? params.mode.toString() : "icon";
+
+        const screenPath = path.join(app.getPath('temp'), `screen_${deviceId}.png`);
+        const templatePath = path.join(binPath, 'templates', params.templateName);
+
+        try {
+          // 1. Chụp ảnh màn hình từ điện thoại
+          const dumpStream = await client.shell(deviceId, `screencap -p /sdcard/screen_vision.png`);
+          await Adb.util.readAll(dumpStream);
+
+          // 2. Kéo ảnh về máy tính để xử lý
+          const transfer = await client.pull(deviceId, '/sdcard/screen_vision.png');
+          await new Promise((resolve, reject) => {
+            const chunks: any[] = [];
+            transfer.on('data', (chunk: any) => chunks.push(chunk));
+            transfer.on('end', () => {
+              fs.writeFileSync(screenPath, Buffer.concat(chunks));
+              resolve(true);
+            });
+            transfer.on('error', reject);
+          });
+
+          // 3. Chạy file EXE Vision để tìm tọa độ
+          const visionResult: any = await new Promise((resolve) => {
+            execFile(visionExePath, [screenPath, templatePath, thresholdVal,modeVal], (error, stdout) => {
+              if (error) return resolve({ success: false, error: error.message });
+              try {
+                resolve(JSON.parse(stdout.trim()));
+              } catch (e) {
+                resolve({ success: false, error: "Lỗi phân tích kết quả Vision" });
+              }
+            });
+          });
+
+          // 4. DỌN DẸP NGAY LẬP TỨC (Dù thành công hay thất bại cũng phải xóa file rác)
+          if (fs.existsSync(screenPath)) {
+            fs.unlinkSync(screenPath);
+          }
+
+          // 5. Nếu tìm thấy tọa độ, thực hiện chạm (TAP)
+          if (visionResult.success && visionResult.x && visionResult.y) {
+            logger.info(`[Vision] ✅ Tìm thấy mục tiêu tại ${visionResult.x}, ${visionResult.y} (Độ tin cậy: ${visionResult.confidence}). Đang thực hiện Tap...`);
+            
+            await client.shell(deviceId, `input tap ${visionResult.x} ${visionResult.y}`);
+            
+            return {
+              success: true,
+              x: visionResult.x,
+              y: visionResult.y,
+              log: `Đã chạm vào tọa độ tìm được`
+            };
+          }
+
+          // Nếu không tìm thấy, trả về log warning
+          logger.warn(`[Vision] ⚠️ Không tìm thấy ảnh ${params.templateName}`);
+          return visionResult;
+
+        } catch (err: any) {
+          // Bọc lỗi xóa file lỡ có trục trặc
+          if (fs.existsSync(screenPath)) fs.unlinkSync(screenPath);
+          
+          logger.error("[Vision] ❌ Lỗi:", err.message);
+          return { success: false, error: err.message };
+        }
         break;
       }
       case 'tap_xpath': {
@@ -648,10 +728,10 @@ async function createWindow() {
     autoUpdater.on('download-progress', (progressObj) => {
       let log_message = "Tốc độ: " + Math.floor(progressObj.bytesPerSecond / 1024) + "KB/s";
       log_message = log_message + ' - Đã tải ' + Math.floor(progressObj.percent) + '%';
-      
+
       // Gửi text status cho khách đọc
       splashWindow?.webContents.send('status', log_message);
-      
+
       // 🚀 THÊM DÒNG NÀY: Bắn đúng số % sang để thanh tiến trình vít ga chạy
       splashWindow?.webContents.send('download-progress', progressObj.percent);
     });

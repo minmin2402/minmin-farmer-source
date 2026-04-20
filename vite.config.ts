@@ -30,7 +30,6 @@ export default defineConfig({
             ...(isBuild ? [obfuscator({
               options: {
                 compact: true,
-                // ❌ XOÁ/TẮT 2 THẰNG NÀY (Nó là thủ phạm tạo ra biến D, E, F...)
                 controlFlowFlattening: true,
                 deadCodeInjection: false,
                 stringArray: false,

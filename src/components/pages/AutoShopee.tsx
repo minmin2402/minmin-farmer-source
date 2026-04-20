@@ -149,41 +149,37 @@ export const AutoShopee = () => {
 
     let currentNodeId = startNode.id;
     const visited = new Set();
-
-    // 🚀 KHỞI TẠO BIẾN: Đưa 3 biến truyền tay vào bộ nhớ ngay từ đầu
+    
+    // 🚀 KHỞI TẠO BIẾN
     const executionVars: Record<string, string> = {
       videoPath: manualVars.videoPath || "",
       affiliate: manualVars.affiliate || "",
       title: manualVars.title || "",
     };
 
-    // 2. Vòng lặp duyệt node "thần thánh" của MinMin
+    // 2. Vòng lặp duyệt node
     while (currentNodeId) {
       if (isStoppingTaskRef.current.includes(taskId)) {
         setLogTasks((prev: any) => ({
           ...prev,
           [taskId]: [
             ...(prev[taskId] || []),
-            "🚫 Task ${taskId} dừng theo lệnh của bạn.",
+            `🚫 Task ${taskId} dừng theo lệnh.`,
           ],
         }));
-        console.log(`🚫 Task ${taskId} dừng theo lệnh của MinMin.`);
-
-        // QUAN TRỌNG: Dừng xong thì tự xóa mình khỏi danh sách để lần sau Play lại được
+        
         isStoppingTaskRef.current = isStoppingTaskRef.current.filter(
           (id) => id !== taskId,
         );
-
-        break; // Thoát vòng lặp, "phanh" khẩn cấp!
+        break; // Phanh khẩn cấp!
       }
+      
       if (visited.has(currentNodeId)) break;
       visited.add(currentNodeId);
-
       const node = nodes.find((n) => n.id === currentNodeId);
       if (!node) break;
 
       if (node.type !== "start") {
-        // Logic xử lý biến {{ten_bien}}
         let finalParams = JSON.parse(JSON.stringify(node.data || {}));
         const replaceVars = (str: any) => {
           if (typeof str !== "string") return str;
@@ -197,40 +193,72 @@ export const AutoShopee = () => {
           finalParams[key] = replaceVars(finalParams[key]);
         });
 
-        // Gửi lệnh xuống Electron
+        // --- 🚀 LOGIC XỬ LÝ LỖI (HANDLE ERROR) ---
+        const errorStrategy = node.data.handleError || "Stop workflow";
+        const maxRetries = errorStrategy === "Retry 3 times" ? 3 : 1;
+        let attempt = 0;
+        let result: any = null;
 
-        setLogTasks((prev: any) => ({
-          ...prev,
-          [taskId]: [
-            ...(prev[taskId] || []),
-            `Đang chạy lệnh ${node.data.type}`,
-          ],
-        }));
-        // @ts-ignore
-        const result = await window.electronAPI.executeAdb({
-          deviceId,
-          action: node.data.type,
-          params: finalParams,
-        });
-        if (result?.success) {
+        // Vòng lặp Retry
+        while (attempt < maxRetries) {
+          attempt++;
+          
           setLogTasks((prev: any) => ({
             ...prev,
             [taskId]: [
               ...(prev[taskId] || []),
-              `Chạy lệnh ${node.data.type} thành công`,
+              `Đang chạy lệnh ${node.data.type} ${maxRetries > 1 ? `(Lần ${attempt}/${maxRetries})` : ""}`,
             ],
           }));
-        } else {
-          setLogTasks((prev: any) => ({
-            ...prev,
-            [taskId]: [
-              ...(prev[taskId] || []),
-              `${node.data.type} Thất bại ${result?.error}`,
-            ],
-          }));
+
+          // @ts-ignore
+          result = await window.electronAPI.executeAdb({
+            deviceId,
+            action: node.data.type,
+            params: finalParams,
+          });
+
+          if (result?.success) {
+            setLogTasks((prev: any) => ({
+              ...prev,
+              [taskId]: [
+                ...(prev[taskId] || []),
+                `✅ Chạy lệnh ${node.data.type} thành công`,
+              ],
+            }));
+            break; 
+          } else {
+            setLogTasks((prev: any) => ({
+              ...prev,
+              [taskId]: [
+                ...(prev[taskId] || []),
+                `❌ ${node.data.type} Thất bại: ${result?.error}`,
+              ],
+            }));
+            
+            if (attempt < maxRetries) {
+              await new Promise((r) => setTimeout(r, 1500));
+            }
+          }
         }
 
-        // Nếu là node gán biến, lưu vào bộ nhớ
+        // --- KIỂM TRA KẾT QUẢ ---
+        if (!result?.success) {
+          if (errorStrategy === "Ignore and continue") {
+            setLogTasks((prev: any) => ({
+              ...prev,
+              [taskId]: [...(prev[taskId] || []), `⚠️ Bỏ qua lỗi và đi tiếp`],
+            }));
+          } else {
+            setLogTasks((prev: any) => ({
+              ...prev,
+              [taskId]: [...(prev[taskId] || []), `🛑 Dừng kịch bản do lỗi!`],
+            }));
+            updateTaskStatus(taskId, "error");
+            break; 
+          }
+        }
+
         if (node.data.type === "set_var") {
           setLogTasks((prev: any) => ({
             ...prev,
@@ -242,7 +270,6 @@ export const AutoShopee = () => {
           executionVars[node.data.var_name] = finalParams.var_value;
         }
 
-        // Đợi delay giữa các node
         setLogTasks((prev: any) => ({
           ...prev,
           [taskId]: [...(prev[taskId] || []), `Đợi ${node.data?.delay} ms`],
@@ -250,7 +277,6 @@ export const AutoShopee = () => {
         await new Promise((r) => setTimeout(r, node.data?.delay || 500));
       }
 
-      // Tìm node tiếp theo
       const edge = edges.find((e) => e.source === currentNodeId);
       currentNodeId = edge ? edge.target : null;
     }
@@ -303,7 +329,7 @@ export const AutoShopee = () => {
     ];
     // 2. Kiểm tra xem có trường nào trống không
     const missingField = requiredFields.find(
-      (field) => !task[field.key] || task[field.key].trim() === "",
+      (field) => !task[field.key] || task[field.key].trim() === "" || task[field.key].trim() === "none",
     );
 
     if (missingField) {
@@ -642,12 +668,14 @@ export const AutoShopee = () => {
                         className="w-full bg-transparent outline-none cursor-pointer appearance-none 
                    text-slate-700 font-medium focus:text-blue-600 transition-colors"
                       >
-                        <option value="" disabled className="text-slate-300">
+                        <option value={"none"}  className="text-slate-300">
                           Chọn workflow...
                         </option>
+
                         {availableWorkflows.map((wfName, idx) => (
+                          
                           <option
-                            key={idx}
+                            key={wfName}
                             value={wfName}
                             className="text-slate-800 bg-white"
                           >

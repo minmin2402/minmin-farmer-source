@@ -15,7 +15,7 @@ const nodeIcons: Record<string, React.ReactNode> = {
   // Tương tác thiết bị
   tap_xy: <MousePointer2 size={14} />,
   tap_xpath: <Search size={14} />,
-  tap_img: <Smartphone size={14} />,
+  opencv_find_and_tap: <Smartphone size={14} />,
   type_text: <Type size={14} />,
   paste: <ClipboardPaste size={14} />,
   copy: <Copy size={14} />,
@@ -60,6 +60,8 @@ export const WorkflowSidebar = () => {
       <NodeGroup title="Tương tác Thiết bị">
         <NodeButton label="Chạm (XY)" type="tap_xy" onDrag={onDragStart} />
         <NodeButton label="Chạm (XPath)" type="tap_xpath" onDrag={onDragStart} />
+        <NodeButton label="Chạm IMG" type="opencv_find_and_tap" onDrag={onDragStart} />
+
         <NodeButton label="Nhập văn bản" type="type_text" onDrag={onDragStart} />
         <NodeButton label="Dán" type="paste" onDrag={onDragStart} />
         <NodeButton label="Sao chép" type="copy" onDrag={onDragStart} />

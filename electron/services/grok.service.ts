@@ -1,3 +1,4 @@
+import { logger } from './../utils/logger';
 import axios from 'axios';
 import { app } from 'electron';
 import { IpcMainInvokeEvent } from 'electron';
@@ -6,7 +7,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { GpmService } from './gpm.service';
 import puppeteer from 'puppeteer-core';
-import { logger } from '../utils/logger';
+
 import { sleep } from './shopee.service';
 import { GrokProfileManager } from '../manager/ProfileManager';
 
@@ -60,7 +61,7 @@ export class GrokService {
                         grokService.saveNewHeaders(gpmProfileId, newHeaders);
                     }
                 } catch (error) {
-                    
+
                 }
                 finally {
                     try {
@@ -674,11 +675,12 @@ export class GrokService {
         profileId: string,
         imagePath: string | null = null,
         outputCount: number,
-        logCallback?: (msg: string) => void
+        isUseVbee: boolean = false,
+        retryStep: any
     ) {
-        const log = (msg: string) => {
-            if (logCallback) logCallback(msg);
-            logger.info(msg);
+        const sendLog = (msg: string) => {
+            logger.info(`[P${profileId}] ${msg}`);
+            _event.sender.send('video:task-log', { status: 'processing', message: msg, taskId });
         };
         const headers = this.buildRequestHeaders(profileId);
 
@@ -688,51 +690,41 @@ export class GrokService {
             post_id: null, video_url: null, is_429: false
         };
 
-        log(`[P${profileId}] VIDEO ${taskId}: ...`);
+        sendLog(`[P${profileId}] VIDEO ${taskId}: ...`);
 
         try {
             let fileMetadataId = null;
             let fileUri = null;
-            const uploadheader = {
-                ...headers,
-                "x-xai-request-id": uuidv4() // Ép cái ID mới toanh ở đây
-            };
+
+
+
             // BƯỚC 0: Xử lý và Upload ảnh (Nếu có)
-            // Lưu ý: Bước adjust_image_aspect_ratio ông đã làm bằng Sharp ở trên
             if (imagePath && fs.existsSync(imagePath)) {
-                log(`[P${profileId}] Bước 0: Upload ảnh làm gốc...`);
-                // Sử dụng hàm uploadImage anh em mình đã viết ở trên
-                // Giả định hàm uploadImage trả về { fileMetadataId, fileUri }
-                logger.info(imagePath)
-                const uploadRes = await this.uploadImage(imagePath, uploadheader);
+                sendLog(`[P${profileId}] Bước 0: Upload ảnh AI đã tạo`);
+                const uploadRes = await this.uploadImage(imagePath, { ...headers, "x-xai-request-id": uuidv4() });
                 if (uploadRes) {
-                    fileUri = uploadRes.fileUri; // Grok-3 thường dùng fileUri trực tiếp
+                    fileUri = uploadRes.fileUri;
                     fileMetadataId = uploadRes.fileMetadataId;
-                } else {
-                    result.error = "Lỗi upload ảnh";
-                    return result;
                 }
             }
 
             // BƯỚC 1: Tạo media post (Học theo logic Python)
-            // BƯỚC 1: Tạo media post
-            const postHeaders = {
-                ...headers,
-                "x-xai-request-id": uuidv4()
-            };
 
-            log(`[P${profileId}] Bước 1: Tạo media post...`);
-            const url1 = "https://grok.com/rest/media/post/create";
+
+            sendLog(`[P${profileId}] Tạo media post...`);
 
 
 
-            const promptGenVideo1 = `${prompt_video} \n ${prompt[0]?.visual_prompt ?? ""} `
+            const visualPart1 = prompt[0]?.visual_prompt ?? "";
+            const voicePart1 = !isUseVbee ? ` \n Voice_content: ${prompt[0]?.voice_content ?? ""}` : "Nhân vật không cần nói chuyện tôi sẽ lồng tiếng sau";
+            const promptGenVideo1 = `${prompt_video} \n Visual: ${visualPart1}${voicePart1}`;
+
             const payload1 = fileUri
                 ? { "mediaType": "MEDIA_POST_TYPE_IMAGE", "mediaUrl": `https://assets.grok.com/${fileUri}` }
                 : { "mediaType": "MEDIA_POST_TYPE_VIDEO", "prompt": promptGenVideo1 };
 
-            const res1 = await axios.post(url1, payload1, {
-                headers: postHeaders,
+            const res1 = await axios.post("https://grok.com/rest/media/post/create", payload1, {
+                headers: { ...headers, "x-xai-request-id": uuidv4() },
                 timeout: 30000,
                 // Ép trả về text nếu JSON parse lỗi
                 responseType: 'text'
@@ -759,109 +751,55 @@ export class GrokService {
             }
 
             if (!postId) {
-                logger.info("❌ Nội dung phản hồi thực tế:", res1.data);
+                sendLog("Không tìm thấy postId");
                 throw new Error("Không tìm thấy post_id trong phản hồi từ Grok");
             }
 
             result.post_id = postId;
-            log(`✅ [P${profileId}] Post ID thành công: ${postId}`);
-
             // BƯỚC 2: Tạo video (Sử dụng Stream để bóc Url)
-            log(`[P${profileId}] Bước 2: Tạo video (đợi render)...`);
-            const url2 = "https://grok.com/rest/app-chat/conversations/new";
+            sendLog(`[P${profileId}] Bước 2: Tạo video (đợi render)...`);
 
-            // Payload Grok-3 đặc chủng của ông
-            const payload2 = {
-                "temporary": true,
-                "modelName": "grok-3",
+            let currentVideoUrl = "";
+            let currentVideoId = "";
+            const payloadVideoPart1 = {
+                "temporary": true, "modelName": "grok-3",
                 "message": fileUri ? `https://assets.grok.com/${fileUri} ${promptGenVideo1} --mode=custom` : `${promptGenVideo1} --mode=custom`,
                 "fileAttachments": fileMetadataId ? [fileMetadataId] : [],
                 "toolOverrides": { "videoGen": true },
                 "enableSideBySide": true,
                 "responseMetadata": {
-                    "modelConfigOverride": {
-                        "modelMap": {
-                            "videoGenModelConfig": {
-                                "parentPostId": fileMetadataId || postId,
-                                "aspectRatio": "9:16",
-                                "videoLength": 10,
-                                "resolutionName": "720p"
-                            }
-                        }
-                    }
+                    "modelConfigOverride": { "modelMap": { "videoGenModelConfig": { "parentPostId": fileMetadataId || postId, "aspectRatio": "9:16", "videoLength": 10, "resolutionName": "720p" } } }
                 }
-            };
+            }
+            await retryStep(async () => {
 
-            const videoHeaders = {
-                ...headers,
-                "x-xai-request-id": uuidv4() // Ép cái ID mới toanh ở đây
-            };
+                _event.sender.send('video:task-log', { status: 'processing', message: `Tạo 0-10s đầu`, taskId });
+                const res = await axios.post("https://grok.com/rest/app-chat/conversations/new", payloadVideoPart1, { headers: { ...headers, "x-xai-request-id": uuidv4() }, responseType: 'stream', timeout: 180000 });
 
-            _event.sender.send('video:task-log', {
-                status: 'processing',
-                message: `Tạo 0-10 giây đầu video`,
-                taskId
-            });
-            const res2 = await axios.post(url2, payload2, { headers: videoHeaders, responseType: 'stream', timeout: 180000 });
+                const info = await this.parseVideoInfo(res, logger);
 
-            let videoUrlPath: string | null = null;
-            let videoId: string | null = null;
-
-            // Bóc tách videoUrl từ stream
-            // Bóc tách cả videoUrl và videoId từ stream
-            await new Promise((resolve, reject) => {
-                res2.data.on('data', (chunk: Buffer) => {
-                    const line = chunk.toString();
-
-                    // 1. Tìm videoUrl (như cũ)
-                    const matchUrl = line.match(/"videoUrl"\s*:\s*"([^"]+)"/);
-                    if (matchUrl) videoUrlPath = matchUrl[1];
-
-                    // 2. Tìm videoId (Cái này dùng để làm Parent cho bước Extend)
-                    const matchId = line.match(/"videoId"\s*:\s*"([^"]+)"/);
-                    if (matchId) videoId = matchId[1];
-
-                    // Mẹo: Nếu Grok trả về dạng JSON "id" bên trong object video, 
-                    // ta có thể dùng regex rộng hơn một chút
-                    if (!videoId) {
-                        const matchAlternativeId = line.match(/"id"\s*:\s*"([a-f0-9\-]{36})"/);
-                        if (matchAlternativeId) videoId = matchAlternativeId[1];
-                    }
-                });
-                res2.data.on('end', () => {
-                    logger.info(`✅ Đã bóc tách xong - URL: ${videoUrlPath}, ID: ${videoId}`);
-                    resolve({ videoUrlPath, videoId });
-                });
-                res2.data.on('error', reject);
-            });
-
-            if (!videoUrlPath) throw new Error("Không tìm thấy videoUrl trong stream");
-            result.video_url = videoUrlPath;
-            if (!videoId) throw new Error("Không tìm thấy videoId trong stream");
-
-            result.video_id = videoId;
-            _event.sender.send('video:task-log', {
-                status: 'processing',
-                message: `Tạo xong 10s`,
-                data: { resultVideoCount: 1 },
-                taskId
-            });
-
-            if (outputCount > 1) {
-                // BƯỚC 3: EXTEND VIDEO
+                currentVideoUrl = info.videoUrlPath;
+                currentVideoId = info.videoId;
+                if (!currentVideoUrl) throw new Error("Đoạn 1 lỗi: Không có URL");
                 _event.sender.send('video:task-log', {
                     status: 'processing',
-                    message: `Tạo đoạn 10-20 giây của video`,
+                    message: `Tạo xong 10s`,
+                    data: { resultVideoCount: 1 },
                     taskId
                 });
-                const videoHeaders2 = {
-                    ...headers,
-                    "x-xai-request-id": uuidv4() // Ép cái ID mới toanh ở đây
-                };
-                const promptvideo2 = prompt[1].visual_prompt;
-                const payload2video = {
-                    ...payload2,
-                    "message": promptvideo2,
+
+
+            }, "Đoạn 1", taskId, 3);
+
+
+
+            if (outputCount > 1) {
+                const visualPart2 = prompt[1]?.visual_prompt ?? "";
+                const voicePart2 = !isUseVbee ? ` \n Voice_content: ${prompt[1]?.voice_content ?? ""}` : "Nhân vật không cần nói chuyện tôi sẽ lồng tiếng sau";
+                const promptGenVideo2 = `${prompt_video} \n Visual: ${visualPart2}${voicePart2}`;
+                const payloadVideoPart2 = {
+                    ...payloadVideoPart1,
+                    "message": promptGenVideo2,
                     "responseMetadata": {
                         "modelConfigOverride": {
                             "modelMap": {
@@ -869,14 +807,14 @@ export class GrokService {
                                     "aspectRatio": "9:16",
                                     "videoLength": 10,
                                     "resolutionName": "720p",
-                                    "extendPostId": videoId,
+                                    "extendPostId": currentVideoId,
                                     "isVideoEdit": false,
                                     "isVideoExtension": true,
                                     "mode": "custom",
-                                    "originalPostId": videoId,
-                                    "originalPrompt": promptvideo2,
+                                    "originalPostId": currentVideoId,
+                                    "originalPrompt": promptGenVideo2,
                                     "originalRefType": "ORIGINAL_REF_TYPE_VIDEO_EXTENSION",
-                                    "parentPostId": videoId,
+                                    "parentPostId": currentVideoId,
                                     "stitchWithExtendPostId": true,
                                     "videoExtensionStartTime": 10.031667
 
@@ -887,123 +825,92 @@ export class GrokService {
                     }
 
                 }
-                const res2video = await axios.post(url2, payload2video, { headers: videoHeaders2, responseType: 'stream', timeout: 180000 });
+                // BƯỚC 3: EXTEND VIDEO
+                try {
 
-                await new Promise((resolve, reject) => {
-                    res2video.data.on('data', (chunk: Buffer) => {
-                        const line = chunk.toString();
+                    await retryStep(async () => {
+                        _event.sender.send('video:task-log', {
+                            status: 'processing',
+                            message: `Tạo đoạn 10-20 giây của video`,
+                            taskId
+                        });
+                        const res = await axios.post("https://grok.com/rest/app-chat/conversations/new", payloadVideoPart2, { headers: { ...headers, "x-xai-request-id": uuidv4() }, responseType: 'stream', timeout: 180000 });
 
-                        // 1. Tìm videoUrl (như cũ)
-                        const matchUrl = line.match(/"videoUrl"\s*:\s*"([^"]+)"/);
-                        if (matchUrl) videoUrlPath = matchUrl[1];
-
-                        // 2. Tìm videoId (Cái này dùng để làm Parent cho bước Extend)
-                        const matchId = line.match(/"videoId"\s*:\s*"([^"]+)"/);
-                        if (matchId) videoId = matchId[1];
-
-                        // Mẹo: Nếu Grok trả về dạng JSON "id" bên trong object video, 
-                        // ta có thể dùng regex rộng hơn một chút
-                        if (!videoId) {
-                            const matchAlternativeId = line.match(/"id"\s*:\s*"([a-f0-9\-]{36})"/);
-                            if (matchAlternativeId) videoId = matchAlternativeId[1];
-                        }
-                    });
-                    res2video.data.on('end', () => {
-                        logger.info(`✅ Đã bóc tách xong - URL: ${videoUrlPath}, ID: ${videoId}`);
+                        const info = await this.parseVideoInfo(res, logger);
+                        currentVideoUrl = info.videoUrlPath; // Cập nhật URL mới nếu thành công
+                        currentVideoId = info.videoId;
                         _event.sender.send('video:task-log', {
                             status: 'processing',
                             message: `Tạo xong 20s`,
                             data: { resultVideoCount: 2 },
                             taskId
                         });
-                        resolve({ videoUrlPath, videoId });
-                    });
-                    res2video.data.on('error', reject);
-                });
-            }
-            if (outputCount > 2) {
-                _event.sender.send('video:task-log', {
-                    status: 'processing',
-                    message: `Tạo đoạn 20-30 giây của video`,
-                    taskId
-                });
-                const videoHeaders3 = {
-                    ...headers,
-                    "x-xai-request-id": uuidv4() // Ép cái ID mới toanh ở đây
-                };
-                const promptvideo3 = prompt[2].visual_prompt
-                const payload3video = {
-                    ...payload2,
-                    "message": promptvideo3,
-                    "responseMetadata": {
-                        "modelConfigOverride": {
-                            "modelMap": {
-                                "videoGenModelConfig": {
-                                    "aspectRatio": "9:16",
-                                    "videoLength": 10,
-                                    "resolutionName": "720p",
-                                    "extendPostId": videoId,
-                                    "isVideoEdit": false,
-                                    "isVideoExtension": true,
-                                    "mode": "custom",
-                                    "originalPostId": videoId,
-                                    "originalPrompt": promptvideo3,
-                                    "originalRefType": "ORIGINAL_REF_TYPE_VIDEO_EXTENSION",
-                                    "parentPostId": videoId,
-                                    "stitchWithExtendPostId": true,
-                                    "videoExtensionStartTime": 20
+
+                    }, "Đoạn 2", taskId, 3);
+
+                    if (outputCount > 2) {
+                        try {
+                            const visualPart3 = prompt[2]?.visual_prompt ?? "";
+                            const voicePart3 = !isUseVbee ? ` \n Voice_content: ${prompt[2]?.voice_content ?? ""}` : "Nhân vật không cần nói chuyện tôi sẽ lồng tiếng sau";
+                            const promptGenVideo2 = `${prompt_video} \n Visual: ${visualPart3}${voicePart3}`;
+                            const payloadVideoPart3 = {
+                                ...payloadVideoPart2,
+                                "message": promptGenVideo2,
+                                "responseMetadata": {
+                                    "modelConfigOverride": {
+                                        "modelMap": {
+                                            "videoGenModelConfig": {
+                                                "aspectRatio": "9:16",
+                                                "videoLength": 10,
+                                                "resolutionName": "720p",
+                                                "extendPostId": currentVideoId,
+                                                "isVideoEdit": false,
+                                                "isVideoExtension": true,
+                                                "mode": "custom",
+                                                "originalPostId": currentVideoId,
+                                                "originalPrompt": promptGenVideo2,
+                                                "originalRefType": "ORIGINAL_REF_TYPE_VIDEO_EXTENSION",
+                                                "parentPostId": currentVideoId,
+                                                "stitchWithExtendPostId": true,
+                                                "videoExtensionStartTime": 20
 
 
+                                            }
+                                        }
+                                    }
                                 }
+
                             }
+                            await retryStep(async () => {
+                                _event.sender.send('video:task-log', { status: 'processing', message: `Tạo 20-30s`, taskId });
+                                const res = await axios.post("https://grok.com/rest/app-chat/conversations/new", payloadVideoPart3, { headers: { ...headers, "x-xai-request-id": uuidv4() }, responseType: 'stream', timeout: 180000 });
+
+                                const info = await this.parseVideoInfo(res, logger);
+                                currentVideoUrl = info.videoUrlPath;
+                                currentVideoId = info.videoId;
+                                _event.sender.send('video:task-log', {
+                                    status: 'processing',
+                                    message: `Tạo xong 30s`,
+                                    data: { resultVideoCount: 3 },
+                                    taskId
+                                });
+                            }, "Đoạn 3", taskId, 3);
+                        } catch (e) {
+                            logger.error("⚠️ Đoạn 3 lỗi sau 3 lần thử, lấy kết quả đoạn 2");
                         }
                     }
 
+
+
+                } catch (error) {
+                    logger.error("⚠️ Đoạn 2 lỗi sau 3 lần thử, lấy kết quả đoạn 1");
                 }
-                const res2video = await axios.post(url2, payload3video, { headers: videoHeaders3, responseType: 'stream', timeout: 180000 });
-
-                await new Promise((resolve, reject) => {
-                    res2video.data.on('data', (chunk: Buffer) => {
-                        const line = chunk.toString();
-
-                        // 1. Tìm videoUrl (như cũ)
-                        const matchUrl = line.match(/"videoUrl"\s*:\s*"([^"]+)"/);
-                        if (matchUrl) videoUrlPath = matchUrl[1];
-
-                        // 2. Tìm videoId (Cái này dùng để làm Parent cho bước Extend)
-                        const matchId = line.match(/"videoId"\s*:\s*"([^"]+)"/);
-                        if (matchId) videoId = matchId[1];
-
-                        // Mẹo: Nếu Grok trả về dạng JSON "id" bên trong object video, 
-                        // ta có thể dùng regex rộng hơn một chút
-                        if (!videoId) {
-                            const matchAlternativeId = line.match(/"id"\s*:\s*"([a-f0-9\-]{36})"/);
-                            if (matchAlternativeId) videoId = matchAlternativeId[1];
-                        }
-                    });
-                    res2video.data.on('end', () => {
-                        logger.info(`✅ Đã bóc tách xong - URL: ${videoUrlPath}, ID: ${videoId}`);
-                        _event.sender.send('video:task-log', {
-                            status: 'processing',
-                            message: `Tạo xong video thứ 3`,
-                            data: { resultVideoCount: 3 },
-                            taskId
-                        });
-                        resolve({ videoUrlPath, videoId });
-                    });
-                    res2video.data.on('error', reject);
-                });
             }
-
-
-
-
-
 
             // BƯỚC 4: Download video
             const downloadHeaders = this.buildDownloadHeaders(profileId);
-            log(`[P${profileId}] Bước 3: Download video...`);
-            const downloadUrl = `https://assets.grok.com/${videoUrlPath}?cache=1&dl=1`;
+            sendLog(`[P${profileId}] Bước 3: Download video...`);
+            const downloadUrl = `https://assets.grok.com/${currentVideoUrl}?cache=1&dl=1`;
             const finalFilename = path.join(outputDir, `video_${taskId}_${Date.now()}.mp4`);
 
             const res3 = await axios.get(downloadUrl, {
@@ -1013,7 +920,7 @@ export class GrokService {
             });
 
             fs.writeFileSync(finalFilename, res3.data);
-            log(`✅ [P${profileId}] Tải xong video: ${path.basename(finalFilename)}`);
+            sendLog(`✅ [P${profileId}] Tải xong video: ${path.basename(finalFilename)}`);
 
             result.success = true;
             result.filename = finalFilename;
@@ -1022,10 +929,33 @@ export class GrokService {
             logger.error(error.message)
             result.error = error.response?.status === 429 ? "Rate Limit 429" : error.message;
             result.is_429 = error.response?.status === 429;
-            log(`❌ [P${profileId}] Lỗi: ${result.error}`);
+            logger.error(`❌ [P${profileId}] Lỗi: ${result.error}`);
         }
 
         return result;
+    }
+
+    private async parseVideoInfo(res: any, logger: any): Promise<{ videoUrlPath: string; videoId: string }> {
+        let videoUrlPath = "";
+        let videoId = "";
+        logger.info("parseVideoInfo")
+        return new Promise((resolve, reject) => {
+            res.data.on('data', (chunk: Buffer) => {
+                const line = chunk.toString();
+                const matchUrl = line.match(/"videoUrl"\s*:\s*"([^"]+)"/);
+                if (matchUrl) videoUrlPath = matchUrl[1];
+
+                const matchId = line.match(/"videoId"\s*:\s*"([^"]+)"/);
+                if (matchId) videoId = matchId[1];
+
+                if (!videoId) {
+                    const matchAlt = line.match(/"id"\s*:\s*"([a-f0-9\-]{36})"/);
+                    if (matchAlt) videoId = matchAlt[1];
+                }
+            });
+            res.data.on('end', () => resolve({ videoUrlPath, videoId }));
+            res.data.on('error', reject);
+        });
     }
 
 

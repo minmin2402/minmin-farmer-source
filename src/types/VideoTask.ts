@@ -19,3 +19,12 @@ export interface VideoTask {
   log: string;
   status: "error" | "processing" | "success" | "none";
 }
+
+export interface PromptSet {
+  id: string;
+  name: string;
+  prompt_review: string;
+  prompt_image: string;
+  prompt_video: string;
+  isDefault?: boolean; // Để đánh dấu mẫu của hệ thống
+}

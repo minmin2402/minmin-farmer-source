@@ -110,11 +110,30 @@ export async function addBackgroundMusic(videoPath: string, audioPath: string, o
     });
 }
 
-export const addLogoAndMusic = async (inputVideo: string, logoPath: string, musicPath: string, outputPath: string, isLogo: boolean, isMusic: boolean) => {
+export const addLogoAndMusic = async (inputVideo: string, logoPath: string, musicPath: string, isLogo: boolean, isMusic: boolean) => {
 
     // --- BƯỚC 1: Xử lý Video (Logo) ---
     if (isLogo && fs.existsSync(logoPath)) {
-        await addLogoToVideo(inputVideo, logoPath, outputPath)
+        const folder = path.dirname(inputVideo);
+        const tempOutput = path.join(folder, `temp_${Date.now()}_video.mp4`);
+        try {
+            // 2. Kiểm tra nếu file temp đã tồn tại từ trước thì xóa
+            if (fs.existsSync(tempOutput)) {
+                await fsc.unlink(tempOutput);
+            }
+
+            await addLogoToVideo(inputVideo, logoPath, tempOutput)
+
+            await fsc.unlink(inputVideo);
+            // Đổi tên file temp thành tên file outputPath chính thức
+            await fsc.rename(tempOutput, inputVideo);
+        } catch (error) {
+            logger.error("Lỗi trong quá trình xử lý:", error);
+            // Nếu lỗi, thử xóa file temp nếu nó đã lỡ tạo ra
+            if (fs.existsSync(tempOutput)) {
+                await fsc.unlink(tempOutput).catch(() => { });
+            }
+        }
     }
 
 
@@ -132,14 +151,14 @@ export const addLogoAndMusic = async (inputVideo: string, logoPath: string, musi
 
             // 3. Chạy FFmpeg: Input là outputPath (file hiện tại), Output là tempOutput
             // Lưu ý: videoPath lúc này là outputPath
-            await addBackgroundMusic(outputPath, musicPath, tempOutput);
+            await addBackgroundMusic(inputVideo, musicPath, tempOutput);
 
             // 4. Xử lý tráo đổi file:
             // Xóa file outputPath cũ
-            await fsc.unlink(outputPath);
+            await fsc.unlink(inputVideo);
 
             // Đổi tên file temp thành tên file outputPath chính thức
-            await fsc.rename(tempOutput, outputPath);
+            await fsc.rename(tempOutput, inputVideo);
 
             logger.info("Thêm nhạc nền và cập nhật file thành công!");
         } catch (error) {

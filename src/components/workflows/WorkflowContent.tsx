@@ -7,6 +7,7 @@ import {
   Background,
   Controls,
   useReactFlow,
+
   Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -30,7 +31,7 @@ const initialNodes: any[] = [
     id: "start-node",
     type: "actionNode",
     position: { x: 250, y: 50 },
-    data: { label: "BẮT ĐẦU WORKFLOW", type: "start", delay: 0 },
+    data: { label: "BẮT ĐẦU WORKFLOW", type: "start", delay: 0, handleError:"Stop workflow" },
   },
 ];
 
@@ -287,11 +288,12 @@ export const WorkflowContent = () => {
     reader.onload = (event) => {
       try {
         const json = JSON.parse(event.target?.result as string);
+        console.log(json)
         if (json.nodes && json.edges) {
           setNodes(json.nodes);
           setEdges(json.edges);
           // Tự động fit view để thấy toàn bộ node vừa load
-          setTimeout(() => fitView(), 100);
+          
         }
       } catch (err) {
         alert("File script không đúng định dạng!");
@@ -635,6 +637,3 @@ export const WorkflowContent = () => {
     </div>
   );
 };
-function fitView(): void {
-  throw new Error("Function not implemented.");
-}

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { ConfigModalVideoMKT } from "../modals/ConfigModalVideoMKT";
 import { STORAGE_KEY } from "../../types/KeyLocalStorage";
-import { VideoTask } from "../../types/VideoTask";
+import { PromptSet, VideoTask } from "../../types/VideoTask";
 import { ResultTaskVideoModal } from "../modals/ResultTaskVideoModal";
 import {
   HeaderColoredButton,
@@ -23,7 +23,7 @@ import {
   HeaderActionButton,
 } from "../tools/Button";
 import toast from "react-hot-toast";
-import { prompt_img, prompt_video } from "../../const";
+import { DEFAULT_PROMPTS, prompt_img, prompt_video } from "../../const";
 
 interface ConfigVideoMKT {
   output_video: string;
@@ -46,6 +46,7 @@ interface ConfigVideoMKT {
   prompt_review: string | null;
   apikey_gemini: string[];
   model_ai_img: "banana-pro" | "nano-banana-2";
+  isUseVbee: boolean;
   voice_code:
     | "s_hochiminh_male_nguoikechuyenbali2_advertise_vc"
     | "n_hanoi_male_quangquangcao_advertise_vc"
@@ -58,84 +59,76 @@ interface ConfigVideoMKT {
   logoPath: string;
   isEnabledMusic: boolean;
   musicPath: string;
-  omo_api_key:string;
+  omo_api_key: string;
+  activePromptId: string;
+  customPrompts: PromptSet[];
 }
-let isAppInitialized = false;
+type FilterStatus = VideoTask["status"] | "all";
+let isCleanedUp = false;
 export const VideoMarketingPage = () => {
-  // 1. Quản lý danh sách Task
   const [tasks, setTasks] = useState<VideoTask[]>(() => {
     const savedTasks = localStorage.getItem("minmin_videoMKT_tasks");
-    if (!savedTasks) return [];
-
-    try {
-      const parsedTasks: VideoTask[] = JSON.parse(savedTasks);
-
-      if (isAppInitialized) {
-        return parsedTasks;
-      }
-
-      const cleanedTasks = parsedTasks.map((task) => {
-        if (task.status === "processing") {
-          return {
-            ...task,
-            status: "none", // Ở đây TS đang hiểu là string
-            log: "Đã dừng do đóng ứng dụng",
-          } as VideoTask; // Ép kiểu ở đây để TS yên tâm
-        }
-        return task;
-      });
-
-      isAppInitialized = true;
-      return cleanedTasks;
-    } catch (error) {
-      console.error("❌ Lỗi parse task từ localStorage:", error);
-      return [];
-    }
+    return savedTasks ? JSON.parse(savedTasks) : [];
   });
+
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const filteredTasks = tasks.filter((task) => {
+    if (filterStatus === "all") return true;
+    return task.status === filterStatus;
+  });
+
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [filterStatus]);
 
   const [selectedTaskResult, setSelectedTaskResult] =
     useState<VideoTask | null>(null);
-
+  const initialDefaultConfig: ConfigVideoMKT = {
+    output_video: "",
+    save_shopid_productid: true,
+    thread: 1,
+    delay_between: 3,
+    api_gpm: "http://localhost:9495",
+    profiles_aff: [],
+    method_load_page: "domcontentloaded",
+    time_loading_page: 60000,
+    time_wait_getdata: 20000,
+    profiles_veo3: [],
+    profiles_grok: [],
+    prompt_review: ``,
+    apikey_gemini: [],
+    model_ai_img: "banana-pro",
+    prompt_image: prompt_img,
+    prompt_video: prompt_video,
+    voice_code: "s_cantho_female_xanxan_advertise_vc",
+    vbee_app_id: "",
+    vbee_app_token: "",
+    speed_voice: 1,
+    isUseVbee: false,
+    isEnabledLogo: false,
+    logoPath: "",
+    isEnabledMusic: false,
+    musicPath: "",
+    omo_api_key: "",
+    activePromptId: "default-mkt",
+    customPrompts: [],
+  };
   const [configVideoMKT, setConfigVideoMKT] = useState<ConfigVideoMKT>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // TRỘN DỮ LIỆU: Ưu tiên cái đã lưu, nhưng nếu thiếu thì lấy từ mặc định
+        return {
+          ...initialDefaultConfig,
+          ...parsed,
+        };
       } catch (e) {
         console.error("Lỗi parse config:", e);
       }
     }
-    // Nếu không có hoặc lỗi thì dùng mặc định
-    return {
-      output_video: "",
-      save_shopid_productid: true,
-      thread: 1,
-      delay_between: 3,
-      api_gpm: "http://localhost:9495",
-      profiles_aff: [],
-      method_load_page: "domcontentloaded",
-      time_loading_page: 60000,
-      time_wait_getdata: 20000,
-      profiles_veo3: [],
-      profiles_grok: [],
-      prompt_review: `- Các prompt đầu: Giới thiệu sản phẩm. Tạo hook 3s đầu tiên thật hấp dẫn
-- Các prompt giữa: Thể hiện tính năng nổi bật của sản phẩm.
-- Các prompt cuối: Kêu gọi hành động (CTA).`,
-      apikey_gemini: [],
-      model_ai_img: "banana-pro",
-      prompt_image: prompt_img,
-      prompt_video: prompt_video,
-      voice_code: "s_cantho_female_xanxan_advertise_vc",
-      vbee_app_id: "",
-      vbee_app_token: "",
-      speed_voice: 1,
-      isEnabledLogo: false,
-      logoPath: "",
-      isEnabledMusic: false,
-      musicPath: "",
-      omo_api_key:""
-    };
+    return initialDefaultConfig;
   });
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isResultModalOpen, setIsResultModalOpen] = useState(false);
@@ -150,10 +143,15 @@ export const VideoMarketingPage = () => {
   };
   async function handleRunSelectedTaskAuto(task: VideoTask | null) {
     try {
+      const allPrompts = [...DEFAULT_PROMPTS, ...configVideoMKT.customPrompts];
+      const currentPrompt =
+        allPrompts.find((p) => p.id === configVideoMKT.activePromptId) ||
+        DEFAULT_PROMPTS[0];
+
       //@ts-ignore
       const result = await window.electronAPI.runTaskAutoVideo({
         tasks: task ? [task] : tasks.filter((t) => selectedIds.includes(t.id)),
-        configVideoMKT,
+        configVideoMKT: { ...configVideoMKT, ...currentPrompt },
       });
       if (!result.success) {
         // 🚩 Toast hiện ra message lỗi ngay lập tức!
@@ -222,7 +220,31 @@ export const VideoMarketingPage = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem("minmin_videoMKT_tasks", JSON.stringify(tasks));
+    if (!isCleanedUp) {
+      setTasks((prevTasks) => {
+        const cleaned = prevTasks.map((task) => {
+          if (task.status === "processing") {
+            return {
+              ...task,
+              status: "none",
+              log: "Đã dừng do đóng ứng dụng đột ngột",
+            } as VideoTask;
+          }
+          return task;
+        });
+
+        // Quan trọng: Lưu ngay vào localStorage sau khi dọn
+        localStorage.setItem("minmin_videoMKT_tasks", JSON.stringify(cleaned));
+        return cleaned;
+      });
+      isCleanedUp = true;
+    }
+  }, []); // Array rỗng để chỉ chạy khi Mount lần đầu
+  useEffect(() => {
+    // Chỉ lưu khi app đã được dọn dẹp xong
+    if (isCleanedUp) {
+      localStorage.setItem("minmin_videoMKT_tasks", JSON.stringify(tasks));
+    }
   }, [tasks]);
 
   useEffect(() => {
@@ -290,12 +312,17 @@ export const VideoMarketingPage = () => {
     );
   };
 
-  // Chọn tất cả / Bỏ chọn tất cả
+  // Chọn tất cả / Bỏ chọn tất cả dựa trên danh sách đã lọc
   const toggleSelectAll = () => {
-    if (selectedIds.length === tasks.length) {
+    // Nếu số lượng đang chọn bằng với số lượng task sau khi lọc thì bỏ chọn hết
+    if (
+      selectedIds.length === filteredTasks.length &&
+      filteredTasks.length > 0
+    ) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(tasks.map((t) => t.id));
+      // Ngược lại, chỉ lấy danh sách ID của những task đang hiển thị trong bộ lọc
+      setSelectedIds(filteredTasks.map((t) => t.id));
     }
   };
 
@@ -506,201 +533,308 @@ export const VideoMarketingPage = () => {
           </div>
         </div>
       </div>
+      <div className="flex items-center gap-2 mb-0 p-2 bg-gray-50 rounded-lg border border-gray-200">
+        <span className="text-[12px] font-bold text-gray-600 mr-2">
+          Bộ lọc:
+        </span>
+
+        {[
+          { id: "all", label: "Tất cả", color: "bg-gray-500" },
+          { id: "processing", label: "Đang chạy", color: "bg-blue-500" },
+          { id: "success", label: "Thành công", color: "bg-emerald-500" },
+          { id: "error", label: "Lỗi", color: "bg-red-500" },
+          { id: "none", label: "Đang chờ", color: "bg-gray-400" },
+        ].map((btn) => (
+          <button
+            key={btn.id}
+            onClick={() => setFilterStatus(btn.id as FilterStatus)}
+            className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
+              filterStatus === btn.id
+                ? `${btn.color} text-white shadow-md scale-105`
+                : "bg-white text-gray-500 border border-gray-300 hover:bg-gray-100"
+            }`}
+          >
+            {btn.label} (
+            {btn.id === "all"
+              ? tasks.length
+              : tasks.filter((t) => t.status === btn.id).length}
+            )
+          </button>
+        ))}
+      </div>
 
       {/* BẢNG DỮ LIỆU */}
       <div className="flex-1 min-h-0 bg-white rounded-b-xl border border-gray-100 shadow-sm flex flex-col">
         <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar">
-        <table className="w-full text-left ">
-          <thead className="bg-[#edf1f5] sticky top-0 z-30 shadow-sm">
-            <tr>
-              <th className="p-4 w-12 text-center">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-gray-300 accent-blue-600"
-                  checked={
-                    tasks.length > 0 && selectedIds.length === tasks.length
-                  }
-                  onChange={toggleSelectAll}
-                />
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest w-16 text-center">
-                STT
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                Link Sản Phẩm
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                Tên SP
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                Mô Tả
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                Ảnh SP
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                Ảnh AI
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                Chế độ xử lý
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
-                Số Video Output
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
-                TB Video Tạo Video
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
-                Thông Báo
-              </th>
-              <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right pr-8">
-                Thao tác
-              </th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-gray-50">
-            {tasks.map((task, index) => (
-              <tr
-                key={task.id}
-                className={`transition-colors ${selectedIds.includes(task.id) ? "bg-blue-50/30" : "hover:bg-slate-50/50"}`}
-              >
-                <td className="p-4 text-center">
+          <table className="w-full text-left ">
+            <thead className="bg-[#edf1f5] sticky top-0 z-30 shadow-sm">
+              <tr>
+                <th className="p-4 w-12 text-center">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 rounded border-gray-300 accent-blue-600 cursor-pointer"
-                    checked={selectedIds.includes(task.id)}
-                    onChange={() => toggleSelect(task.id)}
+                    className="w-4 h-4 rounded border-gray-300 accent-blue-600"
+                    checked={
+                      tasks.length > 0 && selectedIds.length === tasks.length
+                    }
+                    onChange={toggleSelectAll}
                   />
-                </td>
-                <td className="p-4 text-center text-xs font-bold text-black">
-                  {index + 1}
-                </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-gray-100 focus-within:border-blue-300 focus-within:bg-white transition-all">
-                    <Link2 size={14} className="text-slate-300" />
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest w-16 text-center">
+                  STT
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Link Sản Phẩm
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Tên SP
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Mô Tả
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Ảnh SP
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Ảnh AI
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Chế độ xử lý
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
+                  Số đoạn / 10s
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
+                  Đoạn Đã Xong
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
+                  Trạng Thái
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
+                  Thông Báo
+                </th>
+                <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right pr-8">
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-50">
+              {filteredTasks.map((task, index) => (
+                <tr
+                  key={task.id}
+                  className={`transition-colors ${selectedIds.includes(task.id) ? "bg-blue-50/30" : "hover:bg-slate-50/50"}`}
+                >
+                  <td className="p-4 text-center">
                     <input
-                      type="text"
-                      placeholder="Shopee, Tiktok Shop URL..."
-                      className="w-full bg-transparent outline-none text-xs text-black0 placeholder:text-slate-300"
-                      value={task.productUrl}
-                      onChange={(e) => {
-                        const newTasks = [...tasks];
-                        newTasks[index].productUrl = e.target.value;
-                        setTasks(newTasks);
-                      }}
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-gray-300 accent-blue-600 cursor-pointer"
+                      checked={selectedIds.includes(task.id)}
+                      onChange={() => toggleSelect(task.id)}
                     />
-                  </div>
-                </td>
-                <td className="p-4 text-center text-xs font-bold text-black max-w-50">
-                  <div className="truncate" title={task.productName}>
-                    {task.productName}
-                  </div>
-                </td>
-                <td className="p-4 text-center text-xs font-semibold text-black max-w-50">
-                  <div className="truncate" title={task.productDesc}>
-                    {task.productDesc && "Có"}
-                  </div>
-                </td>
-                <td className="p-4 text-center text-xs font-semibold text-black max-w-50">
-                  <div className="truncate" title={task.productPathImg}>
-                    {task.productPathImg && "Có"}
-                  </div>
-                </td>
-                <td className="p-4 text-center text-xs font-semibold text-black max-w-50">
-                  <div className="truncate" title={task.aiImagePath}>
-                    {task.aiImagePath && "Có"}
-                  </div>
-                </td>
-
-                <td className="p-4">
-                  <div className="relative group">
-                    <select
-                      value={task.mode}
-                      onChange={(e) => {
-                        const newTasks = [...tasks];
-                        // Cast the string to your specific type
-                        newTasks[index].mode = e.target.value as
-                          | "Chỉ lấy thông tin sản phẩm"
-                          | "Prompt + Ảnh AI + Video"
-                          | "TT + Prompt + Video + Ảnh AI"
-                          | "Prompt + Video";
-
-                        setTasks(newTasks);
-                      }}
-                      className="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-[11px] font-medium text-black outline-none hover:border-blue-200 cursor-pointer"
-                    >
-                      <option>Chỉ lấy thông tin sản phẩm</option>
-                      <option>Prompt + Video</option>
-                      <option>Prompt + Ảnh AI + Video</option>
-                      <option>TT + Prompt + Video + Ảnh AI</option>
-                    </select>
-                    <ChevronDown
-                      size={12}
-                      className="absolute right-2 top-2.5 text-black pointer-events-none"
-                    />
-                  </div>
-                </td>
-                <td className="p-2 text-center">
-                  <input
-                    type="number"
-                    value={task.outputCount}
-                    min="1"
-                    max="3"
-                    onChange={(e) => {
-                      const newTasks = [...tasks];
-                      newTasks[index].outputCount = Number(e.target.value);
-                      setTasks(newTasks);
-                    }}
-                    className="w-16 p-1 text-center font-mono text-xs font-bold text-blue-600  focus:outline-none "
-                  />
-                </td>
-                <td className="p-4 text-center font-mono text-xs font-bold text-blue-600">
-                  {!task.resultVideoCount && task.resultVideoCount !== 0
-                    ? "..."
-                    : `${task.resultVideoCount}/${task.outputCount}`}
-                </td>
-                <td className="p-4 text-center font-mono text-xs font-bold text-blue-600 max-w-50 wrap-break-word whitespace-normal">
-                  {task.log}
-                </td>
-
-                <td className="p-4 text-right pr-8">
-                  <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors">
-                    <div>
-                      <Box
-                        onClick={() => handleOpenResultTask(task)}
-                        size={16}
+                  </td>
+                  <td className="p-2 text-center text-xs font-bold text-black">
+                    {index + 1}
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-gray-100 focus-within:border-blue-300 focus-within:bg-white transition-all">
+                      <Link2 size={14} className="text-slate-300" />
+                      <input
+                        type="text"
+                        placeholder="Shopee, Tiktok Shop URL..."
+                        className="w-full bg-transparent outline-none text-xs text-black0 placeholder:text-slate-300"
+                        value={task.productUrl}
+                        onChange={(e) => {
+                          const newTasks = [...tasks];
+                          newTasks[index].productUrl = e.target.value;
+                          setTasks(newTasks);
+                        }}
                       />
                     </div>
-                  </button>
-                  {(task.status == "none" ||
-                    task.status == "error" ||
-                    task.status == "success") && (
-                    <>
-                      <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors">
-                        <div>
-                          <Play
-                            onClick={() => handleRunSelectedTaskAuto(task)}
-                            size={16}
-                          />
-                        </div>
-                      </button>
-                    </>
-                  )}
-                  {task.status == "processing" && (
-                    <button
-                      onClick={() => handlePauseSelectedTaskAuto(task)}
-                      className="p-2 text-red-500 hover:bg-blue-50 rounded-full transition-colors"
-                    >
-                      <Pause size={16} />
+                  </td>
+                  <td className="p-4 text-center text-xs font-bold text-black max-w-50">
+                    <div className="truncate" title={task.productName}>
+                      {task.productName}
+                    </div>
+                  </td>
+                  <td className="p-4 text-center text-xs font-semibold text-black max-w-50">
+                    <div className="truncate" title={task.productDesc}>
+                      {task.productDesc && "Có"}
+                    </div>
+                  </td>
+                  <td className="p-4 text-center text-xs font-semibold text-black max-w-50">
+                    <div className="truncate" title={task.productPathImg}>
+                      {task.productPathImg && "Có"}
+                    </div>
+                  </td>
+                  <td className="p-4 text-center text-xs font-semibold text-black max-w-50">
+                    <div className="truncate" title={task.aiImagePath}>
+                      {task.aiImagePath && "Có"}
+                    </div>
+                  </td>
+
+                  <td className="p-4">
+                    <div className="relative group">
+                      <select
+                        value={task.mode}
+                        onChange={(e) => {
+                          const newTasks = [...tasks];
+                          // Cast the string to your specific type
+                          newTasks[index].mode = e.target.value as
+                            | "Chỉ lấy thông tin sản phẩm"
+                            | "Prompt + Ảnh AI + Video"
+                            | "TT + Prompt + Video + Ảnh AI"
+                            | "Prompt + Video";
+
+                          setTasks(newTasks);
+                        }}
+                        className="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-[11px] font-medium text-black outline-none hover:border-blue-200 cursor-pointer"
+                      >
+                        <option>Chỉ lấy thông tin sản phẩm</option>
+                        <option>Prompt + Video</option>
+                        <option>Prompt + Ảnh AI + Video</option>
+                        <option>TT + Prompt + Video + Ảnh AI</option>
+                      </select>
+                      <ChevronDown
+                        size={12}
+                        className="absolute right-2 top-2.5 text-black pointer-events-none"
+                      />
+                    </div>
+                  </td>
+                  <td className="p-2 text-center">
+                    <input
+                      type="number"
+                      value={task.outputCount}
+                      min="1"
+                      max="3"
+                      onChange={(e) => {
+                        const newTasks = [...tasks];
+                        newTasks[index].outputCount = Number(e.target.value);
+                        setTasks(newTasks);
+                      }}
+                      className="w-16 p-1 text-center font-mono text-xs font-bold text-blue-600  focus:outline-none "
+                    />
+                  </td>
+                  <td className="p-4 text-center font-mono text-xs font-bold text-blue-600">
+                    {!task.resultVideoCount && task.resultVideoCount !== 0
+                      ? "..."
+                      : `${task.resultVideoCount}/${task.outputCount}`}
+                  </td>
+                  <td className="p-2 text-center">
+                    <div className="flex justify-center">
+                      {task.status === "processing" && (
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700 border border-blue-200 shadow-sm">
+                          <svg
+                            className="animate-spin h-3 w-3 text-blue-600"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          ĐANG CHẠY
+                        </span>
+                      )}
+
+                      {task.status === "success" && (
+                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="3"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                          DONE
+                        </span>
+                      )}
+
+                      {task.status === "error" && (
+                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="3"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                          ERROR
+                        </span>
+                      )}
+
+                      {(task.status === "none" || !task.status) && (
+                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-100 text-gray-500 border border-gray-200 shadow-sm italic">
+                          ĐANG CHỜ
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-2 text-center max-w-50">
+                    <div className="font-mono text-[10px] font-bold text-blue-600 wrap-break-word line-clamp-5 overflow-hidden">
+                      {task.log}
+                    </div>
+                  </td>
+
+                  <td className="p-4 text-right pr-8">
+                    <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors">
+                      <div>
+                        <Box
+                          onClick={() => handleOpenResultTask(task)}
+                          size={16}
+                        />
+                      </div>
                     </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-</div>
+                    {(task.status == "none" ||
+                      task.status == "error" ||
+                      task.status == "success") && (
+                      <>
+                        <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors">
+                          <div>
+                            <Play
+                              onClick={() => handleRunSelectedTaskAuto(task)}
+                              size={16}
+                            />
+                          </div>
+                        </button>
+                      </>
+                    )}
+                    {task.status == "processing" && (
+                      <button
+                        onClick={() => handlePauseSelectedTaskAuto(task)}
+                        className="p-2 text-red-500 hover:bg-blue-50 rounded-full transition-colors"
+                      >
+                        <Pause size={16} />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {tasks.length === 0 && (
           <div className="p-20 text-center text-slate-300 flex flex-col items-center gap-2">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">

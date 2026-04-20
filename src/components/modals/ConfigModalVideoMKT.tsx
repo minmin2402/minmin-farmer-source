@@ -12,6 +12,8 @@ import {
   User2,
 } from "lucide-react";
 import { STORAGE_KEY } from "../../types/KeyLocalStorage";
+import { DEFAULT_PROMPTS } from "../../const";
+import { PromptSet } from "../../types/VideoTask";
 
 interface ConfigModalProps {
   isOpen: boolean;
@@ -30,7 +32,10 @@ export const ConfigModalVideoMKT = ({
   const [statusGPMAPI, setStatusGPMAPI] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
+  const allPrompts = [...DEFAULT_PROMPTS, ...configVideoMKT.customPrompts];
+  const currentPrompt = allPrompts.find(p => p.id === configVideoMKT.activePromptId) || DEFAULT_PROMPTS[0];
 
+  
   const handleSaveAndClose = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(configVideoMKT));
     onClose(); // Lưu xong mới đóng
@@ -47,6 +52,31 @@ export const ConfigModalVideoMKT = ({
       ...configVideoMKT,
       profiles_aff: array,
     });
+  };
+  // Hàm tạo prompt mới
+  const handleAddNewPrompt = () => {
+    const newId = `prompt-${Date.now()}`;
+    const newPrompt: PromptSet = {
+      id: newId,
+      name: `Bộ Prompt mới ${configVideoMKT.customPrompts.length + 1}`,
+      prompt_review: "",
+      prompt_image: "",
+      prompt_video: "",
+    };
+    setConfigVideoMKT({
+      ...configVideoMKT,
+      customPrompts: [...configVideoMKT.customPrompts, newPrompt],
+      activePromptId: newId
+    });
+  };
+  // Hàm cập nhật nội dung prompt đang sửa
+  const updateCurrentPrompt = (field: keyof PromptSet, value: string) => {
+    if (currentPrompt.isDefault) return; // Không cho sửa hàng hệ thống
+
+    const updatedCustom = configVideoMKT.customPrompts.map((p:any) => 
+      p.id === currentPrompt.id ? { ...p, [field]: value } : p
+    );
+    setConfigVideoMKT({ ...configVideoMKT, customPrompts: updatedCustom });
   };
 
   const handleTextareaChangeAPIKeyGemini = (
@@ -289,7 +319,6 @@ export const ConfigModalVideoMKT = ({
                 }}
                 className="text-[10px] font-bold text-blue-500 hover:text-blue-600 uppercase flex items-center gap-1 transition-colors cursor-pointer"
               >
-                
                 Hướng dẫn lấy Key
               </a>
               <div className="flex gap-2">
@@ -305,7 +334,6 @@ export const ConfigModalVideoMKT = ({
                   placeholder=""
                   className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-500 transition-all"
                 />
-                
               </div>
             </div>
 
@@ -327,8 +355,6 @@ export const ConfigModalVideoMKT = ({
                 Đã nhập: {configVideoMKT.profiles_aff.length} Profile
               </div>
             </div>
-
-            
 
             <div className="space-y-2">
               <label className="text-[11px] font-black text-slate-400 uppercase">
@@ -497,125 +523,161 @@ export const ConfigModalVideoMKT = ({
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-4">
-              {/* Phần chọn giọng nói */}
-              <div className="relative">
-                <label className="block mb-1.5 text-sm font-semibold text-slate-700">
-                  Giọng đọc
-                </label>
-                <div className="relative">
-                  <select
-                    value={configVideoMKT.voice_code}
-                    className="w-full p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-medium"
-                    onChange={(e) => {
+
+            {/* Section Vbee API Configuration */}
+            <div className="mt-6 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+              {/* Header & Toggle */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-bold text-slate-700">
+                    Cấu hình Vbee (TTS)
+                  </h3>
+                  <p className="text-[10px] text-slate-500 italic">
+                    Bật để sử dụng giọng đọc VBEE AI cho video
+                  </p>
+                </div>
+
+                {/* Nút Toggle Switch */}
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={configVideoMKT.isUseVbee || false}
+                    onChange={(e) =>
                       setConfigVideoMKT({
                         ...configVideoMKT,
-                        voice_code: e.target.value,
-                      });
-                    }}
-                  >
-                    <option value="s_hochiminh_male_nguoikechuyenbali2_advertise_vc">
-                      Nam - Hồ Chí Minh
-                    </option>
-                    <option value="n_hanoi_male_quangquangcao_advertise_vc">
-                      Nam - Hà Nội
-                    </option>
-                    <option value="s_cantho_female_xanxan_advertise_vc">
-                      Nữ - Cần Thơ
-                    </option>
-                    <option value="n_hanoi_female_quangcao02_advertise_vc">
-                      Nữ - Hà Nội
-                    </option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                    <svg
-                      className="w-4 h-4 text-slate-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
+                        isUseVbee: e.target.checked,
+                      })
+                    }
+                  />
+                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              {/* Chỉ hiển thị khi isEnabledVbee được bật */}
+              {configVideoMKT.isUseVbee && (
+                <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex flex-col gap-4">
+                    {/* Phần chọn giọng nói */}
+                    <div className="relative">
+                      <label className="block mb-1.5 text-sm font-semibold text-slate-700">
+                        Giọng đọc
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={configVideoMKT.voice_code}
+                          className="w-full p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-medium"
+                          onChange={(e) => {
+                            setConfigVideoMKT({
+                              ...configVideoMKT,
+                              voice_code: e.target.value,
+                            });
+                          }}
+                        >
+                          <option value="s_hochiminh_male_nguoikechuyenbali2_advertise_vc">
+                            Nam - Hồ Chí Minh
+                          </option>
+                          <option value="n_hanoi_male_quangquangcao_advertise_vc">
+                            Nam - Hà Nội
+                          </option>
+                          <option value="s_cantho_female_xanxan_advertise_vc">
+                            Nữ - Cần Thơ
+                          </option>
+                          <option value="n_hanoi_female_quangcao02_advertise_vc">
+                            Nữ - Hà Nội
+                          </option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                          <svg
+                            className="w-4 h-4 text-slate-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Phần chỉnh tốc độ giọng nói */}
+                    <div className="flex flex-col">
+                      <label className="block mb-1.5 text-sm font-semibold text-slate-700">
+                        Tốc độ (0.1 - 1.9)
+                      </label>
+                      <input
+                        type="number"
+                        min="0.1"
+                        max="1.9"
+                        step="0.1"
+                        value={configVideoMKT.speed_voice || 1.0}
+                        className="w-full p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium"
+                        placeholder="Ví dụ: 1.0"
+                        onChange={(e) => {
+                          let val = parseFloat(e.target.value);
+                          // Ràng buộc giá trị không vượt quá min/max khi người dùng nhập tay
+                          if (val > 1.9) val = 1.9;
+                          if (val < 0.1) val = 0.1;
+
+                          setConfigVideoMKT({
+                            ...configVideoMKT,
+                            speed_voice: val,
+                          });
+                        }}
                       />
-                    </svg>
+                      <p className="mt-1 text-xs text-slate-400 italic">
+                        Mặc định thường là 1.0 (Bình thường)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    {/* Input App ID */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[11px] font-black text-slate-500 uppercase flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                        Vbee App ID
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Nhập App ID..."
+                        value={configVideoMKT.vbee_app_id || ""}
+                        className="p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium placeholder:text-slate-300 transition-all"
+                        onChange={(e) =>
+                          setConfigVideoMKT({
+                            ...configVideoMKT,
+                            vbee_app_id: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    {/* Input Token */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[11px] font-black text-slate-500 uppercase flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                        Vbee Token
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="Nhập Token..."
+                        value={configVideoMKT.vbee_app_token || ""}
+                        className="p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium placeholder:text-slate-300 transition-all"
+                        onChange={(e) =>
+                          setConfigVideoMKT({
+                            ...configVideoMKT,
+                            vbee_app_token: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Phần chỉnh tốc độ giọng nói */}
-              <div className="flex flex-col">
-                <label className="block mb-1.5 text-sm font-semibold text-slate-700">
-                  Tốc độ (0.1 - 1.9)
-                </label>
-                <input
-                  type="number"
-                  min="0.1"
-                  max="1.9"
-                  step="0.1"
-                  value={configVideoMKT.speed_voice || 1.0}
-                  className="w-full p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium"
-                  placeholder="Ví dụ: 1.0"
-                  onChange={(e) => {
-                    let val = parseFloat(e.target.value);
-                    // Ràng buộc giá trị không vượt quá min/max khi người dùng nhập tay
-                    if (val > 1.9) val = 1.9;
-                    if (val < 0.1) val = 0.1;
-
-                    setConfigVideoMKT({
-                      ...configVideoMKT,
-                      speed_voice: val,
-                    });
-                  }}
-                />
-                <p className="mt-1 text-xs text-slate-400 italic">
-                  Mặc định thường là 1.0 (Bình thường)
-                </p>
-              </div>
-            </div>
-            {/* Cấu hình Vbee API */}
-
-            <div className="grid grid-cols-2 gap-4 mb-0 mt-4">
-              {/* Input App ID */}
-              <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-black text-slate-400 uppercase">
-                  Vbee App ID
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="Nhập App ID..."
-                  value={configVideoMKT.vbee_app_id || ""}
-                  className="p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium placeholder:text-slate-300"
-                  onChange={(e) =>
-                    setConfigVideoMKT({
-                      ...configVideoMKT,
-                      vbee_app_id: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              {/* Input Token */}
-              <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-black text-slate-400 uppercase">
-                  Vbee Token
-                </label>
-                <input
-                  type="password" // Dùng password để ẩn token cho bảo mật
-                  placeholder="Nhập Token..."
-                  value={configVideoMKT.vbee_app_token || ""}
-                  className="p-2.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium placeholder:text-slate-300"
-                  onChange={(e) =>
-                    setConfigVideoMKT({
-                      ...configVideoMKT,
-                      vbee_app_token: e.target.value,
-                    })
-                  }
-                />
-              </div>
+              )}
             </div>
             <a
               href="https://your-instruction-link.com"
@@ -648,61 +710,63 @@ export const ConfigModalVideoMKT = ({
               </svg>
               Hướng dẫn Vbee AI
             </a>
+              {/* PROMPT*/}
+              <div className="space-y-6 p-4 bg-white rounded-2xl shadow-sm border border-slate-100">
+      
+      {/* Header Selector */}
+      <div className="flex items-center justify-between border-b pb-4">
+        <div className="flex flex-col">
+          <label className="text-[11px] font-black text-slate-400 uppercase">Chọn bộ cấu trúc Prompt</label>
+          <select 
+            value={configVideoMKT.activePromptId}
+            onChange={(e) => setConfigVideoMKT({...configVideoMKT, activePromptId: e.target.value})}
+            className="mt-1 bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
+          >
+            {allPrompts.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+        
+        <button 
+          onClick={handleAddNewPrompt}
+          className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-all"
+        >
+          + Tạo bộ mới
+        </button>
+      </div>
 
-            <div className="space-y-3">
-              <label className="text-[11px] font-black text-slate-400 uppercase">
-                Cấu trúc Prompt Review
-              </label>
-              <div className="flex gap-2 mt-2">
-                <textarea
-                  value={configVideoMKT.prompt_review}
-                  onChange={(e) =>
-                    setConfigVideoMKT({
-                      ...configVideoMKT,
-                      prompt_review: e.target.value,
-                    })
-                  }
-                  placeholder="cấu trúc prompt review"
-                  className=" custom-scrollbar w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm outline-none focus:border-indigo-500 h-36 resize-none"
-                ></textarea>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <label className="text-[11px] font-black text-slate-400 uppercase">
-                Cấu hình Prompt (Ảnh)
-              </label>
-              <div className="flex gap-2 mt-2">
-                <textarea
-                  value={configVideoMKT.prompt_image}
-                  onChange={(e) =>
-                    setConfigVideoMKT({
-                      ...configVideoMKT,
-                      prompt_image: e.target.value,
-                    })
-                  }
-                  placeholder="Prompt Video AI"
-                  className=" custom-scrollbar w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm outline-none focus:border-indigo-500 h-36 resize-none"
-                ></textarea>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <label className="text-[11px] font-black text-slate-400 uppercase">
-                Cấu hình Prompt (Video)
-              </label>
-              <div className="flex gap-2 mt-2">
-                <textarea
-                  value={configVideoMKT.prompt_video}
-                  onChange={(e) =>
-                    setConfigVideoMKT({
-                      ...configVideoMKT,
-                      prompt_video: e.target.value,
-                    })
-                  }
-                  placeholder="Prompt Video AI"
-                  className="custom-scrollbar w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm outline-none focus:border-indigo-500 h-36 resize-none"
-                ></textarea>
-              </div>
-            </div>
+      {/* Thông báo nếu là hàng mặc định */}
+      {currentPrompt.isDefault && (
+        <div className="p-2 bg-amber-50 border border-amber-100 rounded-lg text-[10px] text-amber-600 font-medium">
+          ⚠️ Đây là mẫu hệ thống, bạn không thể chỉnh sửa. Hãy "Tạo bộ mới" nếu muốn tùy chỉnh.
+        </div>
+      )}
+
+      {/* List Textareas */}
+      <div className="grid grid-cols-1 gap-4">
+        {[
+          { id: 'prompt_review', label: 'Cấu trúc Prompt Review' },
+          { id: 'prompt_image', label: 'Cấu hình Prompt (Ảnh)' },
+          { id: 'prompt_video', label: 'Cấu hình Prompt (Video)' },
+        ].map((item) => (
+          <div key={item.id} className="space-y-2">
+            <label className="text-[11px] font-black text-slate-400 uppercase">{item.label}</label>
+            <textarea
+              readOnly={currentPrompt.isDefault}
+              value={currentPrompt[item.id as keyof PromptSet] as string}
+              onChange={(e) => updateCurrentPrompt(item.id as keyof PromptSet, e.target.value)}
+              className={`custom-scrollbar w-full border rounded-xl p-4 text-sm outline-none transition-all h-32 resize-none ${
+                currentPrompt.isDefault 
+                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
+                : "bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-600"
+              }`}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+            
           </section>
 
           {/* PHẦN 5: Cấu Hình riêng */}

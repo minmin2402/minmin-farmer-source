@@ -1,3 +1,6 @@
+import { PromptSet } from "./types/VideoTask";
+
+
 export const prompt_img = `Bạn cho người mẫu nam hoặc nữ sao cho phù hợp với mô tả sản phẩm đang review sản phẩm này theo mô tả, bạn chọn bối cảnh phòng review cho phù hợp với sản phẩm nhé, người mẫu nhìn thẳng vào camera, hành động của người mẫu với sản phẩm (mặc, sử dụng, cầm, nắm, đứng cạnh, nằm , ngồi ...) bạn chọn sao cho phù hợp với sản phẩm . bạn hãy bóc tách sản phẩm từ ảnh input. bắt buộc phải sử dụng sản phẩm, không dùng hoặc sử dụng bất cứ thứ gì không liên quan đến sản phẩm.
 Chú ý tương quan kích thước của sản phẩm và người mẫu phải hợp lý, sản phẩm không được quá to hoặc quá nhỏ so với người mẫu.
 Ảnh sinh ra làm sao để khi đưa vào veo3 làm video không bị lỗi PUBLIC_ERROR_PROMINENT_PEOPLE_FILTER_FAILED ,PUBLIC_ERROR_SEXUAL
@@ -6,8 +9,6 @@ Negative: no watermark, no text, no duplication, no CGI, no blur, no distortion,
 
 
 export const prompt_video = `Mô tả nhân vật/sản phẩm: Lấy y nguyên nhân vật/sản phẩm trong ảnh đầu vào .
-
-Nhân vật không cần nói chuyện tôi sẽ chèn giọng nói sau . Nhân vật phải hoạt động hết khoảng thời gian của video, không bị đứng hình .
 
 Đừng chèn chữ hay subtitle vào video
 Nhân vật phải hoạt động hết khoảng thời gian của video, không bị đứng hình .
@@ -22,3 +23,18 @@ Mô tả hành động: Giữ nguyên hình ảnh đầu vào xuyên suốt vide
 Quality: ultra-detailed, hyper-realistic, photo-realistic, 8K UHD resolution, cinematic tone, clean composition, full-body framing with the entire model visible from head to toe, both feet touching the ground, and no cropping.
 
 Negative: no watermark, no text, no logo, no duplication, no CGI, no blur, no distortion, no color shift, no overexposed light, no floating objects, no cropped frame, no unrealistic pose, no background`
+
+
+
+export const DEFAULT_PROMPTS: PromptSet[] = [
+  {
+    id: "default-mkt",
+    name: "Mẫu Mặc Định (System)",
+    isDefault: true,
+    prompt_review: `- Các prompt đầu: Giới thiệu sản phẩm. Tạo hook 3s đầu tiên thật hấp dẫn
+- Các prompt giữa: Thể hiện tính năng nổi bật của sản phẩm.
+- Các prompt cuối: Kêu gọi hành động (CTA).`,
+    prompt_image: prompt_img,
+    prompt_video: prompt_video,
+  }
+];

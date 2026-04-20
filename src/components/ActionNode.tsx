@@ -3,7 +3,8 @@ import { Handle, Position } from '@xyflow/react';
 import { 
   Monitor, Timer, PowerOff, MousePointer2, TextCursorInput, 
   Files, Trash2, Smartphone, Type, Copy, ClipboardPaste, 
-  Search, Variable, Shuffle, AppWindow, XSquare, Download, Edit3, Play
+  Search, Variable, Shuffle, AppWindow, XSquare, Download, Edit3, Play,
+  ScanSearch
 } from 'lucide-react';
 import { KEYEVENT } from '../types/KeyEvent';
 
@@ -26,6 +27,7 @@ const nodeIcons: Record<string, React.ReactNode> = {
   install_apk: <Download size={14} />,
   push_file: <Files size={14} />,
   delete_file: <Trash2 size={14} />,
+  opencv_find_and_tap: <ScanSearch size={14} className="text-purple-500" />,
   // Dùng icon Play từ lucide-react, thêm fill để nổi bật
   start: <Play size={14} className="fill-emerald-600 text-emerald-600" />
 };
@@ -78,6 +80,14 @@ export const ActionNode = ({ data }: any) => {
         )}
         {data.type === 'install_apk' && (
           <InputField label="PATH:" value={data.path_apk_install} placeholder="Chọn đường dẫn...." />
+        )}
+        {data.type === 'opencv_find_and_tap' && (
+          <div className="flex gap-2">
+            <InputField label="TÊN ẢNH" value={data.templateName} placeholder="icon_tivi.png" />
+            <InputField label="ĐỘ CHÍNH XÁC" value={data.threshold} placeholder="0.7" />
+            <InputField label="CHẾ ĐỘ" value={data.mode} placeholder="icon" />
+
+          </div>
         )}
 
         
