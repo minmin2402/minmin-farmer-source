@@ -83,42 +83,48 @@ function _mergeNamespaces(n, m) {
 }
 var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
 function getDefaultExportFromCjs(a2) {
-  var b2 = { "GMhoR": "default" };
-  return a2 && a2["__esModule"] && Object["prototype"]["hasOwnProperty"]["call"](a2, b2["GMhoR"]) ? a2[b2["GMhoR"]] : a2;
+  return a2 && a2["__esModule"] && Object["prototype"]["hasOwnProperty"]["call"](a2, "default") ? a2["default"] : a2;
 }
 function getAugmentedNamespace(b2) {
-  var c2 = { "BhTQI": "3|1|5|2|0|4", "NuQEm": "__esModule", "CbLEb": function(i, j) {
-    return i == j;
-  } }, d = c2["BhTQI"]["split"]("|"), e = 0;
+  var c2 = { "FkXjQ": "3|0|5|1|6|2|4", "ZqLsA": function(j, k) {
+    return j == k;
+  }, "oXUaU": "function", "ZOPKt": function(j, k) {
+    return j instanceof k;
+  }, "vEoXv": "__esModule" }, d = c2["FkXjQ"]["split"]("|"), e = 0;
   while (!![]) {
     switch (d[e++]) {
       case "0":
-        Object["keys"](b2)["forEach"](function(i) {
-          var j = Object["getOwnPropertyDescriptor"](b2, i);
-          Object["defineProperty"](h, i, j["get"] ? j : { "enumerable": !![], "get": function() {
-            return b2[i];
+        if (b2["__esModule"]) return b2;
+        continue;
+      case "1":
+        if (c2["ZqLsA"](typeof i, c2["oXUaU"])) {
+          var g = function j() {
+            if (h["AcYJr"](this, j)) return Reflect["construct"](i, arguments, this["constructor"]);
+            return i["apply"](this, arguments);
+          };
+          g["prototype"] = i["prototype"];
+        } else g = {};
+        continue;
+      case "2":
+        Object["keys"](b2)["forEach"](function(l) {
+          var m = Object["getOwnPropertyDescriptor"](b2, l);
+          Object["defineProperty"](g, l, m["get"] ? m : { "enumerable": !![], "get": function() {
+            return b2[l];
           } });
         });
         continue;
-      case "1":
-        var g = b2["default"];
-        continue;
-      case "2":
-        Object["defineProperty"](h, c2["NuQEm"], { "value": !![] });
-        continue;
       case "3":
-        if (b2["__esModule"]) return b2;
+        var h = { "AcYJr": function(k, l) {
+          return c2["ZOPKt"](k, l);
+        } };
         continue;
       case "4":
-        return h;
+        return g;
       case "5":
-        if (c2["CbLEb"](typeof g, "function")) {
-          var h = function i() {
-            if (this instanceof i) return Reflect["construct"](g, arguments, this["constructor"]);
-            return g["apply"](this, arguments);
-          };
-          h["prototype"] = g["prototype"];
-        } else h = {};
+        var i = b2["default"];
+        continue;
+      case "6":
+        Object["defineProperty"](g, c2["vEoXv"], { "value": !![] });
         continue;
     }
     break;
@@ -32300,7 +32306,14 @@ var _eval = EvalError;
 var range = RangeError;
 var ref = ReferenceError;
 var syntax = SyntaxError;
-var type = TypeError;
+var type;
+var hasRequiredType;
+function requireType() {
+  if (hasRequiredType) return type;
+  hasRequiredType = 1;
+  type = TypeError;
+  return type;
+}
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
@@ -32546,7 +32559,7 @@ function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
   var bind3 = functionBind;
-  var $TypeError2 = type;
+  var $TypeError2 = requireType();
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
   callBindApplyHelpers = function callBindBasic(args) {
@@ -32619,7 +32632,7 @@ var $EvalError = _eval;
 var $RangeError = range;
 var $ReferenceError = ref;
 var $SyntaxError = syntax;
-var $TypeError$1 = type;
+var $TypeError$1 = requireType();
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
@@ -32950,7 +32963,7 @@ var GetIntrinsic2 = getIntrinsic;
 var $defineProperty = GetIntrinsic2("%Object.defineProperty%", true);
 var hasToStringTag = requireShams()();
 var hasOwn$1 = hasown;
-var $TypeError = type;
+var $TypeError = requireType();
 var toStringTag = hasToStringTag ? Symbol.toStringTag : null;
 var esSetTostringtag = function setToStringTag(object2, value) {
   var overrideIfSet = arguments.length > 2 && !!arguments[2] && arguments[2].force;
@@ -36991,38 +37004,36 @@ class GroupService {
     this["_http"] = a2;
   }
   async ["getAll"]() {
-    const a2 = { "bWJxu": "groups", "xphVW": function(c2, d) {
-      return c2(d);
-    } }, b2 = await this["_http"]["get"](a2["bWJxu"]);
-    return a2["xphVW"](ensureSuccess$3, b2), b2["data"];
+    const a2 = { "aIOme": "groups" }, b2 = await this["_http"]["get"](a2["aIOme"]);
+    return ensureSuccess$3(b2), b2["data"];
   }
   async ["getById"](a2) {
-    const b2 = { "PWTEX": function(d, e) {
+    const b2 = { "WsIHm": function(d, e) {
       return d(e);
     } }, c2 = await this["_http"]["get"]("groups/" + a2);
-    return b2["PWTEX"](ensureSuccess$3, c2), c2["data"];
+    return b2["WsIHm"](ensureSuccess$3, c2), c2["data"];
   }
   async ["create"]({ name: a2, order: b2 }) {
-    const c2 = { "PtDEW": function(f, g) {
-      return f !== g;
-    }, "IxFTe": "groups/create", "fZcii": function(f, g) {
+    const c2 = { "MFUPv": function(f, g) {
       return f(g);
-    } }, d = { "name": a2, ...c2["PtDEW"](b2, void 0) ? { "order": b2 } : {} }, e = await this["_http"]["post"](c2["IxFTe"], d);
-    return c2["fZcii"](ensureSuccess$3, e), e["data"];
+    } }, d = { "name": a2, ...b2 !== void 0 ? { "order": b2 } : {} }, e = await this["_http"]["post"]("groups/create", d);
+    return c2["MFUPv"](ensureSuccess$3, e), e["data"];
   }
   async ["update"](a2, { name: b2, order: c2 }) {
-    const d = { "SiNuU": function(g, h) {
+    const d = { "VLlYW": function(g, h) {
       return g !== h;
+    }, "BrgFl": function(g, h) {
+      return g(h);
     } }, e = { "name": b2 };
-    d["SiNuU"](c2, void 0) && (e["order"] = c2);
+    d["VLlYW"](c2, void 0) && (e["order"] = c2);
     const f = await this["_http"]["post"]("groups/update/" + a2, e);
-    return ensureSuccess$3(f), f["data"];
+    return d["BrgFl"](ensureSuccess$3, f), f["data"];
   }
   async ["delete"](a2) {
-    const b2 = { "AYgbE": function(d, e) {
+    const b2 = { "iWPBU": function(d, e) {
       return d(e);
     } }, c2 = await this["_http"]["get"]("groups/delete/" + a2);
-    b2["AYgbE"](ensureSuccess$3, c2);
+    b2["iWPBU"](ensureSuccess$3, c2);
   }
 }
 function ensureSuccess$2(a2) {
@@ -37034,36 +37045,38 @@ class ProxyService {
     this["_http"] = a2;
   }
   async ["getAll"]({ page = 1, pageSize = 30, search: a2, sort: b2 } = {}) {
-    const c2 = { "dTspz": function(f, g) {
+    const c2 = { "kxmwl": function(f, g) {
+      return f(g);
+    }, "IiYYk": function(f, g) {
       return f(g);
     } };
     let d = "proxies?page=" + page + "&page_size=" + pageSize;
-    a2 && (d += "&search=" + encodeURIComponent(a2));
-    b2 && (d += "&sort=" + c2["dTspz"](encodeURIComponent, b2));
+    a2 && (d += "&search=" + c2["kxmwl"](encodeURIComponent, a2));
+    b2 && (d += "&sort=" + c2["IiYYk"](encodeURIComponent, b2));
     const e = await this["_http"]["get"](d);
-    return c2["dTspz"](ensureSuccess$2, e), e["data"];
+    return c2["kxmwl"](ensureSuccess$2, e), e["data"];
   }
   async ["getById"](a2) {
-    const b2 = { "LjbNx": function(d, e) {
+    const b2 = { "qwhTM": function(d, e) {
       return d(e);
     } }, c2 = await this["_http"]["get"]("proxies/" + a2);
-    return b2["LjbNx"](ensureSuccess$2, c2), c2["data"];
+    return b2["qwhTM"](ensureSuccess$2, c2), c2["data"];
   }
   async ["create"](a2) {
-    const b2 = { "YKpbk": "proxies/create", "IMyeW": function(d, e) {
-      return d(e);
-    } }, c2 = await this["_http"]["post"](b2["YKpbk"], { "raw_proxy": a2 });
-    return b2["IMyeW"](ensureSuccess$2, c2), c2["data"];
-  }
-  async ["update"](a2, b2) {
-    const c2 = await this["_http"]["post"]("proxies/update/" + a2, { "raw_proxy": b2 });
+    const b2 = { "NlfEV": "proxies/create" }, c2 = await this["_http"]["post"](b2["NlfEV"], { "raw_proxy": a2 });
     return ensureSuccess$2(c2), c2["data"];
   }
+  async ["update"](a2, b2) {
+    const c2 = { "cDMdR": function(e, f) {
+      return e(f);
+    } }, d = await this["_http"]["post"]("proxies/update/" + a2, { "raw_proxy": b2 });
+    return c2["cDMdR"](ensureSuccess$2, d), d["data"];
+  }
   async ["delete"](a2) {
-    const b2 = { "bjNlP": function(d, e) {
+    const b2 = { "wHmab": function(d, e) {
       return d(e);
     } }, c2 = await this["_http"]["get"]("proxies/delete/" + a2);
-    b2["bjNlP"](ensureSuccess$2, c2);
+    b2["wHmab"](ensureSuccess$2, c2);
   }
 }
 function ensureSuccess$1(a2) {
@@ -37075,60 +37088,54 @@ class ProfileService {
     this["_http"] = a2;
   }
   async ["getAll"]({ page = 1, perPage = 30, search: a2, sort: b2 } = {}) {
-    const c2 = { "GgxcV": function(f, g) {
+    const c2 = { "xLyUm": function(f, g) {
+      return f(g);
+    }, "KQPzO": function(f, g) {
       return f(g);
     } };
     let d = "profiles?page=" + page + "&per_page=" + perPage;
-    a2 && (d += "&search=" + encodeURIComponent(a2));
-    b2 && (d += "&sort=" + c2["GgxcV"](encodeURIComponent, b2));
+    a2 && (d += "&search=" + c2["xLyUm"](encodeURIComponent, a2));
+    b2 && (d += "&sort=" + c2["xLyUm"](encodeURIComponent, b2));
     const e = await this["_http"]["get"](d);
-    return ensureSuccess$1(e), e["data"];
+    return c2["KQPzO"](ensureSuccess$1, e), e["data"];
   }
   async ["getById"](a2) {
-    const b2 = { "JBiRS": function(d, e) {
+    const b2 = { "ezZrW": function(d, e) {
       return d(e);
     } }, c2 = await this["_http"]["get"]("profiles/" + a2);
-    return b2["JBiRS"](ensureSuccess$1, c2), c2["data"];
+    return b2["ezZrW"](ensureSuccess$1, c2), c2["data"];
   }
   async ["create"](a2) {
-    const b2 = { "YORyL": function(d, e) {
+    const b2 = { "dbxSj": "profiles/create", "Vlocp": function(d, e) {
       return d(e);
-    } }, c2 = await this["_http"]["post"]("profiles/create", a2);
-    return b2["YORyL"](ensureSuccess$1, c2), c2["data"];
+    } }, c2 = await this["_http"]["post"](b2["dbxSj"], a2);
+    return b2["Vlocp"](ensureSuccess$1, c2), c2["data"];
   }
   async ["update"](a2, b2) {
-    const c2 = { "JnKPP": function(e, f) {
-      return e(f);
-    } }, d = await this["_http"]["post"]("profiles/update/" + a2, b2);
-    return c2["JnKPP"](ensureSuccess$1, d), d["data"];
+    const c2 = await this["_http"]["post"]("profiles/update/" + a2, b2);
+    return ensureSuccess$1(c2), c2["data"];
   }
   async ["delete"](a2, b2 = "soft") {
-    const c2 = { "vuahl": function(e, f) {
+    const c2 = { "KSKuB": function(e, f) {
       return e(f);
     } }, d = await this["_http"]["get"]("profiles/delete/" + a2 + "?mode=" + b2);
-    c2["vuahl"](ensureSuccess$1, d);
+    c2["KSKuB"](ensureSuccess$1, d);
   }
   async ["start"](a2, b2 = { "remoteDebuggingPort": 0, "windowScale": 0, "windowPos": "", "windowSize": "", "additionArgs": "" }) {
-    const c2 = { "usqYq": function(g, h) {
-      return g !== h;
-    }, "focHK": function(g, h) {
-      return g !== h;
-    }, "uviVK": function(g, h) {
+    const c2 = { "CpxJu": function(g, h) {
       return g(h);
-    }, "BGbox": function(g, h) {
-      return g(h);
-    }, "XyRXS": function(g, h) {
+    }, "DIuaM": function(g, h) {
       return g > h;
-    }, "Znwft": function(g, h) {
+    }, "feBZf": function(g, h) {
       return g(h);
     } }, d = [];
-    c2["usqYq"](b2 == null ? void 0 : b2["remoteDebuggingPort"], void 0) && d["push"]("remote_debugging_port=" + b2["remoteDebuggingPort"]);
-    c2["focHK"](b2["windowScale"], void 0) && d["push"]("window_scale=" + b2["windowScale"]);
-    b2["windowPos"] && d["push"]("window_pos=" + c2["uviVK"](encodeURIComponent, b2["windowPos"]));
-    b2["windowSize"] && d["push"]("window_size=" + c2["BGbox"](encodeURIComponent, b2["windowSize"]));
+    (b2 == null ? void 0 : b2["remoteDebuggingPort"]) !== void 0 && d["push"]("remote_debugging_port=" + b2["remoteDebuggingPort"]);
+    b2["windowScale"] !== void 0 && d["push"]("window_scale=" + b2["windowScale"]);
+    b2["windowPos"] && d["push"]("window_pos=" + c2["CpxJu"](encodeURIComponent, b2["windowPos"]));
+    b2["windowSize"] && d["push"]("window_size=" + encodeURIComponent(b2["windowSize"]));
     b2["additionArgs"] && d["push"]("addition_args=" + encodeURIComponent(b2["additionArgs"]));
-    const e = c2["XyRXS"](d["length"], 0) ? "?" + d["join"]("&") : "", f = await this["_http"]["get"]("profiles/start/" + a2 + e);
-    return c2["Znwft"](ensureSuccess$1, f), f["data"];
+    const e = c2["DIuaM"](d["length"], 0) ? "?" + d["join"]("&") : "", f = await this["_http"]["get"]("profiles/start/" + a2 + e);
+    return c2["feBZf"](ensureSuccess$1, f), f["data"];
   }
   async ["stop"](a2) {
     const b2 = await this["_http"]["get"]("profiles/stop/" + a2);
@@ -37144,36 +37151,33 @@ class ExtensionService {
     this["_http"] = a2;
   }
   async ["getAll"]() {
-    const a2 = { "czYhh": "extensions", "AQcLh": function(c2, d) {
+    const a2 = { "PQUiy": function(c2, d) {
       return c2(d);
-    } }, b2 = await this["_http"]["get"](a2["czYhh"]);
-    return a2["AQcLh"](ensureSuccess, b2), b2["data"];
+    } }, b2 = await this["_http"]["get"]("extensions");
+    return a2["PQUiy"](ensureSuccess, b2), b2["data"];
   }
   async ["updateState"](a2, b2) {
-    const c2 = { "mOGHl": "true", "FCrTe": function(e, f) {
+    const c2 = { "DrbyO": "true", "ZdYby": "false", "oFfxL": function(e, f) {
       return e(f);
-    } }, d = await this["_http"]["get"]("extensions/update-state/" + a2 + "?active=" + (b2 ? c2["mOGHl"] : "false"));
-    c2["FCrTe"](ensureSuccess, d);
+    } }, d = await this["_http"]["get"]("extensions/update-state/" + a2 + "?active=" + (b2 ? c2["DrbyO"] : c2["ZdYby"]));
+    c2["oFfxL"](ensureSuccess, d);
   }
 }
 async function resolveFetch() {
-  const a2 = { "rEujl": function(c2, d) {
-    return c2 === d;
-  }, "xXoXj": "node-fetch" };
-  if (a2["rEujl"](typeof globalThis["fetch"], "function")) return globalThis["fetch"]["bind"](globalThis);
-  const { default: b2 } = await import(a2["xXoXj"]);
-  return b2;
+  if (typeof globalThis["fetch"] === "function") return globalThis["fetch"]["bind"](globalThis);
+  const { default: a2 } = await import("./index-D-dQWx4p.js");
+  return a2;
 }
 function createHttp(a2, b2) {
-  const c2 = { "livXN": function(f, g, h) {
-    return f(g, h);
-  }, "FMOfz": "POST", "mGNQO": "application/json" };
+  const c2 = { "uuOeD": function(f, g) {
+    return f(g);
+  }, "nfSbe": "POST", "tnHPs": "application/json" };
   async function d(f) {
-    const g = await b2(a2 + "/" + f);
+    const g = await c2["uuOeD"](b2, a2 + "/" + f);
     return g["json"]();
   }
   async function e(f, g) {
-    const h = await c2["livXN"](b2, a2 + "/" + f, { "method": c2["FMOfz"], "headers": { "Content-Type": c2["mGNQO"] }, "body": JSON["stringify"](g) });
+    const h = await b2(a2 + "/" + f, { "method": c2["nfSbe"], "headers": { "Content-Type": c2["tnHPs"] }, "body": JSON["stringify"](g) });
     return h["json"]();
   }
   return { "get": d, "post": e };
@@ -37185,13 +37189,11 @@ class GPMLoginGlobalClient {
     __publicField(this, "profiles");
     __publicField(this, "extensions");
     __publicField(this, "ready");
-    const b2 = { "mWOzc": function(d, e, f) {
+    const b2 = { "NwdkU": function(d, e, f) {
       return d(e, f);
-    }, "ivEfB": function(d) {
-      return d();
     } }, c2 = a2["replace"](/\/$/, "") + "/api/v1";
-    this["ready"] = b2["ivEfB"](resolveFetch)["then"]((d) => {
-      const e = b2["mWOzc"](createHttp, c2, d);
+    this["ready"] = resolveFetch()["then"]((d) => {
+      const e = b2["NwdkU"](createHttp, c2, d);
       this["groups"] = new GroupService(e), this["proxies"] = new ProxyService(e), this["profiles"] = new ProfileService(e), this["extensions"] = new ExtensionService(e);
     });
   }
@@ -39209,10 +39211,10 @@ try {
 }
 a["transports"]["file"]["format"] = "[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}] {text}", a["transports"]["file"]["maxSize"] = 5 * 1024 * 1024;
 const logger = { "info": (d, ...f) => a["info"](d, ...f), "error": (d, ...f) => a["error"](d, ...f), "warn": (d, ...f) => a["warn"](d, ...f), "debug": (d, ...f) => {
-  const g = { "EqBgh": function(h, i) {
+  const g = { "DYUSI": function(h, i) {
     return h === i;
-  }, "RuCfL": "development" };
-  g["EqBgh"](process["env"]["NODE_ENV"], g["RuCfL"]) && a["debug"](d, ...f);
+  }, "ltZgp": "development" };
+  g["DYUSI"](process["env"]["NODE_ENV"], g["ltZgp"]) && a["debug"](d, ...f);
 } };
 class GpmOldClient {
   constructor(b2 = "http://localhost:19995") {
@@ -39220,8 +39222,8 @@ class GpmOldClient {
     this["axiosInstance"] = axios["create"]({ "baseURL": b2, "timeout": 5e3 });
   }
   async ["getProfiles"]() {
-    const b2 = await this["axiosInstance"]["get"]("/api/v3/profiles");
-    return b2["data"];
+    const b2 = { "quvYI": "/api/v3/profiles" }, c2 = await this["axiosInstance"]["get"](b2["quvYI"]);
+    return c2["data"];
   }
   async ["start"](b2, c2) {
     try {
@@ -39241,43 +39243,38 @@ class GpmService {
   constructor(b2 = "http://localhost:9495") {
     __publicField(this, "client");
     __publicField(this, "isGlobal");
-    const c2 = { "unqfR": "127.0.0.1" };
-    b2["includes"](c2["unqfR"]) ? (this["client"] = new GpmOldClient(b2), this["isGlobal"] = ![]) : (this["client"] = new GPMLoginGlobalClient(b2), this["isGlobal"] = !![]);
+    b2["includes"]("127.0.0.1") ? (this["client"] = new GpmOldClient(b2), this["isGlobal"] = ![]) : (this["client"] = new GPMLoginGlobalClient(b2), this["isGlobal"] = !![]);
   }
   async ["checkConnection"](b2) {
-    const c2 = { "weMoA": function(d, e) {
-      return d + e;
-    }, "RdhIC": "Check GPM tại ", "Xapxe": function(d, e) {
+    const c2 = { "Twgci": "Check GPM tại ", "mVvwH": function(d, e) {
       return d === e;
-    }, "pQFXo": "Kết nối GPM thành công!", "rYUBo": "Không thể kết nối tới GPM. Hãy đảm bảo App GPM đã bật!", "FlFOD": function(d, e) {
-      return d === e;
-    }, "RUlsk": "GPM-Login" };
+    }, "lCSJS": "Kết nối GPM thành công!", "eaqrp": "Không thể kết nối tới GPM. Hãy đảm bảo App GPM đã bật!" };
     try {
       if (this["isGlobal"]) {
-        logger["info"](c2["weMoA"](c2["RdhIC"], b2));
+        logger["info"](c2["Twgci"] + b2);
         const d = await axios["get"](b2, { "timeout": 2e3 });
-        return c2["Xapxe"](d["data"]["success"], !![]) ? { "success": !![], "message": c2["pQFXo"] } : { "success": ![], "message": c2["rYUBo"] };
+        return c2["mVvwH"](d["data"]["success"], !![]) ? { "success": !![], "message": c2["lCSJS"] } : { "success": ![], "message": "Không thể kết nối tới GPM. Hãy đảm bảo App GPM đã bật!" };
       } else {
-        logger["info"](c2["RdhIC"] + b2);
+        logger["info"](c2["Twgci"] + b2);
         const e = await axios["get"](b2, { "timeout": 2e3 });
-        return c2["FlFOD"](e["data"], c2["RUlsk"]) ? { "success": !![], "message": c2["pQFXo"] } : { "success": ![], "message": c2["rYUBo"] };
+        return c2["mVvwH"](e["data"], "GPM-Login") ? { "success": !![], "message": c2["lCSJS"] } : { "success": ![], "message": c2["eaqrp"] };
       }
     } catch (f) {
-      return { "success": ![], "message": c2["rYUBo"] };
+      return { "success": ![], "message": "Không thể kết nối tới GPM. Hãy đảm bảo App GPM đã bật!" };
     }
   }
   async ["getProfiles"]() {
   }
   async ["startProfile"](b2, c2, d = "-2000,0", e = "0,0", f = "0") {
     var _a2;
-    const g = { "uyeno": "[GPM] chạy với windowsize", "ejbLk": "-2000", "ugiuy": "--headless=new", "NjJgg": "--disable-gpu", "GSQsv": "--mute-audio" };
-    logger["info"](g["uyeno"], d);
+    const g = { "XfQoc": "-2000", "nEipI": "--headless=new", "kQykt": "--disable-gpu", "sIhaF": "--mute-audio" };
+    logger["info"]("[GPM] chạy với windowsize", d);
     try {
       try {
         await this["stopProfile"](b2), await new Promise((i) => setTimeout(i, 3e3));
       } catch (i) {
       }
-      const h = { "windowSize": d, "windowScale": f, "windowPos": e, "remoteDebuggingPort": c2, "addArgs": [d["includes"](g["ejbLk"]) ? g["ugiuy"] : "", g["NjJgg"], g["GSQsv"]] };
+      const h = { "windowSize": d, "windowScale": f, "windowPos": e, "remoteDebuggingPort": c2, "addArgs": [d["includes"](g["XfQoc"]) ? g["nEipI"] : "", g["kQykt"], g["sIhaF"]] };
       logger["info"]("\nStarting profile " + b2 + " …");
       if (this["isGlobal"]) {
         const j = await this["client"]["profiles"]["start"](b2, h);
@@ -39292,18 +39289,17 @@ class GpmService {
     }
   }
   async ["stopProfile"](b2) {
-    const c2 = { "sCcaE": "❌ Lỗi đóng profile:" };
     try {
       if (this["isGlobal"]) {
-        const d = await this["client"]["profiles"]["stop"](b2);
-        logger["info"](d);
+        const c2 = await this["client"]["profiles"]["stop"](b2);
+        logger["info"](c2);
       } else await this["client"]["stop"](b2);
-    } catch (e) {
-      logger["error"](c2["sCcaE"], e);
+    } catch (d) {
+      logger["error"]("❌ Lỗi đóng profile:", d);
     }
   }
   async ["createProfile"]() {
-    const b2 = { "IKxWp": "❌ Lỗi tạo profiles:" };
+    const b2 = { "kWAcY": "❌ Lỗi tạo profiles:" };
     try {
       if (this["isGlobal"]) {
         const c2 = await this["client"]["profiles"]["create"]({ "name": "tiktok_" + Date["now"]() });
@@ -39311,11 +39307,11 @@ class GpmService {
       }
       return null;
     } catch (d) {
-      logger["error"](b2["IKxWp"], d);
+      logger["error"](b2["kWAcY"], d);
     }
   }
   async ["deleteProfile"](b2, c2 = "soft") {
-    const d = { "yCLWU": "❌ Lỗi xoá profiles:" };
+    const d = { "HeFIe": "❌ Lỗi xoá profiles:" };
     try {
       if (this["isGlobal"]) {
         const e = await this["client"]["profiles"]["delete"](b2, c2);
@@ -39323,7 +39319,7 @@ class GpmService {
       }
       return null;
     } catch (f) {
-      logger["error"](d["yCLWU"], f);
+      logger["error"](d["HeFIe"], f);
     }
   }
 }
@@ -59721,7 +59717,7 @@ async function _connectToBiDiBrowser(connectionTransport, url2, options) {
   const { bidiConnection, cdpConnection, closeCallback } = await getBiDiConnection(connectionTransport, url2, options);
   const BiDi = await import(
     /* webpackIgnore: true */
-    "./bidi-Da9Z0iea.js"
+    "./bidi-X3NxREFE.js"
   );
   const bidiBrowser = await BiDi.BidiBrowser.create({
     connection: bidiConnection,
@@ -59738,7 +59734,7 @@ async function _connectToBiDiBrowser(connectionTransport, url2, options) {
 async function getBiDiConnection(connectionTransport, url2, options) {
   const BiDi = await import(
     /* webpackIgnore: true */
-    "./bidi-Da9Z0iea.js"
+    "./bidi-X3NxREFE.js"
   );
   const { slowMo = 0, protocolTimeout, idGenerator = createIncrementalIdGenerator() } = options;
   const pureBidiConnection = new BiDi.BidiConnection(url2, connectionTransport, idGenerator, slowMo, protocolTimeout);
@@ -59819,7 +59815,7 @@ async function getConnectionTransport(options) {
       endpointUrl: connectionURL
     };
   } else if (options.channel && isNode) {
-    const { detectBrowserPlatform: detectBrowserPlatform2, resolveDefaultUserDataDir: resolveDefaultUserDataDir2, Browser: Browser3 } = await import("./main-BVTpyJk5.js");
+    const { detectBrowserPlatform: detectBrowserPlatform2, resolveDefaultUserDataDir: resolveDefaultUserDataDir2, Browser: Browser3 } = await import("./main-Cu4Dexxt.js");
     const platform2 = detectBrowserPlatform2();
     if (!platform2) {
       throw new Error("Could not detect required browser platform");
@@ -92829,7 +92825,7 @@ class BrowserLauncher {
     const bidiOnly = process.env["PUPPETEER_WEBDRIVER_BIDI_ONLY"] === "true";
     const BiDi = await import(
       /* webpackIgnore: true */
-      "./bidi-Da9Z0iea.js"
+      "./bidi-X3NxREFE.js"
     );
     const bidiConnection = await BiDi.connectBidiOverCdp(cdpConnection);
     return await BiDi.BidiBrowser.create({
@@ -92852,7 +92848,7 @@ class BrowserLauncher {
     const transport = await NodeWebSocketTransport.create(browserWSEndpoint);
     const BiDi = await import(
       /* webpackIgnore: true */
-      "./bidi-Da9Z0iea.js"
+      "./bidi-X3NxREFE.js"
     );
     const bidiConnection = new BiDi.BidiConnection(browserWSEndpoint, transport, opts.idGenerator, opts.slowMo, opts.protocolTimeout);
     return await BiDi.BidiBrowser.create({
@@ -93861,85 +93857,83 @@ const {
   launch
 } = puppeteer;
 async function downloadImage(d, e) {
-  const f = { "bVGRZ": function(g, h) {
+  const f = { "ySqMN": function(g, h) {
     return g(h);
-  }, "xuRuB": "❌ Lỗi ghi file:", "JukKd": function(g, h) {
-    return g(h);
-  }, "bhcBP": "finish", "xSNhI": "error", "ToqDV": function(g, h) {
+  }, "XxlHw": "❌ Lỗi ghi file:", "PqKIx": "finish", "rMnTx": "error", "KWvDE": function(g, h) {
     return g || h;
-  }, "lsDso": "D:\\Output\\Videos", "yaNcL": function(g, h) {
-    return g(h);
-  }, "jZtrp": "GET", "HBOnv": "stream" };
+  }, "hohMx": "D:\\Output\\Videos", "kVaMX": "GET", "FPGPz": "❌ Lỗi download:" };
   try {
-    const g = Math["random"]()["toString"](36)["substring"](2, 7), h = "prod_" + Date["now"]() + "_" + g + ".png", i = f["ToqDV"](e, f["lsDso"]);
+    const g = Math["random"]()["toString"](36)["substring"](2, 7), h = "prod_" + Date["now"]() + "_" + g + ".png", i = f["KWvDE"](e, f["hohMx"]);
     !b__default["existsSync"](i) && b__default["mkdirSync"](i, { "recursive": !![] });
-    const j = c__default["join"](i, h), k = await f["yaNcL"](axios, { "url": d, "method": f["jZtrp"], "responseType": f["HBOnv"] }), l = b__default["createWriteStream"](j);
+    const j = c__default["join"](i, h), k = await f["ySqMN"](axios, { "url": d, "method": f["kVaMX"], "responseType": "stream" }), l = b__default["createWriteStream"](j);
     return k["data"]["pipe"](l), new Promise((m) => {
-      const n = { "pcEsH": f["xuRuB"], "erAGA": function(o, p) {
-        return f["JukKd"](o, p);
-      } };
-      l["on"](f["bhcBP"], () => {
-        logger["info"]("✅ Đã tải: " + h), f["bVGRZ"](m, { "success": !![], "name": h });
-      }), l["on"](f["xSNhI"], (o) => {
-        logger["error"](n["pcEsH"], o), n["erAGA"](m, { "success": ![], "name": "" });
+      const n = { "OfBEF": function(o, p) {
+        return f["ySqMN"](o, p);
+      }, "chomg": f["XxlHw"] };
+      l["on"](f["PqKIx"], () => {
+        logger["info"]("✅ Đã tải: " + h), n["OfBEF"](m, { "success": !![], "name": h });
+      }), l["on"](f["rMnTx"], (o) => {
+        logger["error"](n["chomg"], o), n["OfBEF"](m, { "success": ![], "name": "" });
       });
     });
   } catch (m) {
-    return logger["error"]("❌ Lỗi download:", m), { "success": ![], "name": "" };
+    return logger["error"](f["FPGPz"], m), { "success": ![], "name": "" };
   }
 }
 async function processImageTo916(c2) {
-  const d = { "jEtRl": function(l, m) {
+  const d = { "BzYKo": function(l, m) {
     return l(m);
-  }, "NqpoY": "Không đọc được kích thước ảnh", "jlscE": function(l, m) {
+  }, "hhdcA": "Không đọc được kích thước ảnh", "Sdeto": function(l, m) {
     return l * m;
-  }, "jWCZh": function(l, m) {
+  }, "AeFbB": function(l, m) {
     return l / m;
-  }, "jzLSY": function(l, m) {
+  }, "cGkRk": function(l, m) {
     return l / m;
-  }, "bYhsU": function(l, m) {
+  }, "sJyxP": function(l, m) {
     return l - m;
   } };
   b$1["cache"](![]);
-  const e = "processed_" + c__default["basename"](c2), f = c__default["join"](c__default["dirname"](c2), e), g = d["jEtRl"](b$1, c2), h = await g["metadata"]();
-  if (!h["width"] || !h["height"]) throw new Error(d["NqpoY"]);
-  const i = h["width"], j = Math["round"](d["jlscE"](d["jWCZh"](i, 9), 16)), k = Math["round"](d["jzLSY"](d["bYhsU"](j, h["height"]), 2));
+  const e = "processed_" + c__default["basename"](c2), f = c__default["join"](c__default["dirname"](c2), e), g = d["BzYKo"](b$1, c2), h = await g["metadata"]();
+  if (!h["width"] || !h["height"]) throw new Error(d["hhdcA"]);
+  const i = h["width"], j = Math["round"](d["Sdeto"](d["AeFbB"](i, 9), 16)), k = Math["round"](d["cGkRk"](d["sJyxP"](j, h["height"]), 2));
   return await g["extend"]({ "top": k, "bottom": k, "left": 0, "right": 0, "background": { "r": 255, "g": 255, "b": 255, "alpha": 1 } })["toFile"](f), e;
 }
 const sleep = (d) => new Promise((e) => setTimeout(e, d));
 const getShopeeIds = (d) => {
-  const e = { "jsBrh": function(f, g) {
+  const e = { "dTxty": function(f, g) {
     return f >= g;
-  }, "YCQqY": "❌ Lỗi parse Shopee URL:" };
+  }, "hWpvr": "❌ Lỗi parse Shopee URL:" };
   if (!d) return null;
   try {
     const f = /i\.(\d+)\.(\d+)/, g = /product\/(\d+)\/(\d+)/, h = d["match"](f) || d["match"](g);
-    if (h && e["jsBrh"](h["length"], 3)) return { "shopId": h[1], "productId": h[2] };
+    if (h && e["dTxty"](h["length"], 3)) return { "shopId": h[1], "productId": h[2] };
     return null;
   } catch (i) {
-    return logger["error"](e["YCQqY"], i), null;
+    return logger["error"](e["hWpvr"], i), null;
   }
 };
 async function getInfoProduct(d, e) {
   var _a2, _b2, _c2;
-  const f = { "XmCYT": function(g, h) {
+  const f = { "CDTkX": function(g, h) {
     return g(h);
-  }, "AkvNk": function(g, h) {
+  }, "uBqeb": "🔗 Đã kết nối thành công vào trình duyệt GPM!", "DteLm": function(g, h) {
     return g > h;
-  }, "xjMie": '//div[@role="main"]/section/section[2]/div/div/h1', "ElIdI": '//div[@class="product-detail page-product__detail"]/section[last()]', "hyHcP": '//div[not(.//img[@alt="icon video play"])]/div/picture/source[@type="image/webp"]/following-sibling::img[1]', "EmsYY": "https://shopee.vn", "tEqdl": "load", "HrjGY": "⚡ Đang phi thẳng vào trang sản phẩm (Chế độ Cướp Cò)...", "rKrtg": "resize_w82", "AMsyY": "resize_w780", "GSexg": function(g, h, i) {
+  }, "icazT": '//div[@class="product-detail page-product__detail"]/section[last()]', "frAzA": "🚚 Đang mồi trang chủ Shopee...", "Xmxnw": "load", "XafUg": "⚡ Đang phi thẳng vào trang sản phẩm (Chế độ Cướp Cò)...", "GYemW": "🛑 Đã chặn thành công Shopee JS Redirect!", "aNIzq": "resize_w82", "avohh": "resize_w780", "MsSWP": function(g, h, i) {
     return g(h, i);
-  }, "zqBVs": "❌ Không xóa được file cũ:", "HRWRU": "❌ Lỗi xử lý ảnh 9:16:", "juawV": "Tải ảnh thất bại", "SSXIX": "Không tìm thấy link ảnh trong DOM", "RVSxr": "Lỗi bóc tách dữ liệu Shopee", "xhybA": "✅ Hoàn tất lấy Info Product!", "vmaob": "Lỗi Shopee Service KXD" };
+  }, "IlvEt": function(g, h) {
+    return g(h);
+  }, "zzMqZ": "❌ Lỗi xử lý ảnh 9:16:", "NfYze": "Lỗi bóc tách dữ liệu Shopee", "HXhPi": "✅ Hoàn tất lấy Info Product!", "EWoKR": "Lỗi Shopee Service KXD" };
   try {
-    await f["XmCYT"](sleep, 3e3);
+    await f["CDTkX"](sleep, 3e3);
     const g = await puppeteer["connect"]({ "browserURL": "http://127.0.0.1:" + d, "defaultViewport": null });
-    logger["info"]("🔗 Đã kết nối thành công vào trình duyệt GPM!");
-    const h = await g["pages"](), i = f["AkvNk"](h["length"], 0) ? h[0] : await g["newPage"](), j = f["xjMie"], k = f["ElIdI"], l = f["hyHcP"];
-    logger["info"]("🚚 Đang mồi trang chủ Shopee..."), await i["goto"](f["EmsYY"], { "waitUntil": ((_a2 = e["configVideoMKT"]) == null ? void 0 : _a2["method_load_page"]) ?? f["tEqdl"], "timeout": ((_b2 = e["configVideoMKT"]) == null ? void 0 : _b2["time_loading_page"]) ?? 25e3 })["catch"](() => {
-    }), logger["info"](f["HrjGY"]), await i["goto"](e["task"]["productUrl"], { "waitUntil": "domcontentloaded", "timeout": 15e3 })["catch"](() => {
+    logger["info"](f["uBqeb"]);
+    const h = await g["pages"](), i = f["DteLm"](h["length"], 0) ? h[0] : await g["newPage"](), j = '//div[@role="main"]/section/section[2]/div/div/h1', k = f["icazT"], l = '//div[not(.//img[@alt="icon video play"])]/div/picture/source[@type="image/webp"]/following-sibling::img[1]';
+    logger["info"](f["frAzA"]), await i["goto"]("https://shopee.vn", { "waitUntil": ((_a2 = e["configVideoMKT"]) == null ? void 0 : _a2["method_load_page"]) ?? f["Xmxnw"], "timeout": ((_b2 = e["configVideoMKT"]) == null ? void 0 : _b2["time_loading_page"]) ?? 25e3 })["catch"](() => {
+    }), logger["info"](f["XafUg"]), await i["goto"](e["task"]["productUrl"], { "waitUntil": "domcontentloaded", "timeout": 15e3 })["catch"](() => {
     });
     let m = null, n = null, o = null;
     try {
-      await i["waitForSelector"]("xpath/" + j, { "timeout": ((_c2 = e["configVideoMKT"]) == null ? void 0 : _c2["time_wait_getdata"]) ?? 15e3 }), await i["evaluate"](() => window["stop"]()), logger["info"]("🛑 Đã chặn thành công Shopee JS Redirect!");
+      await i["waitForSelector"]("xpath/" + j, { "timeout": ((_c2 = e["configVideoMKT"]) == null ? void 0 : _c2["time_wait_getdata"]) ?? 15e3 }), await i["evaluate"](() => window["stop"]()), logger["info"](f["GYemW"]);
       const p = "\n                (() => {\n                    const getByXpath = (xpath) => document.evaluate(xpath, document, null, 9, null).singleNodeValue;\n                    \n                    const titleEl = getByXpath('" + j + "');\n                    const descEl = getByXpath('" + k + "');\n                    const imgEl = getByXpath('" + l + `');
 
                     return {
@@ -93952,54 +93946,52 @@ async function getInfoProduct(d, e) {
       m = q["title"], n = q["desc"], logger["info"]("💎 Tiêu đề: " + m), logger["info"]("💎 Mô tả: " + n);
       if (q["imgSrcset"]) {
         logger["info"]("🔗 Link ảnh gốc: " + q["imgSrcset"]);
-        const r = q["imgSrcset"]["replace"](f["rKrtg"], f["AMsyY"]), s = await f["GSexg"](downloadImage, r, e["task"]["save_path_project"]);
+        const r = q["imgSrcset"]["replace"](f["aNIzq"], f["avohh"]), s = await f["MsSWP"](downloadImage, r, e["task"]["save_path_project"]);
         if (s["success"]) try {
           let t2 = c__default["join"](e["task"]["save_path_project"], s["name"]);
-          const u2 = await processImageTo916(t2);
+          const u2 = await f["IlvEt"](processImageTo916, t2);
           u2 && (o = c__default["join"](e["task"]["save_path_project"], u2));
           try {
             b__default["existsSync"](t2) && (b__default["unlinkSync"](t2), logger["info"]("🗑️ Đã dọn dẹp file cũ: " + t2));
           } catch (v) {
-            logger["error"](f["zqBVs"], v);
+            logger["error"]("❌ Không xóa được file cũ:", v);
           }
         } catch (w) {
-          logger["error"](f["HRWRU"], w);
+          logger["error"](f["zzMqZ"], w);
         }
-        else throw new Error(f["juawV"]);
-      } else throw new Error(f["SSXIX"]);
+        else throw new Error("Tải ảnh thất bại");
+      } else throw new Error("Không tìm thấy link ảnh trong DOM");
     } catch (x) {
       await g["disconnect"](), logger["error"](x);
-      throw new Error((x == null ? void 0 : x["message"]) ?? f["RVSxr"]);
+      throw new Error((x == null ? void 0 : x["message"]) ?? f["NfYze"]);
     }
-    return await g["disconnect"](), logger["info"](f["xhybA"]), { "taskId": e["task"]["id"], "productTitle": m, "productDesc": n, "productPathImage": o };
+    return await g["disconnect"](), logger["info"](f["HXhPi"]), { "taskId": e["task"]["id"], "productTitle": m, "productDesc": n, "productPathImage": o };
   } catch (y) {
-    throw new Error((y == null ? void 0 : y["message"]) ?? f["vmaob"]);
+    throw new Error((y == null ? void 0 : y["message"]) ?? f["EWoKR"]);
   }
 }
 async function shopeeService(d, e, f, g, h, i, j) {
-  const k = { "IoLHY": "[ShopeeService] Lỗi không xác định", "PGGnb": "processing", "aPIUO": "video:task-log", "evMtb": "Lấy data thành công", "dnxyl": function(n, o) {
-    return n(o);
-  }, "owzKo": function(n, o) {
-    return n * o;
+  const k = { "uqLDw": "[ShopeeService] Lỗi không xác định", "YBBSG": "video:task-log", "LwwaF": "processing", "bVrQR": "1|2|3|0|4", "yHMnO": "Lấy data thành công", "ttjCR": function(n, o, p) {
+    return n(o, p);
   } };
-  let l = null, m = { "success": ![], "message": k["IoLHY"], "data": null };
+  let l = null, m = { "success": ![], "message": k["uqLDw"], "data": null };
   try {
-    d["sender"]["send"]("video:task-log", { "status": k["PGGnb"], "message": "🚀 Mở trình duyệt lấy Info", "taskId": j["id"] });
+    d["sender"]["send"](k["YBBSG"], { "status": k["LwwaF"], "message": "🚀 Mở trình duyệt lấy Info", "taskId": j["id"] });
     const n = await e["startProfile"](f, g);
     if (!n["success"]) throw new Error(n["message"]);
     if (n["data"]["remote_debugging_port"]) {
-      const o = "2|0|3|1|4"["split"]("|");
+      const o = k["bVrQR"]["split"]("|");
       let p = 0;
       while (!![]) {
         switch (o[p++]) {
           case "0":
-            d["sender"]["send"](k["aPIUO"], { "status": "processing", "message": "✅ Lấy Info thành công", "data": l, "taskId": j["id"] });
+            m["message"] = k["yHMnO"];
             continue;
           case "1":
-            m["message"] = k["evMtb"];
+            l = await k["ttjCR"](getInfoProduct, n["data"]["remote_debugging_port"], { ...i, "task": j });
             continue;
           case "2":
-            l = await getInfoProduct(n["data"]["remote_debugging_port"], { ...i, "task": j });
+            d["sender"]["send"](k["YBBSG"], { "status": "processing", "message": "✅ Lấy Info thành công", "data": l, "taskId": j["id"] });
             continue;
           case "3":
             m["success"] = !![];
@@ -94012,9 +94004,9 @@ async function shopeeService(d, e, f, g, h, i, j) {
       }
     }
   } catch (q) {
-    d["sender"]["send"](k["aPIUO"], { "status": "processing", "message": "Lỗi cào dữ liệu: " + q, "taskId": j["id"] }), m["success"] = ![], m["message"] = (q == null ? void 0 : q["message"]) ?? "[ShopeeService] Lỗi không xác định";
+    d["sender"]["send"](k["YBBSG"], { "status": k["LwwaF"], "message": "Lỗi cào dữ liệu: " + q, "taskId": j["id"] }), m["success"] = ![], m["message"] = (q == null ? void 0 : q["message"]) ?? "[ShopeeService] Lỗi không xác định";
   } finally {
-    return await e["stopProfile"](f), await k["dnxyl"](sleep, k["owzKo"](h, 1e3)), logger["info"]("🔓 Nhả Profile " + f + " cho luồng khác."), m;
+    return await e["stopProfile"](f), await sleep(h * 1e3), logger["info"]("🔓 Nhả Profile " + f + " cho luồng khác."), m;
   }
 }
 const byteToHex = [];
@@ -94066,20 +94058,18 @@ class GrokService {
     __publicField(this, "MIN_IMAGE_SIZE_KB", 50);
     __publicField(this, "configDir");
     __publicField(this, "headersDir");
-    const f = { "oFMLX": "configs", "eLvXS": "grok_headers", "WVexa": "📂 Thư mục cấu hình tại:" }, g = app["getPath"]("userData");
-    this["configDir"] = c__default["join"](g, f["oFMLX"]), this["headersDir"] = c__default["join"](this["configDir"], f["eLvXS"]), !b__default["existsSync"](this["headersDir"]) && b__default["mkdirSync"](this["headersDir"], { "recursive": !![] }), logger["info"](f["WVexa"], this["headersDir"]);
+    const f = { "qhHcz": "userData", "SVnwa": "configs" }, g = app["getPath"](f["qhHcz"]);
+    this["configDir"] = c__default["join"](g, f["SVnwa"]), this["headersDir"] = c__default["join"](this["configDir"], "grok_headers"), !b__default["existsSync"](this["headersDir"]) && b__default["mkdirSync"](this["headersDir"], { "recursive": !![] }), logger["info"]("📂 Thư mục cấu hình tại:", this["headersDir"]);
   }
   async ["initHeaderGrok"](f, g, h, i, j, k, l, m) {
-    const n = { "VKloj": "video:task-log", "FANET": "processing", "jhyod": function(o, p) {
-      return o(p);
-    }, "XHhGM": function(o, p) {
+    const n = { "chkLC": "video:task-log", "VabNb": "processing", "SQQKJ": function(o, p) {
       return o * p;
-    }, "ZqCkp": "Đã khởi tạo thành công header grok", "SGzGW": "[GrokService]: Khởi tạo header thất bại" };
+    }, "xGvnr": "Đã khởi tạo thành công header grok", "jKnfx": "[GrokService]: Khởi tạo header thất bại" };
     try {
-      f["sender"]["send"](n["VKloj"], { "status": n["FANET"], "message": "🔍 Đang kiểm tra Grok Profile " + k, "taskId": g });
+      f["sender"]["send"](n["chkLC"], { "status": n["VabNb"], "message": "🔍 Đang kiểm tra Grok Profile " + k, "taskId": g });
       let o = await h["checkHeaderLive"](k);
       if (!o) try {
-        f["sender"]["send"](n["VKloj"], { "status": "processing", "message": "🔄 Header hết hạn hoặc chưa có! Đang mở GPM để lấy lại...", "taskId": g }), await i["lockProfile"](k);
+        f["sender"]["send"](n["chkLC"], { "status": n["VabNb"], "message": "🔄 Header hết hạn hoặc chưa có! Đang mở GPM để lấy lại...", "taskId": g }), await i["lockProfile"](k);
         const p = await j["startProfile"](k, l);
         if (!p["success"]) throw new Error(p["message"]);
         if (p["data"]["remote_debugging_port"]) {
@@ -94089,33 +94079,33 @@ class GrokService {
       } catch (r) {
       } finally {
         try {
-          await j["stopProfile"](k), await n["jhyod"](sleep, n["XHhGM"](m, 1e3));
+          await j["stopProfile"](k), await sleep(n["SQQKJ"](m, 1e3));
         } catch (s) {
         }
         await i["releaseProfile"](k);
       }
-      return { "success": !![], "message": n["ZqCkp"] };
+      return { "success": !![], "message": n["xGvnr"] };
     } catch (t2) {
-      return logger["error"](t2["message"]), { "success": !![], "message": (t2 == null ? void 0 : t2["message"]) ?? n["SGzGW"] };
+      return logger["error"](t2["message"]), { "success": !![], "message": (t2 == null ? void 0 : t2["message"]) ?? n["jKnfx"] };
     }
   }
   async ["refreshGrokHeaderViaGPM"](f) {
-    const g = { "DPbQl": function(i, j) {
+    const g = { "tPFmD": function(i, j) {
       return i > j;
-    }, "ajdez": "Network.requestWillBeSent", "ilomm": "Network.requestWillBeSentExtraInfo", "YTQKn": "🚀 Đang truy cập Grok...", "EUrLc": "https://grok.com/", "zNlLj": "domcontentloaded", "gmntk": "suggestions/profile", "SBzek": "cookie", "vywXK": function(i, j) {
-      return i === j;
-    }, "hdAZp": "❌ Không tìm thấy API suggestions/profile trong logs.", "MvJCx": "❌ Lỗi trích xuất:" };
+    }, "Iimtp": "Network.requestWillBeSent", "bYyGS": "Network.requestWillBeSentExtraInfo", "YQTMk": "🚀 Đang truy cập Grok...", "sgjQw": "https://grok.com/", "tyMZC": "domcontentloaded", "oljTs": "⏳ Chờ trang load và API calls (8 giây)...", "iaypr": "suggestions/profile", "ivbxg": function(i, j, k) {
+      return i(j, k);
+    }, "zlmRh": "❌ Không tìm thấy API suggestions/profile trong logs.", "Ufcxt": "❌ Lỗi trích xuất:" };
     let h = null;
     try {
       h = await puppeteer["connect"]({ "browserURL": "http://127.0.0.1:" + f, "defaultViewport": null });
-      const i = await h["pages"](), j = g["DPbQl"](i["length"], 0) ? i[0] : await h["newPage"](), k = await j["target"]()["createCDPSession"]();
+      const i = await h["pages"](), j = g["tPFmD"](i["length"], 0) ? i[0] : await h["newPage"](), k = await j["target"]()["createCDPSession"]();
       await k["send"]("Network.enable");
       const l = {}, m = {};
-      k["on"](g["ajdez"], (p) => {
+      k["on"](g["Iimtp"], (p) => {
         l[p["requestId"]] = { "url": p["request"]["url"], "method": p["request"]["method"], "headers": p["request"]["headers"] };
-      }), k["on"](g["ilomm"], (p) => {
+      }), k["on"](g["bYyGS"], (p) => {
         m[p["requestId"]] = p["headers"];
-      }), logger["info"](g["YTQKn"]), await j["goto"](g["EUrLc"], { "waitUntil": g["zNlLj"] }), logger["info"]("⏳ Chờ trang load và API calls (8 giây)..."), await new Promise((p) => setTimeout(p, 8e3));
+      }), logger["info"](g["YQTMk"]), await j["goto"](g["sgjQw"], { "waitUntil": g["tyMZC"] }), logger["info"](g["oljTs"]), await new Promise((p) => setTimeout(p, 8e3));
       const n = (p, q) => {
         const r = {};
         if (q) for (const [s, t2] of Object["entries"](q)) {
@@ -94130,53 +94120,52 @@ class GrokService {
       let o = null;
       for (const p in l) {
         const q = l[p];
-        if (q["url"]["includes"](g["gmntk"])) {
+        if (q["url"]["includes"](g["iaypr"])) {
           const r = q["headers"], s = m[p];
-          o = n(r, s);
-          if (o[g["SBzek"]]) break;
+          o = g["ivbxg"](n, r, s);
+          if (o["cookie"]) break;
         }
       }
-      if (!o || g["vywXK"](Object["keys"](o)["length"], 0)) throw new Error(g["hdAZp"]);
+      if (!o || Object["keys"](o)["length"] === 0) throw new Error(g["zlmRh"]);
       return logger["info"]("✅ Đã trích xuất xong: " + Object["keys"](o)["length"] + " keys"), await h["disconnect"](), o;
     } catch (t2) {
-      logger["error"](g["MvJCx"], t2["message"]);
+      logger["error"](g["Ufcxt"], t2["message"]);
       if (h) await h["disconnect"]();
       throw t2;
     }
   }
   async ["checkHeaderLive"](f) {
+    const g = { "AGFDC": "https://grok.com/rest/suggestions/profile" };
     try {
-      const g = this["getHeadersFromLocal"](f);
-      if (!g) return ![];
-      const h = await axios["get"]("https://grok.com/rest/suggestions/profile", { "headers": g, "timeout": 5e3 });
-      return h["status"] === 200;
-    } catch (i) {
+      const h = this["getHeadersFromLocal"](f);
+      if (!h) return ![];
+      const i = await axios["get"](g["AGFDC"], { "headers": h, "timeout": 5e3 });
+      return i["status"] === 200;
+    } catch (j) {
       return ![];
     }
   }
   ["getHeadersFromLocal"](f) {
-    const g = { "PpDwp": "x-xai-request-id", "wjYPC": function(i) {
-      return i();
-    } }, h = c__default["join"](this["headersDir"], "profile_" + f + ".json");
+    const g = { "PYRcS": "utf-8", "sFjvi": "x-xai-request-id" }, h = c__default["join"](this["headersDir"], "profile_" + f + ".json");
     if (!b__default["existsSync"](h)) return null;
     try {
-      const i = JSON["parse"](b__default["readFileSync"](h, "utf-8")), j = {};
+      const i = JSON["parse"](b__default["readFileSync"](h, g["PYRcS"])), j = {};
       for (const k in i) {
         !k["startsWith"](":") && (j[k["toLowerCase"]()] = i[k]);
       }
-      return j[g["PpDwp"]] = g["wjYPC"](v4), j;
+      return j[g["sFjvi"]] = v4(), j;
     } catch {
       return null;
     }
   }
   ["getDefaultHeaders"]() {
-    const f = { "OwfqD": "*/*", "DuPIx": "gzip, deflate, br, zstd", "MhnIv": "en-US,en;q=0.9", "YHufJ": "application/json", "nxfUD": "https://grok.com", "SVRCM": "https://grok.com/", "KWiDC": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36", "DYoei": function(g) {
+    const f = { "YgMrF": "*/*", "lmnhV": "en-US,en;q=0.9", "RoZyD": "application/json", "dgeYJ": "https://grok.com", "rFmAs": "https://grok.com/", "gNyNR": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36", "rWJSl": function(g) {
       return g();
     } };
-    return { "accept": f["OwfqD"], "accept-encoding": f["DuPIx"], "accept-language": f["MhnIv"], "content-type": f["YHufJ"], "origin": f["nxfUD"], "referer": f["SVRCM"], "user-agent": f["KWiDC"], "x-xai-request-id": f["DYoei"](v4) };
+    return { "accept": f["YgMrF"], "accept-encoding": "gzip, deflate, br, zstd", "accept-language": f["lmnhV"], "content-type": f["RoZyD"], "origin": f["dgeYJ"], "referer": f["rFmAs"], "user-agent": f["gNyNR"], "x-xai-request-id": f["rWJSl"](v4) };
   }
   ["buildRequestHeaders"](f) {
-    const g = { "gSmPK": "content-type", "ESgbi": "application/json", "JAfBN": "origin", "NDHBt": "x-xai-request-id", "kxvQJ": function(j) {
+    const g = { "yVSjy": "content-type", "dkZAN": "origin", "RmIZY": "https://grok.com", "cuDmi": "x-xai-request-id", "ifdTi": function(j) {
       return j();
     } }, h = this["getHeadersFromLocal"](f);
     if (!h) return logger["warn"]("⚠️ Không tìm thấy raw headers cho Profile " + f + ", dùng default."), this["getDefaultHeaders"]();
@@ -94185,29 +94174,29 @@ class GrokService {
       if (j["startsWith"](":")) continue;
       i[j["toLowerCase"]()] = h[j];
     }
-    return !i[g["gSmPK"]] && (i["content-type"] = g["ESgbi"]), !i["origin"] && (i[g["JAfBN"]] = "https://grok.com"), i[g["NDHBt"]] = g["kxvQJ"](v4), i;
+    return !i["content-type"] && (i[g["yVSjy"]] = "application/json"), !i["origin"] && (i[g["dkZAN"]] = g["RmIZY"]), i[g["cuDmi"]] = g["ifdTi"](v4), i;
   }
   ["saveNewHeaders"](f, g) {
     const h = c__default["join"](this["headersDir"], "profile_" + f + ".json");
     b__default["writeFileSync"](h, JSON["stringify"](g, null, 2)), logger["info"]("✅ Đã lưu Header mới cho Profile " + f);
   }
   async ["generateReviewVideoImage"](f, g, h, i, j) {
-    const k = { "UPLtJ": "Upload ảnh không thành công", "TneVp": function(l) {
+    const k = { "xJdYq": "Header trống, cần refresh qua GPM", "tekZv": function(l) {
       return l();
-    }, "TnQRO": function(l, m) {
-      return l === m;
-    }, "WFYeG": "Không tìm thấy image" };
+    }, "KLWQy": "Upload ảnh không thành công", "zpxsO": function(l) {
+      return l();
+    }, "QqCUr": "Grok Không trả về ảnh", "ivWwD": "Không tìm thấy image" };
     try {
       const l = this["buildRequestHeaders"](h);
-      if (!l) throw new Error("Header trống, cần refresh qua GPM");
-      const m = { ...l, "x-xai-request-id": v4() }, n = await this["uploadImage"](g, m);
-      if (!(n == null ? void 0 : n["fileUri"])) return { "success": ![], "message": k["UPLtJ"] };
-      const { fileUri: o } = n, p = { ...l, "x-xai-request-id": k["TneVp"](v4) }, q = await this["createMediaPost"](f, o, p);
+      if (!l) throw new Error(k["xJdYq"]);
+      const m = { ...l, "x-xai-request-id": k["tekZv"](v4) }, n = await this["uploadImage"](g, m);
+      if (!(n == null ? void 0 : n["fileUri"])) return { "success": ![], "message": k["KLWQy"] };
+      const { fileUri: o } = n, p = { ...l, "x-xai-request-id": k["zpxsO"](v4) }, q = await this["createMediaPost"](f, o, p);
       if (!q) return { "success": ![], "message": "Tạo post thất bại" };
-      const r = { ...l, "x-xai-request-id": k["TneVp"](v4) }, s = await this["sendImageEditRequest"](f, [o], q, r);
-      if (!s || k["TnQRO"](s["length"], 0)) return { "success": ![], "message": "Grok Không trả về ảnh" };
+      const r = { ...l, "x-xai-request-id": k["zpxsO"](v4) }, s = await this["sendImageEditRequest"](f, [o], q, r);
+      if (!s || s["length"] === 0) return { "success": ![], "message": k["QqCUr"] };
       const t2 = await this["downloadBestImage"](s, j, h, i);
-      if (!t2) return { "success": ![], "message": k["WFYeG"] };
+      if (!t2) return { "success": ![], "message": k["ivWwD"] };
       return { "success": !![], "filePath": t2 };
     } catch (u2) {
       return logger["info"](u2["message"]), { "success": ![], "message": u2["message"] };
@@ -94215,56 +94204,58 @@ class GrokService {
   }
   async ["uploadImage"](f, g) {
     var _a2;
-    const h = { "rGbGD": "image/jpeg", "XEkiS": "base64", "TZkug": "IMAGINE_SELF_UPLOAD_FILE_SOURCE", "ZrgqR": "https://grok.com/rest/app-chat/upload-file", "Rjeem": function(i, j) {
+    const h = { "moanv": "image/jpeg", "QrCPy": "image/png", "FPiYs": "image/webp", "mQdOP": "base64", "NutAg": "IMAGINE_SELF_UPLOAD_FILE_SOURCE", "cChWU": "https://grok.com/rest/app-chat/upload-file", "bkWOq": function(i, j) {
       return i === j;
-    }, "tEsXs": function(i, j) {
+    }, "YHheK": function(i, j) {
       return i && j;
-    }, "emjuW": "❌ Lỗi upload_image:" };
+    } };
     try {
-      const i = c__default["basename"](f), j = c__default["extname"](f)["toLowerCase"](), k = { ".jpg": h["rGbGD"], ".jpeg": h["rGbGD"], ".png": "image/png", ".webp": "image/webp" }, l = k[j] || h["rGbGD"], m = b__default["readFileSync"](f, { "encoding": h["XEkiS"] }), n = { "fileName": i, "fileMimeType": l, "content": m, "fileSource": h["TZkug"] }, o = h["ZrgqR"], p = await axios["post"](o, n, { "headers": g, "timeout": 6e4 });
-      if (h["Rjeem"](p["status"], 200)) {
+      const i = c__default["basename"](f), j = c__default["extname"](f)["toLowerCase"](), k = { ".jpg": "image/jpeg", ".jpeg": h["moanv"], ".png": h["QrCPy"], ".webp": h["FPiYs"] }, l = k[j] || h["moanv"], m = b__default["readFileSync"](f, { "encoding": h["mQdOP"] }), n = { "fileName": i, "fileMimeType": l, "content": m, "fileSource": h["NutAg"] }, o = h["cChWU"], p = await axios["post"](o, n, { "headers": g, "timeout": 6e4 });
+      if (h["bkWOq"](p["status"], 200)) {
         const { fileMetadataId: q, fileUri: r } = p["data"];
-        if (h["tEsXs"](q, r)) return logger["info"]("✅ Upload thành công! ID: " + q), { "fileMetadataId": q, "fileUri": r };
+        if (h["YHheK"](q, r)) return logger["info"]("✅ Upload thành công! ID: " + q), { "fileMetadataId": q, "fileUri": r };
       }
       return null;
     } catch (s) {
-      return logger["error"](h["emjuW"], ((_a2 = s["response"]) == null ? void 0 : _a2["data"]) || s["message"]), null;
+      return logger["error"]("❌ Lỗi upload_image:", ((_a2 = s["response"]) == null ? void 0 : _a2["data"]) || s["message"]), null;
     }
   }
   async ["createMediaPost"](f, g, h) {
     var _a2;
-    const i = { "GEaYS": "https://grok.com/rest/media/post/create", "xpHCC": function(j, k) {
+    const i = { "RgJjA": "https://grok.com/rest/media/post/create", "IsQNi": function(j, k) {
       return j === k;
-    }, "eVniD": "object", "Lqgdz": "❌ Lỗi create_media_post:" };
+    }, "IqXhM": function(j, k) {
+      return j === k;
+    } };
     try {
-      const j = i["GEaYS"], k = { "mediaType": "MEDIA_POST_TYPE_IMAGE", "prompt": f, "mediaUrl": "https://assets.grok.com/" + g }, l = await axios["post"](j, k, { "headers": h, "timeout": 25e3 });
-      if (l["status"] === 200 || l["status"] === 201) {
+      const j = i["RgJjA"], k = { "mediaType": "MEDIA_POST_TYPE_IMAGE", "prompt": f, "mediaUrl": "https://assets.grok.com/" + g }, l = await axios["post"](j, k, { "headers": h, "timeout": 25e3 });
+      if (l["status"] === 200 || i["IsQNi"](l["status"], 201)) {
         const m = l["data"];
         let n = null;
-        if (m && i["xpHCC"](typeof m, "object")) {
+        if (m && typeof m === "object") {
           if (m["id"]) n = m["id"];
-          else m["post"] && typeof m["post"] === i["eVniD"] && (n = m["post"]["id"]);
+          else m["post"] && i["IqXhM"](typeof m["post"], "object") && (n = m["post"]["id"]);
         }
         if (n) return logger["info"]("✅ Đã tạo Media Post thành công với ảnh SP: " + n), n;
       }
       return null;
     } catch (o) {
-      return logger["error"](i["Lqgdz"], ((_a2 = o["response"]) == null ? void 0 : _a2["data"]) || o["message"]), null;
+      return logger["error"]("❌ Lỗi create_media_post:", ((_a2 = o["response"]) == null ? void 0 : _a2["data"]) || o["message"]), null;
     }
   }
   async ["sendImageEditRequest"](f, g, h, i) {
     var _a2;
-    const j = { "mflBt": "end", "RuIwu": "https://grok.com/rest/app-chat/conversations/new", "JHYsU": "imagine-image-edit", "WsrFu": "imagine", "urJor": "❌ Lỗi sendImageEditRequest:" }, k = j["RuIwu"], l = { "temporary": !![], "modelName": j["JHYsU"], "message": f, "enableImageGeneration": !![], "returnImageBytes": ![], "returnRawGrokInXaiRequest": ![], "enableImageStreaming": !![], "imageGenerationCount": 1, "forceConcise": ![], "toolOverrides": { "imageGen": !![] }, "enableSideBySide": !![], "sendFinalMetadata": !![], "isReasoning": ![], "disableTextFollowUps": !![], "responseMetadata": { "modelConfigOverride": { "modelMap": { "imageEditModelConfig": { "imageReferences": g["map"]((n) => "https://assets.grok.com/" + n), "parentPostId": h }, "imageEditModel": j["WsrFu"] } } }, "disableMemory": ![], "forceSideBySide": ![] }, m = [];
+    const j = { "tVkKM": "data", "RrQQx": "end", "TajzL": "https://grok.com/rest/app-chat/conversations/new", "dKVFZ": "imagine-image-edit", "YvAcO": "stream", "UdAhX": "❌ Lỗi sendImageEditRequest:" }, k = j["TajzL"], l = { "temporary": !![], "modelName": j["dKVFZ"], "message": f, "enableImageGeneration": !![], "returnImageBytes": ![], "returnRawGrokInXaiRequest": ![], "enableImageStreaming": !![], "imageGenerationCount": 1, "forceConcise": ![], "toolOverrides": { "imageGen": !![] }, "enableSideBySide": !![], "sendFinalMetadata": !![], "isReasoning": ![], "disableTextFollowUps": !![], "responseMetadata": { "modelConfigOverride": { "modelMap": { "imageEditModelConfig": { "imageReferences": g["map"]((n) => "https://assets.grok.com/" + n), "parentPostId": h }, "imageEditModel": "imagine" } } }, "disableMemory": ![], "forceSideBySide": ![] }, m = [];
     try {
-      const n = await axios["post"](k, l, { "headers": i, "responseType": "stream", "timeout": 18e4 });
+      const n = await axios["post"](k, l, { "headers": i, "responseType": j["YvAcO"], "timeout": 18e4 });
       return new Promise((o, p) => {
-        const q = { "mGcMV": "utf-8", "fUUuk": function(s, t2) {
+        const q = { "CDIhY": function(s, t2) {
           return s(t2);
         } };
         let r = "";
-        n["data"]["on"]("data", (s) => {
+        n["data"]["on"](j["tVkKM"], (s) => {
           var _a3, _b2, _c2, _d2;
-          r += s["toString"](q["mGcMV"]);
+          r += s["toString"]("utf-8");
           let t2 = r["split"]("\n");
           r = t2["pop"]() || "";
           for (const u2 of t2) {
@@ -94279,7 +94270,7 @@ class GrokService {
             } catch (A) {
             }
           }
-        }), n["data"]["on"](j["mflBt"], () => {
+        }), n["data"]["on"](j["RrQQx"], () => {
           if (r["trim"]()) try {
             const s = JSON["parse"](r), t2 = JSON["stringify"](s)["matchAll"](/"imageUrl"\s*:\s*"([^"]+)"/g);
             for (const u2 of t2) {
@@ -94287,34 +94278,32 @@ class GrokService {
             }
           } catch (v) {
           }
-          logger["info"]("🎨 Grok đã vẽ xong " + m["length"] + " ảnh."), q["fUUuk"](o, m);
+          logger["info"]("🎨 Grok đã vẽ xong " + m["length"] + " ảnh."), q["CDIhY"](o, m);
         }), n["data"]["on"]("error", (s) => p(s));
       });
     } catch (o) {
-      return logger["error"](j["urJor"], ((_a2 = o["response"]) == null ? void 0 : _a2["data"]) || o["message"]), [];
+      return logger["error"](j["UdAhX"], ((_a2 = o["response"]) == null ? void 0 : _a2["data"]) || o["message"]), [];
     }
   }
   ["buildDownloadHeaders"](f) {
-    const g = { "lwYKQ": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8", "KTLUc": "gzip, deflate, br, zstd", "ZmYym": "u=1, i", "cnFMa": "https://grok.com/", "ndUlU": '"Not(A:Brand";v="8", "Chromium";v="144", "Google Chrome";v="144"', "EIdDj": '"Windows"', "WxNKr": "image", "TVuVB": "same-site", "FwKcD": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36", "bwKOd": "cookie" }, h = this["parseCookieFromFile"](f), i = { "accept": g["lwYKQ"], "accept-encoding": g["KTLUc"], "accept-language": "vi,en-US;q=0.9,en;q=0.8", "priority": g["ZmYym"], "referer": g["cnFMa"], "sec-ch-ua": g["ndUlU"], "sec-ch-ua-mobile": "?0", "sec-ch-ua-platform": g["EIdDj"], "sec-fetch-dest": g["WxNKr"], "sec-fetch-mode": "no-cors", "sec-fetch-site": g["TVuVB"], "user-agent": g["FwKcD"] };
-    return h && (i[g["bwKOd"]] = h), i;
+    const g = { "hHWia": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8", "anrCQ": "gzip, deflate, br, zstd", "DGYcO": "u=1, i", "nyczF": '"Not(A:Brand";v="8", "Chromium";v="144", "Google Chrome";v="144"', "oKsUR": '"Windows"', "Epmpq": "no-cors", "VimFI": "same-site", "hOZdb": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" }, h = this["parseCookieFromFile"](f), i = { "accept": g["hHWia"], "accept-encoding": g["anrCQ"], "accept-language": "vi,en-US;q=0.9,en;q=0.8", "priority": g["DGYcO"], "referer": "https://grok.com/", "sec-ch-ua": g["nyczF"], "sec-ch-ua-mobile": "?0", "sec-ch-ua-platform": g["oKsUR"], "sec-fetch-dest": "image", "sec-fetch-mode": g["Epmpq"], "sec-fetch-site": g["VimFI"], "user-agent": g["hOZdb"] };
+    return h && (i["cookie"] = h), i;
   }
   ["parseCookieFromFile"](f) {
-    const g = { "GPqiC": "utf-8" }, h = c__default["join"](this["headersDir"], "profile_" + f + ".json");
+    const g = { "vUEvk": "utf-8" }, h = c__default["join"](this["headersDir"], "profile_" + f + ".json");
     if (b__default["existsSync"](h)) {
-      const i = JSON["parse"](b__default["readFileSync"](h, g["GPqiC"]));
+      const i = JSON["parse"](b__default["readFileSync"](h, g["vUEvk"]));
       return i["cookie"] || "";
     }
     return "";
   }
   async ["downloadBestImage"](f, g, h, i) {
-    const j = { "oAcZx": function(n, o) {
+    const j = { "PREoP": function(n, o) {
       return n === o;
-    }, "QzHqM": function(n, o) {
+    }, "lLmwN": function(n, o) {
       return n > o;
-    }, "CCZuK": function(n, o) {
-      return n >= o;
-    } };
-    if (!f || j["oAcZx"](f["length"], 0)) return null;
+    }, "sUnlw": "⚠️ Không tìm thấy ảnh nào đủ chất lượng." };
+    if (!f || j["PREoP"](f["length"], 0)) return null;
     const k = this["buildDownloadHeaders"](h);
     let l = null, m = -1;
     logger["info"]("🔍 Đang quét " + f["length"] + " ảnh để tìm tấm chất lượng nhất...");
@@ -94322,30 +94311,30 @@ class GrokService {
       try {
         const { content: o, sizeKb: p } = await this["checkImageSize"](n, k);
         if (!o) continue;
-        j["QzHqM"](p, m) && (m = p, l = o, logger["info"]("📸 Tìm thấy ảnh tốt hơn: " + p["toFixed"](2) + " KB"));
+        j["lLmwN"](p, m) && (m = p, l = o, logger["info"]("📸 Tìm thấy ảnh tốt hơn: " + p["toFixed"](2) + " KB"));
       } catch (q) {
         logger["error"]("❌ Lỗi khi check ảnh " + n + ":", q);
       }
     }
-    if (l && j["CCZuK"](m, this["MIN_IMAGE_SIZE_KB"])) {
+    if (l && m >= this["MIN_IMAGE_SIZE_KB"]) {
       if (!b__default["existsSync"](i)) b__default["mkdirSync"](i, { "recursive": !![] });
       const r = "grok_best_" + g + "_" + Date["now"]() + ".png", s = c__default["join"](i, r);
       return b__default["writeFileSync"](s, l), logger["info"]('✅ Đã chọn tấm ảnh "khủng" nhất: ' + s + " (" + m["toFixed"](2) + " KB)"), s;
     }
-    return logger["info"]("⚠️ Không tìm thấy ảnh nào đủ chất lượng."), null;
+    return logger["info"](j["sUnlw"]), null;
   }
   async ["downloadImageForPrompt"](f, g, h, i) {
-    const j = { "qTuJJ": function(l, m) {
+    const j = { "XBIQZ": function(l, m) {
       return l === m;
-    }, "FzbBp": function(l, m) {
+    }, "UuYSP": function(l, m) {
       return l < m;
     } };
-    if (!f || j["qTuJJ"](f["length"], 0)) return null;
+    if (!f || j["XBIQZ"](f["length"], 0)) return null;
     const k = this["buildDownloadHeaders"](h);
     for (const l of f) {
       const { content: m, sizeKb: n } = await this["checkImageSize"](l, k);
       if (!m) continue;
-      if (j["FzbBp"](n, this["MIN_IMAGE_SIZE_KB"])) {
+      if (j["UuYSP"](n, this["MIN_IMAGE_SIZE_KB"])) {
         logger["info"]("⚠️ Bỏ qua ảnh chất lượng thấp: " + n["toFixed"](2) + " KB");
         continue;
       }
@@ -94356,16 +94345,16 @@ class GrokService {
     return null;
   }
   async ["checkImageSize"](f, g) {
-    const h = { "AcSnQ": "http", "tipkm": "arraybuffer", "nVRxf": function(j, k) {
+    const h = { "FaBXu": "http", "dZdeW": "arraybuffer", "NjzyO": function(j, k) {
       return j === k;
-    }, "eUFfk": "content-type", "qDLfC": function(j, k) {
-      return j < k;
-    } }, i = f["startsWith"](h["AcSnQ"]) ? f : "https://assets.grok.com/" + f;
+    }, "yTktx": function(j, k) {
+      return j / k;
+    }, "RKyTo": "image" }, i = f["startsWith"](h["FaBXu"]) ? f : "https://assets.grok.com/" + f;
     try {
-      const j = await axios["get"](i, { "headers": g, "responseType": h["tipkm"], "timeout": 6e4 });
-      if (h["nVRxf"](j["status"], 200)) {
-        const k = (j["headers"][h["eUFfk"]] || "")["toLowerCase"](), l = Buffer["from"](j["data"]), m = l["length"] / 1024;
-        if (!k["includes"]("image") && h["qDLfC"](l["length"], 1e3)) return { "content": null, "sizeKb": 0 };
+      const j = await axios["get"](i, { "headers": g, "responseType": h["dZdeW"], "timeout": 6e4 });
+      if (h["NjzyO"](j["status"], 200)) {
+        const k = (j["headers"]["content-type"] || "")["toLowerCase"](), l = Buffer["from"](j["data"]), m = h["yTktx"](l["length"], 1024);
+        if (!k["includes"](h["RKyTo"]) && l["length"] < 1e3) return { "content": null, "sizeKb": 0 };
         return { "content": l, "sizeKb": m };
       } else return { "content": null, "sizeKb": 0 };
     } catch (n) {
@@ -94374,50 +94363,40 @@ class GrokService {
   }
   async ["createVideoForPromptCore"](f, g, h, i, j, k = 1, l, m = null, n, o) {
     var _a2, _b2, _c2;
-    const p = { "RZOSA": function(t2, u2) {
+    const p = { "mRyIi": function(t2, u2) {
       return t2(u2);
-    }, "tvbsb": "data", "DzUpT": "end", "jswwj": "video:task-log", "MZKWd": "processing", "usHHs": function(t2, u2) {
-      return t2(u2);
-    }, "ZjQke": "error", "IDica": function(t2, u2) {
-      return t2(u2);
-    }, "uBztF": function(t2) {
+    }, "Mgqbc": "end", "TaICI": "error", "ihoeR": "video:task-log", "xuyRr": "data", "IFxoH": "processing", "LphCc": function(t2) {
       return t2();
-    }, "YuNDY": function(t2, u2) {
+    }, "mGEgc": "Lỗi upload ảnh", "etxeM": function(t2, u2) {
       return t2(u2);
-    }, "bUMNY": "Lỗi upload ảnh", "lTQSf": "https://grok.com/rest/media/post/create", "JiHnb": "MEDIA_POST_TYPE_IMAGE", "sYYAM": "text", "agYYS": "❌ Nội dung phản hồi thực tế:", "NvcrB": function(t2, u2) {
-      return t2(u2);
-    }, "PAXSI": "grok-3", "DbYDF": function(t2, u2) {
-      return t2 || u2;
-    }, "fWYBK": "9:16", "reNSq": "720p", "uAnVd": function(t2) {
-      return t2();
-    }, "PYoqH": "stream", "GdGim": "Không tìm thấy videoUrl trong stream", "jaYjx": function(t2, u2) {
-      return t2 > u2;
-    }, "paZfe": "ORIGINAL_REF_TYPE_VIDEO_EXTENSION", "VZNgN": function(t2, u2) {
-      return t2 > u2;
-    }, "DxQoj": function(t2) {
-      return t2();
-    }, "dvsRQ": "arraybuffer", "mAZGf": "Rate Limit 429", "LpfQK": function(t2, u2) {
+    }, "mILBQ": "https://grok.com/rest/media/post/create", "NnGfZ": "text", "AIQey": function(t2, u2) {
       return t2 === u2;
-    } }, q = (t2) => {
-      if (o) p["RZOSA"](o, t2);
+    }, "ixIyd": "string", "kEwJO": "Không tìm thấy post_id trong phản hồi từ Grok", "rXQuT": function(t2, u2) {
+      return t2(u2);
+    }, "YUOeM": "https://grok.com/rest/app-chat/conversations/new", "dTiNp": "grok-3", "ViPVq": function(t2, u2) {
+      return t2 || u2;
+    }, "gDfZm": "9:16", "BkuqI": "720p", "YRFBp": "stream", "PNaiN": "Không tìm thấy videoId trong stream", "zfnef": function(t2, u2) {
+      return t2 > u2;
+    }, "mkrYt": "custom", "RAOAA": "ORIGINAL_REF_TYPE_VIDEO_EXTENSION", "sVuPD": "arraybuffer", "Pnfkw": "Rate Limit 429" }, q = (t2) => {
+      if (o) p["mRyIi"](o, t2);
       logger["info"](t2);
     }, r = this["buildRequestHeaders"](l), s = { "prompt": g, "taskId": h, "profile": k, "success": ![], "error": null, "filename": null, "post_id": null, "video_url": null, "is_429": ![] };
     q("[P" + l + "] VIDEO " + h + ": ...");
     try {
       let t2 = null, u2 = null;
-      const v = { ...r, "x-xai-request-id": p["uBztF"](v4) };
+      const v = { ...r, "x-xai-request-id": p["LphCc"](v4) };
       if (m && b__default["existsSync"](m)) {
-        p["YuNDY"](q, "[P" + l + "] Bước 0: Upload ảnh làm gốc..."), logger["info"](m);
+        p["mRyIi"](q, "[P" + l + "] Bước 0: Upload ảnh làm gốc..."), logger["info"](m);
         const M = await this["uploadImage"](m, v);
         if (M) u2 = M["fileUri"], t2 = M["fileMetadataId"];
-        else return s["error"] = p["bUMNY"], s;
+        else return s["error"] = p["mGEgc"], s;
       }
-      const w = { ...r, "x-xai-request-id": p["uBztF"](v4) };
-      q("[P" + l + "] Bước 1: Tạo media post...");
-      const x = p["lTQSf"], y = i + " \n " + (((_a2 = g[0]) == null ? void 0 : _a2["visual_prompt"]) ?? "") + " ", z = u2 ? { "mediaType": p["JiHnb"], "mediaUrl": "https://assets.grok.com/" + u2 } : { "mediaType": "MEDIA_POST_TYPE_VIDEO", "prompt": y }, A = await axios["post"](x, z, { "headers": w, "timeout": 3e4, "responseType": p["sYYAM"] });
+      const w = { ...r, "x-xai-request-id": v4() };
+      p["etxeM"](q, "[P" + l + "] Bước 1: Tạo media post...");
+      const x = p["mILBQ"], y = i + " \n " + (((_a2 = g[0]) == null ? void 0 : _a2["visual_prompt"]) ?? "") + " ", z = u2 ? { "mediaType": "MEDIA_POST_TYPE_IMAGE", "mediaUrl": "https://assets.grok.com/" + u2 } : { "mediaType": "MEDIA_POST_TYPE_VIDEO", "prompt": y }, A = await axios["post"](x, z, { "headers": w, "timeout": 3e4, "responseType": p["NnGfZ"] });
       let B = null;
       try {
-        const N = typeof A["data"] === "string" ? JSON["parse"](A["data"]) : A["data"];
+        const N = p["AIQey"](typeof A["data"], p["ixIyd"]) ? JSON["parse"](A["data"]) : A["data"];
         if (N["post"] && N["post"]["id"]) B = N["post"]["id"];
         else N["id"] && (B = N["id"]);
       } catch (O) {
@@ -94425,16 +94404,16 @@ class GrokService {
         P && (B = P[1]);
       }
       if (!B) {
-        logger["info"](p["agYYS"], A["data"]);
-        throw new Error("Không tìm thấy post_id trong phản hồi từ Grok");
+        logger["info"]("❌ Nội dung phản hồi thực tế:", A["data"]);
+        throw new Error(p["kEwJO"]);
       }
-      s["post_id"] = B, p["NvcrB"](q, "✅ [P" + l + "] Post ID thành công: " + B), q("[P" + l + "] Bước 2: Tạo video (đợi render)...");
-      const C = "https://grok.com/rest/app-chat/conversations/new", D = { "temporary": !![], "modelName": p["PAXSI"], "message": u2 ? "https://assets.grok.com/" + u2 + " " + y + " --mode=custom" : y + " --mode=custom", "fileAttachments": t2 ? [t2] : [], "toolOverrides": { "videoGen": !![] }, "enableSideBySide": !![], "responseMetadata": { "modelConfigOverride": { "modelMap": { "videoGenModelConfig": { "parentPostId": p["DbYDF"](t2, B), "aspectRatio": p["fWYBK"], "videoLength": 10, "resolutionName": p["reNSq"] } } } } }, E = { ...r, "x-xai-request-id": p["uAnVd"](v4) };
-      f["sender"]["send"](p["jswwj"], { "status": "processing", "message": "Tạo 0-10 giây đầu video", "taskId": h });
-      const F = await axios["post"](C, D, { "headers": E, "responseType": p["PYoqH"], "timeout": 18e4 });
+      s["post_id"] = B, p["rXQuT"](q, "✅ [P" + l + "] Post ID thành công: " + B), p["mRyIi"](q, "[P" + l + "] Bước 2: Tạo video (đợi render)...");
+      const C = p["YUOeM"], D = { "temporary": !![], "modelName": p["dTiNp"], "message": u2 ? "https://assets.grok.com/" + u2 + " " + y + " --mode=custom" : y + " --mode=custom", "fileAttachments": t2 ? [t2] : [], "toolOverrides": { "videoGen": !![] }, "enableSideBySide": !![], "responseMetadata": { "modelConfigOverride": { "modelMap": { "videoGenModelConfig": { "parentPostId": p["ViPVq"](t2, B), "aspectRatio": p["gDfZm"], "videoLength": 10, "resolutionName": p["BkuqI"] } } } } }, E = { ...r, "x-xai-request-id": v4() };
+      f["sender"]["send"](p["ihoeR"], { "status": p["IFxoH"], "message": "Tạo 0-10 giây đầu video", "taskId": h });
+      const F = await axios["post"](C, D, { "headers": E, "responseType": p["YRFBp"], "timeout": 18e4 });
       let G2 = null, H = null;
       await new Promise((Q, R) => {
-        F["data"]["on"](p["tvbsb"], (S) => {
+        F["data"]["on"]("data", (S) => {
           const T = S["toString"](), U = T["match"](/"videoUrl"\s*:\s*"([^"]+)"/);
           if (U) G2 = U[1];
           const V = T["match"](/"videoId"\s*:\s*"([^"]+)"/);
@@ -94443,19 +94422,19 @@ class GrokService {
             const W = T["match"](/"id"\s*:\s*"([a-f0-9\-]{36})"/);
             if (W) H = W[1];
           }
-        }), F["data"]["on"](p["DzUpT"], () => {
-          logger["info"]("✅ Đã bóc tách xong - URL: " + G2 + ", ID: " + H), p["RZOSA"](Q, { "videoUrlPath": G2, "videoId": H });
-        }), F["data"]["on"]("error", R);
+        }), F["data"]["on"](p["Mgqbc"], () => {
+          logger["info"]("✅ Đã bóc tách xong - URL: " + G2 + ", ID: " + H), Q({ "videoUrlPath": G2, "videoId": H });
+        }), F["data"]["on"](p["TaICI"], R);
       });
-      if (!G2) throw new Error(p["GdGim"]);
+      if (!G2) throw new Error("Không tìm thấy videoUrl trong stream");
       s["video_url"] = G2;
-      if (!H) throw new Error("Không tìm thấy videoId trong stream");
-      s["video_id"] = H, f["sender"]["send"](p["jswwj"], { "status": p["MZKWd"], "message": "Tạo xong 10s", "data": { "resultVideoCount": 1 }, "taskId": h });
-      if (p["jaYjx"](n, 1)) {
-        f["sender"]["send"](p["jswwj"], { "status": "processing", "message": "Tạo đoạn 10-20 giây của video", "taskId": h });
-        const Q = { ...r, "x-xai-request-id": v4() }, R = g[1]["visual_prompt"], S = { ...D, "message": R, "responseMetadata": { "modelConfigOverride": { "modelMap": { "videoGenModelConfig": { "aspectRatio": p["fWYBK"], "videoLength": 10, "resolutionName": p["reNSq"], "extendPostId": H, "isVideoEdit": ![], "isVideoExtension": !![], "mode": "custom", "originalPostId": H, "originalPrompt": R, "originalRefType": p["paZfe"], "parentPostId": H, "stitchWithExtendPostId": !![], "videoExtensionStartTime": 10.031667 } } } } }, T = await axios["post"](C, S, { "headers": Q, "responseType": p["PYoqH"], "timeout": 18e4 });
+      if (!H) throw new Error(p["PNaiN"]);
+      s["video_id"] = H, f["sender"]["send"](p["ihoeR"], { "status": p["IFxoH"], "message": "Tạo xong 10s", "data": { "resultVideoCount": 1 }, "taskId": h });
+      if (p["zfnef"](n, 1)) {
+        f["sender"]["send"](p["ihoeR"], { "status": p["IFxoH"], "message": "Tạo đoạn 10-20 giây của video", "taskId": h });
+        const Q = { ...r, "x-xai-request-id": p["LphCc"](v4) }, R = g[1]["visual_prompt"], S = { ...D, "message": R, "responseMetadata": { "modelConfigOverride": { "modelMap": { "videoGenModelConfig": { "aspectRatio": p["gDfZm"], "videoLength": 10, "resolutionName": p["BkuqI"], "extendPostId": H, "isVideoEdit": ![], "isVideoExtension": !![], "mode": p["mkrYt"], "originalPostId": H, "originalPrompt": R, "originalRefType": p["RAOAA"], "parentPostId": H, "stitchWithExtendPostId": !![], "videoExtensionStartTime": 10.031667 } } } } }, T = await axios["post"](C, S, { "headers": Q, "responseType": p["YRFBp"], "timeout": 18e4 });
         await new Promise((U, V) => {
-          T["data"]["on"](p["tvbsb"], (W) => {
+          T["data"]["on"](p["xuyRr"], (W) => {
             const X = W["toString"](), Y = X["match"](/"videoUrl"\s*:\s*"([^"]+)"/);
             if (Y) G2 = Y[1];
             const Z = X["match"](/"videoId"\s*:\s*"([^"]+)"/);
@@ -94464,38 +94443,35 @@ class GrokService {
               const a0 = X["match"](/"id"\s*:\s*"([a-f0-9\-]{36})"/);
               if (a0) H = a0[1];
             }
-          }), T["data"]["on"](p["DzUpT"], () => {
-            logger["info"]("✅ Đã bóc tách xong - URL: " + G2 + ", ID: " + H), f["sender"]["send"](p["jswwj"], { "status": p["MZKWd"], "message": "Tạo xong 20s", "data": { "resultVideoCount": 2 }, "taskId": h }), p["usHHs"](U, { "videoUrlPath": G2, "videoId": H });
-          }), T["data"]["on"](p["ZjQke"], V);
+          }), T["data"]["on"](p["Mgqbc"], () => {
+            logger["info"]("✅ Đã bóc tách xong - URL: " + G2 + ", ID: " + H), f["sender"]["send"](p["ihoeR"], { "status": "processing", "message": "Tạo xong 20s", "data": { "resultVideoCount": 2 }, "taskId": h }), p["mRyIi"](U, { "videoUrlPath": G2, "videoId": H });
+          }), T["data"]["on"](p["TaICI"], V);
         });
       }
-      if (p["VZNgN"](n, 2)) {
-        f["sender"]["send"](p["jswwj"], { "status": p["MZKWd"], "message": "Tạo đoạn 20-30 giây của video", "taskId": h });
-        const U = { ...r, "x-xai-request-id": p["DxQoj"](v4) }, V = g[2]["visual_prompt"], W = { ...D, "message": V, "responseMetadata": { "modelConfigOverride": { "modelMap": { "videoGenModelConfig": { "aspectRatio": p["fWYBK"], "videoLength": 10, "resolutionName": p["reNSq"], "extendPostId": H, "isVideoEdit": ![], "isVideoExtension": !![], "mode": "custom", "originalPostId": H, "originalPrompt": V, "originalRefType": "ORIGINAL_REF_TYPE_VIDEO_EXTENSION", "parentPostId": H, "stitchWithExtendPostId": !![], "videoExtensionStartTime": 20 } } } } }, X = await axios["post"](C, W, { "headers": U, "responseType": "stream", "timeout": 18e4 });
+      if (p["zfnef"](n, 2)) {
+        f["sender"]["send"](p["ihoeR"], { "status": p["IFxoH"], "message": "Tạo đoạn 20-30 giây của video", "taskId": h });
+        const U = { ...r, "x-xai-request-id": v4() }, V = g[2]["visual_prompt"], W = { ...D, "message": V, "responseMetadata": { "modelConfigOverride": { "modelMap": { "videoGenModelConfig": { "aspectRatio": p["gDfZm"], "videoLength": 10, "resolutionName": p["BkuqI"], "extendPostId": H, "isVideoEdit": ![], "isVideoExtension": !![], "mode": p["mkrYt"], "originalPostId": H, "originalPrompt": V, "originalRefType": p["RAOAA"], "parentPostId": H, "stitchWithExtendPostId": !![], "videoExtensionStartTime": 20 } } } } }, X = await axios["post"](C, W, { "headers": U, "responseType": p["YRFBp"], "timeout": 18e4 });
         await new Promise((Y, Z) => {
-          const a0 = { "HNhyw": p["jswwj"], "CQJyb": function(a1, a2) {
-            return p["IDica"](a1, a2);
-          } };
-          X["data"]["on"]("data", (a1) => {
-            const a2 = a1["toString"](), a3 = a2["match"](/"videoUrl"\s*:\s*"([^"]+)"/);
-            if (a3) G2 = a3[1];
-            const a4 = a2["match"](/"videoId"\s*:\s*"([^"]+)"/);
-            if (a4) H = a4[1];
+          X["data"]["on"]("data", (a0) => {
+            const a1 = a0["toString"](), a2 = a1["match"](/"videoUrl"\s*:\s*"([^"]+)"/);
+            if (a2) G2 = a2[1];
+            const a3 = a1["match"](/"videoId"\s*:\s*"([^"]+)"/);
+            if (a3) H = a3[1];
             if (!H) {
-              const a5 = a2["match"](/"id"\s*:\s*"([a-f0-9\-]{36})"/);
-              if (a5) H = a5[1];
+              const a4 = a1["match"](/"id"\s*:\s*"([a-f0-9\-]{36})"/);
+              if (a4) H = a4[1];
             }
-          }), X["data"]["on"](p["DzUpT"], () => {
-            logger["info"]("✅ Đã bóc tách xong - URL: " + G2 + ", ID: " + H), f["sender"]["send"](a0["HNhyw"], { "status": "processing", "message": "Tạo xong video thứ 3", "data": { "resultVideoCount": 3 }, "taskId": h }), a0["CQJyb"](Y, { "videoUrlPath": G2, "videoId": H });
-          }), X["data"]["on"]("error", Z);
+          }), X["data"]["on"](p["Mgqbc"], () => {
+            logger["info"]("✅ Đã bóc tách xong - URL: " + G2 + ", ID: " + H), f["sender"]["send"](p["ihoeR"], { "status": p["IFxoH"], "message": "Tạo xong video thứ 3", "data": { "resultVideoCount": 3 }, "taskId": h }), p["mRyIi"](Y, { "videoUrlPath": G2, "videoId": H });
+          }), X["data"]["on"](p["TaICI"], Z);
         });
       }
       const I = this["buildDownloadHeaders"](l);
-      p["usHHs"](q, "[P" + l + "] Bước 3: Download video...");
-      const J = "https://assets.grok.com/" + G2 + "?cache=1&dl=1", K = c__default["join"](j, "video_" + h + "_" + Date["now"]() + ".mp4"), L = await axios["get"](J, { "headers": I, "responseType": p["dvsRQ"], "timeout": 12e4 });
-      b__default["writeFileSync"](K, L["data"]), p["usHHs"](q, "✅ [P" + l + "] Tải xong video: " + c__default["basename"](K)), s["success"] = !![], s["filename"] = K;
+      q("[P" + l + "] Bước 3: Download video...");
+      const J = "https://assets.grok.com/" + G2 + "?cache=1&dl=1", K = c__default["join"](j, "video_" + h + "_" + Date["now"]() + ".mp4"), L = await axios["get"](J, { "headers": I, "responseType": p["sVuPD"], "timeout": 12e4 });
+      b__default["writeFileSync"](K, L["data"]), q("✅ [P" + l + "] Tải xong video: " + c__default["basename"](K)), s["success"] = !![], s["filename"] = K;
     } catch (Y) {
-      logger["error"](Y["message"]), s["error"] = ((_b2 = Y["response"]) == null ? void 0 : _b2["status"]) === 429 ? p["mAZGf"] : Y["message"], s["is_429"] = p["LpfQK"]((_c2 = Y["response"]) == null ? void 0 : _c2["status"], 429), p["IDica"](q, "❌ [P" + l + "] Lỗi: " + s["error"]);
+      logger["error"](Y["message"]), s["error"] = ((_b2 = Y["response"]) == null ? void 0 : _b2["status"]) === 429 ? p["Pnfkw"] : Y["message"], s["is_429"] = p["AIQey"]((_c2 = Y["response"]) == null ? void 0 : _c2["status"], 429), p["rXQuT"](q, "❌ [P" + l + "] Lỗi: " + s["error"]);
     }
     return s;
   }
@@ -95736,62 +95712,60 @@ class GoogleGenerativeAI {
 class GeminiService {
   constructor(a2) {
     __publicField(this, "keys");
-    __publicField(this, "models", ["models/gemini-3-flash-preview", "gemini-3.1-flash", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash-8b", "gemini-flash-latest", "models/gemini-2.5-pro"]);
+    __publicField(this, "models", ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash-8b", "gemini-flash-latest"]);
     __publicField(this, "queue", Promise["resolve"]());
     __publicField(this, "REQUEST_DELAY", 400);
     this["keys"] = a2["map"]((b2) => ({ "key": b2, "lastUsed": 0, "isCooldown": ![], "failCount": 0 }));
   }
   async ["addToQueue"](a2) {
-    const b2 = { "ykWGx": function(c2) {
+    const b2 = { "VkeMI": function(c2) {
       return c2();
-    }, "ugDuH": "❌ Queue Task Error:" };
+    }, "aXrxP": "❌ Queue Task Error:" };
     return this["queue"] = this["queue"]["then"](async () => {
-      return await new Promise((c2) => setTimeout(c2, this["REQUEST_DELAY"])), b2["ykWGx"](a2);
+      return await new Promise((c2) => setTimeout(c2, this["REQUEST_DELAY"])), b2["VkeMI"](a2);
     })["catch"]((c2) => {
-      return logger["error"](b2["ugDuH"], c2["message"]), b2["ykWGx"](a2);
+      return logger["error"](b2["aXrxP"], c2["message"]), b2["VkeMI"](a2);
     }), this["queue"];
   }
   ["getBestKey"]() {
-    const a2 = { "FpvFb": function(e, f) {
+    const a2 = { "zxEjc": function(e, f) {
       return e !== f;
-    }, "NlNUI": function(e, f) {
+    }, "ISzFX": function(e, f) {
       return e - f;
-    }, "eEPRr": function(e, f) {
+    }, "siaof": function(e, f) {
       return e > f;
-    }, "sDQch": function(e, f) {
-      return e - f;
     } }, b2 = Date["now"](), c2 = [...this["keys"]]["sort"]((e, f) => {
-      if (a2["FpvFb"](e["isCooldown"], f["isCooldown"])) return e["isCooldown"] ? 1 : -1;
-      return a2["NlNUI"](e["lastUsed"], f["lastUsed"]);
+      if (a2["zxEjc"](e["isCooldown"], f["isCooldown"])) return e["isCooldown"] ? 1 : -1;
+      return a2["ISzFX"](e["lastUsed"], f["lastUsed"]);
     }), d = c2[0];
-    return d["isCooldown"] && a2["eEPRr"](a2["sDQch"](b2, d["lastUsed"]), 6e4) && (d["isCooldown"] = ![]), d["key"];
+    return d["isCooldown"] && a2["siaof"](a2["ISzFX"](b2, d["lastUsed"]), 6e4) && (d["isCooldown"] = ![]), d["key"];
   }
   ["markKeyStatus"](a2, b2) {
     const c2 = this["keys"]["find"]((d) => d["key"] === a2);
     c2 && (c2["lastUsed"] = Date["now"](), b2 ? (c2["isCooldown"] = ![], c2["failCount"] = 0) : (c2["isCooldown"] = !![], c2["failCount"]++));
   }
   async ["generateVideoPrompt"](a2, b2, c2, d) {
-    const e = { "fOlsx": function(f, g) {
-      return f * g;
-    }, "vxfAZ": function(f, g) {
+    const e = { "rarey": function(f, g) {
+      return f < g;
+    }, "ZdPhp": function(f, g) {
       return f % g;
-    }, "Kssll": "v1beta", "YbAsW": "user", "GepCw": "application/json", "VKDxE": function(f, g) {
+    }, "htXAB": "v1beta", "hGAyN": "user", "WOoQX": "application/json", "XEbrK": function(f, g) {
       return f || g;
-    }, "KNhEf": "Rate Limit", "fiLCJ": "503", "FezLW": function(f, g) {
+    }, "vxtBU": "Rate Limit", "nYhXZ": "503", "NtpQU": function(f, g) {
       return f === g;
     } };
     return this["addToQueue"](async () => {
       let f = 0;
-      const g = e["fOlsx"](this["keys"]["length"], 2);
-      while (f < g) {
-        const h = this["getBestKey"](), i = this["models"][e["vxfAZ"](f, this["models"]["length"])];
+      const g = this["keys"]["length"] * 2;
+      while (e["rarey"](f, g)) {
+        const h = this["getBestKey"](), i = this["models"][e["ZdPhp"](f, this["models"]["length"])];
         try {
-          const j = new GoogleGenerativeAI(h), k = j["getGenerativeModel"]({ "model": i }, { "apiVersion": e["Kssll"] }), l = this["buildPrompt"](a2, b2, c2, d), m = await k["generateContent"]({ "contents": [{ "role": e["YbAsW"], "parts": [{ "text": l }] }], "generationConfig": { "responseMimeType": e["GepCw"], "temperature": 0.7 } }), n = await m["response"], o = n["text"]();
-          return this["markKeyStatus"](h, !![]), { "success": !![], "data": JSON["parse"](e["VKDxE"](o, "[]")) };
+          const j = new GoogleGenerativeAI(h), k = j["getGenerativeModel"]({ "model": i }, { "apiVersion": e["htXAB"] }), l = this["buildPrompt"](a2, b2, c2, d), m = await k["generateContent"]({ "contents": [{ "role": e["hGAyN"], "parts": [{ "text": l }] }], "generationConfig": { "responseMimeType": e["WOoQX"], "temperature": 0.7 } }), n = await m["response"], o = n["text"]();
+          return this["markKeyStatus"](h, !![]), { "success": !![], "data": JSON["parse"](e["XEbrK"](o, "[]")) };
         } catch (p) {
           f++, this["markKeyStatus"](h, ![]);
-          const q = p["message"]["includes"]("429") || p["message"]["includes"](e["KNhEf"]) || p["message"]["includes"](e["fiLCJ"]);
-          if (q) logger["warn"]("⚠️ Lần thử " + f + ": Key bận hoặc Server quá tải. Đang đổi sang Key/Model tiếp theo..."), e["FezLW"](f, this["keys"]["length"]) && await new Promise((s) => setTimeout(s, 2e3));
+          const q = p["message"]["includes"]("429") || p["message"]["includes"](e["vxtBU"]) || p["message"]["includes"](e["nYhXZ"]);
+          if (q) logger["warn"]("⚠️ Lần thử " + f + ": Key bận hoặc Server quá tải. Đang đổi sang Key/Model tiếp theo..."), e["NtpQU"](f, this["keys"]["length"]) && await new Promise((s) => setTimeout(s, 2e3));
           else return { "success": ![], "error": p["message"] };
         }
       }
@@ -95799,10 +95773,12 @@ class GeminiService {
     });
   }
   ["buildPrompt"](a2, b2, c2, d) {
-    const e = { "tZDFe": function(f, g) {
+    const e = { "NxgHY": function(f, g) {
       return f * g;
+    }, "VLMYk": function(f, g) {
+      return f === g;
     } };
-    return "\n    Bạn là chuyên gia điều phối Video Script cho AI Video.\n    Sản phẩm: " + a2 + "\n    Mô tả: " + b2 + "\n    Tổng thời lượng: " + e["tZDFe"](d, 10) + " giây.\n    Yêu cầu: Chia làm " + d + " đoạn, mỗi đoạn 10 giây.\n\n    DỰA TRÊN CẤU TRÚC NGƯỜI DÙNG CUNG CẤP:\n    " + c2 + "\n\n    NHIỆM VỤ CỦA BẠN:\n    Hãy điều phối (mapping) cấu trúc trên vào đúng " + d + " phân đoạn (mỗi đoạn 10s) theo quy tắc sau:\n\n    " + (d === 1 ? "\n    - Gộp toàn bộ cấu trúc (Đầu, Giữa, Cuối) vào duy nhất 1 đoạn 10 giây. \n    - Nhịp độ nhanh, dứt khoát." : "\n    - Phải chia nội dung thành CHÍNH XÁC " + d + ' đoạn, phân cách bằng "---".\n    - Đoạn 1: Thực hiện nội dung "Các prompt đầu".\n    - Các đoạn ở giữa: Thực hiện nội dung "Các prompt giữa". Phải bắt đầu bằng: "Tiếp nối cảnh trước, camera di chuyển..." để tránh lặp hình (looping).\n    - Đoạn cuối cùng: Thực hiện nội dung "Các prompt cuối".') + '\n    \n    YÊU CẦU VỀ THỜI LƯỢNG:\n    - Mỗi đoạn "voice_content" chỉ được phép dài tối đa 30 từ tiếng Việt.\n    - Đảm bảo khi đọc lên mất khoảng 7-9 giây, không được vượt quá 10 giây.\n\n    YÊU CẦU ĐẦU RA (JSON FORMAT):\n    Trả về duy nhất một mảng JSON các đối tượng. Mỗi đối tượng gồm:\n    - "visual_prompt": Mô tả hành động, bối cảnh bằng tiếng Anh (để Grok hiểu tốt nhất).\n    - "voice_content": Lời bình tiếng Việt (đã phiên âm các từ tiếng nước ngoài, ví dụ: "S-mát-phôn").\n    - "voice_content": Chỉ ghi nội dung nói của nhân vật không ghi nhầm các từ chuyển cảnh vào đó nhé.\n\n    MẪU CẤU TRÚC:\n    [\n      {\n        "visual_prompt": "Cinematic shot of the product on a wooden table, soft sunlight...",\n        "voice_content": "Chào mừng bạn đến với s-mát-phôn thế hệ mới."\n      }\n    ]\n      Chỉ trả về JSON, không kèm theo bất kỳ văn bản giải thích nào.\n    \n';
+    return "\n    Bạn là chuyên gia điều phối Video Script cho AI Video.\n    Sản phẩm: " + a2 + "\n    Mô tả: " + b2 + "\n    Tổng thời lượng: " + e["NxgHY"](d, 10) + " giây.\n    Yêu cầu: Chia làm " + d + " đoạn, mỗi đoạn 10 giây.\n\n    DỰA TRÊN CẤU TRÚC NGƯỜI DÙNG CUNG CẤP:\n    " + c2 + "\n\n    NHIỆM VỤ CỦA BẠN:\n    Hãy điều phối (mapping) cấu trúc trên vào đúng " + d + " phân đoạn (mỗi đoạn 10s) theo quy tắc sau:\n\n    " + (e["VLMYk"](d, 1) ? "\n    - Gộp toàn bộ cấu trúc (Đầu, Giữa, Cuối) vào duy nhất 1 đoạn 10 giây. \n    - Nhịp độ nhanh, dứt khoát." : "\n    - Phải chia nội dung thành CHÍNH XÁC " + d + ' đoạn, phân cách bằng "---".\n    - Đoạn 1: Thực hiện nội dung "Các prompt đầu".\n    - Các đoạn ở giữa: Thực hiện nội dung "Các prompt giữa". Phải bắt đầu bằng: "Tiếp nối cảnh trước, camera di chuyển..." để tránh lặp hình (looping).\n    - Đoạn cuối cùng: Thực hiện nội dung "Các prompt cuối".') + '\n    \n    YÊU CẦU VỀ THỜI LƯỢNG:\n    - Mỗi đoạn "voice_content" chỉ được phép dài tối đa 30 từ tiếng Việt.\n    - Đảm bảo khi đọc lên mất khoảng 7-9 giây, không được vượt quá 10 giây.\n\n    YÊU CẦU ĐẦU RA (JSON FORMAT):\n    Trả về duy nhất một mảng JSON các đối tượng. Mỗi đối tượng gồm:\n    - "visual_prompt": Mô tả hành động, bối cảnh bằng tiếng Anh (để Grok hiểu tốt nhất).\n    - "voice_content": Lời bình tiếng Việt (đã phiên âm các từ tiếng nước ngoài, ví dụ: "S-mát-phôn").\n    - "voice_content": Chỉ ghi nội dung nói của nhân vật không ghi nhầm các từ chuyển cảnh vào đó nhé.\n\n    MẪU CẤU TRÚC:\n    [\n      {\n        "visual_prompt": "Cinematic shot of the product on a wooden table, soft sunlight...",\n        "voice_content": "Chào mừng bạn đến với s-mát-phôn thế hệ mới."\n      }\n    ]\n      Chỉ trả về JSON, không kèm theo bất kỳ văn bản giải thích nào.\n    \n';
   }
 }
 class ShopeeProfileManager {
@@ -95829,16 +95805,16 @@ class ShopeeProfileManager {
     return null;
   }
   async ["releaseProfile"](a2, b2 = 3e3) {
-    const c2 = { "bCyhJ": function(e, f) {
-      return e > f;
-    }, "QBqxo": function(e, f) {
+    const c2 = { "qnrQP": function(e, f) {
+      return e && f;
+    }, "vUxAv": function(e, f) {
       return e(f);
     } }, d = this["profileStatus"]["get"](a2);
     if (d) {
       logger["info"]("[GPM] ⏳ Đang đợi dọn dẹp Profile " + a2 + "..."), await new Promise((e) => setTimeout(e, b2)), d["isLocked"] = ![], d["lastUsed"] = Date["now"](), logger["info"]("[GPM] 🔓 Đã nhả Profile: " + a2);
-      if (c2["bCyhJ"](this["requestQueue"]["length"], 0)) {
+      if (this["requestQueue"]["length"] > 0) {
         const e = this["requestQueue"]["shift"](), f = this["findFreeProfile"]();
-        e && f && c2["QBqxo"](e, f);
+        c2["qnrQP"](e, f) && c2["vUxAv"](e, f);
       }
     }
   }
@@ -95859,14 +95835,16 @@ class GrokProfileManager {
     });
   }
   async ["releaseProfile"](a2, b2 = 3e3) {
-    const c2 = { "jnugL": function(e, f) {
+    const c2 = { "UhYWq": function(e, f) {
       return e > f;
+    }, "IJDha": function(e, f) {
+      return e(f);
     } }, d = this["profileStatus"]["get"](a2);
     if (!d) return;
     logger["info"]("[GPM-Grok] ⏳ Đang đợi dọn dẹp Profile " + a2 + "..."), await new Promise((e) => setTimeout(e, b2)), d["lastUsed"] = Date["now"]();
-    if (c2["jnugL"](d["waitingQueue"]["length"], 0)) {
+    if (c2["UhYWq"](d["waitingQueue"]["length"], 0)) {
       const e = d["waitingQueue"]["shift"]();
-      logger["info"]("[GPM-Grok] 🔄 Bàn giao Profile " + a2 + " cho task tiếp theo trong hàng đợi..."), e && e(!![]);
+      logger["info"]("[GPM-Grok] 🔄 Bàn giao Profile " + a2 + " cho task tiếp theo trong hàng đợi..."), e && c2["IJDha"](e, !![]);
     } else d["isLocked"] = ![], logger["info"]("[GPM-Grok] 🔓 Đã nhả hoàn toàn Profile: " + a2);
   }
 }
@@ -95878,192 +95856,216 @@ class VbeeService {
     this["api_key"] = d, this["app_id"] = e;
   }
   async ["downloadAudio"](d, e, f = "s_cantho_female_xanxan_advertise_vc", g = 1) {
-    const h = { "doTvY": "mp3", "Dyoan": "indirect", "INFRA": function(j, k) {
+    const h = { "QMlvf": "mp3", "wBMqE": "https://mydomain.com/callback", "bDMyG": function(j, k) {
       return j !== k;
-    }, "rjiqI": "❌ Vbee Post Error:", "aGdBf": function(j, k) {
+    }, "dmkEh": "❌ Vbee Post Error:", "xRVcw": function(j, k) {
       return j === k;
-    }, "avjNf": "arraybuffer", "PpsZk": function(j, k) {
-      return j === k;
-    }, "fGbpX": "FAILURE", "hAIea": "❌ Vbee xử lý file thất bại", "RMybm": "❌ Lỗi Vbee Service:" };
+    }, "gxiUa": "Thành công nhưng không tìm thấy link audio", "KScLr": "FAILURE", "lbUqt": function(j, k) {
+      return j + k;
+    }, "husXb": "❌ Lỗi Vbee Service:" };
     try {
-      const j = await axios["post"](this["base_url"], { "app_id": this["app_id"], "input_text": d, "voice_code": f, "audio_type": h["doTvY"], "speed_rate": String(g["toFixed"](1)), "callbackUrl": "https://mydomain.com/callback", "response_type": h["Dyoan"] }, { "headers": { "Authorization": "Bearer " + this["api_key"] } });
-      if (h["INFRA"](j["data"]["status"], 1)) return logger["error"](h["rjiqI"], j["data"]["error_message"]), null;
+      const j = await axios["post"](this["base_url"], { "app_id": this["app_id"], "input_text": d, "voice_code": f, "audio_type": h["QMlvf"], "speed_rate": String(g["toFixed"](1)), "callbackUrl": h["wBMqE"], "response_type": "indirect" }, { "headers": { "Authorization": "Bearer " + this["api_key"] } });
+      if (h["bDMyG"](j["data"]["status"], 1)) return logger["error"](h["dmkEh"], j["data"]["error_message"]), null;
       const k = j["data"]["result"]["request_id"];
       logger["info"]("📡 Đã lấy được Request ID: " + k + ". Đang chờ xử lý...");
       const l = 15;
       for (let m = 0; m < l; m++) {
         await new Promise((p) => setTimeout(p, 2e3));
         const n = await axios["get"](this["base_url"] + "/" + k, { "headers": { "Authorization": "Bearer " + this["api_key"] } }), o = n["data"];
-        if (o["status"] === 1 && h["aGdBf"](o["result"]["status"], "SUCCESS")) {
+        if (h["xRVcw"](o["status"], 1) && h["xRVcw"](o["result"]["status"], "SUCCESS")) {
           const p = o["result"]["audio_link"] || o["result"]["audio_url"] || o["result"]["link_audio"];
-          if (!p) throw new Error("Thành công nhưng không tìm thấy link audio");
-          const q = "vbee_" + Date["now"]() + ".mp3", r = c__default["join"](e, q), s = await axios["get"](p, { "responseType": h["avjNf"] });
+          if (!p) throw new Error(h["gxiUa"]);
+          const q = "vbee_" + Date["now"]() + ".mp3", r = c__default["join"](e, q), s = await axios["get"](p, { "responseType": "arraybuffer" });
           return b__default["writeFileSync"](r, s["data"]), logger["info"]("✅ [Vbee] Đã tải xong: " + r), r;
         }
-        if (h["PpsZk"](o["result"]["status"], h["fGbpX"])) return logger["error"](h["hAIea"]), null;
-        logger["info"]("⏳ Đang xử lý... (" + (m + 1) + "/" + l + ")");
+        if (h["xRVcw"](o["result"]["status"], h["KScLr"])) return logger["error"]("❌ Vbee xử lý file thất bại"), null;
+        logger["info"]("⏳ Đang xử lý... (" + h["lbUqt"](m, 1) + "/" + l + ")");
       }
       return null;
     } catch (t2) {
-      return logger["error"](h["RMybm"], t2["message"]), null;
+      return logger["error"](h["husXb"], t2["message"]), null;
     }
   }
 }
 const pathFFmpeg$1 = b$2["path"]["replace"]("app.asar", "app.asar.unpacked");
 a$3["setFfmpegPath"](pathFFmpeg$1);
 async function mergeAudioToVideo(f, g, h) {
-  const i = { "rFEhw": function(j, k) {
+  const i = { "HyANj": function(j, k) {
     return j * k;
-  }, "iDJIp": function(j, k) {
+  }, "nbXbC": function(j, k) {
     return j + k;
-  }, "fmiRx": function(j, k) {
+  }, "MMPZl": function(j, k) {
     return j(k);
-  }, "gnCZj": function(j, k) {
+  }, "eOpna": "Video gốc không tồn tại", "QBsvM": function(j, k) {
     return j(k);
-  }, "pbkAU": function(j, k) {
+  }, "OZOzE": function(j, k) {
     return j > k;
-  }, "QRiRq": "-map 0:v:0", "FOTxg": "-map [outa]", "abZAT": "-b:a 192k", "JCFpZ": "error", "bEvKq": "end", "JzeOr": function(j, k) {
-    return j(k);
-  } };
+  }, "qDafA": "-map 0:v:0", "MBDNA": "-map [outa]", "lfrbQ": "-c:a aac", "hNlRe": "start", "rdEUq": "error", "KLsEo": "end" };
   return new Promise((j, k) => {
-    const l = { "qwvAt": function(m, n) {
-      return i["rFEhw"](m, n);
-    }, "ujrRx": function(m, n) {
-      return i["iDJIp"](m, n);
-    } };
     try {
-      if (!b__default["existsSync"](f)) return i["fmiRx"](k, new Error("Video gốc không tồn tại"));
-      let m = i["gnCZj"](a$3, c__default["resolve"](f));
-      g["forEach"]((p) => {
-        b__default["existsSync"](p) && (m = m["input"](c__default["resolve"](p)));
+      if (!b__default["existsSync"](f)) return i["MMPZl"](k, new Error(i["eOpna"]));
+      let l = i["QBsvM"](a$3, c__default["resolve"](f));
+      g["forEach"]((o) => {
+        b__default["existsSync"](o) && (l = l["input"](c__default["resolve"](o)));
       });
-      let n = "", o = "";
-      g["forEach"]((p, q) => {
-        const r = l["qwvAt"](q, 1e4), s = "a" + q;
-        n += "[" + l["ujrRx"](q, 1) + ":a]adelay=" + r + "|" + r + ",volume=2.0[" + s + "];", o += "[" + s + "]";
-      }), i["pbkAU"](g["length"], 1) ? n += o + "amix=inputs=" + g["length"] + ":dropout_transition=0,volume=" + g["length"] + "[outa]" : n += "[a0]volume=1.0[outa]", m["complexFilter"]([n])["outputOptions"]([i["QRiRq"], i["FOTxg"], "-c:v copy", "-c:a aac", i["abZAT"]])["on"]("start", (p) => logger["info"]("🚀 Chạy lệnh FFmpeg:", p))["on"](i["JCFpZ"], (p) => k(p))["on"](i["bEvKq"], () => j(h))["save"](h);
-    } catch (p) {
-      i["JzeOr"](k, p);
+      let m = "", n = "";
+      g["forEach"]((o, p) => {
+        const q = i["HyANj"](p, 1e4), r = "a" + p;
+        m += "[" + i["nbXbC"](p, 1) + ":a]adelay=" + q + "|" + q + ",volume=2.0[" + r + "];", n += "[" + r + "]";
+      }), i["OZOzE"](g["length"], 1) ? m += n + "amix=inputs=" + g["length"] + ":dropout_transition=0,volume=" + g["length"] + "[outa]" : m += "[a0]volume=1.0[outa]", l["complexFilter"]([m])["outputOptions"]([i["qDafA"], i["MBDNA"], "-c:v copy", i["lfrbQ"], "-b:a 192k"])["on"](i["hNlRe"], (o) => logger["info"]("🚀 Chạy lệnh FFmpeg:", o))["on"](i["rdEUq"], (o) => k(o))["on"](i["KLsEo"], () => j(h))["save"](h);
+    } catch (o) {
+      k(o);
     }
   });
 }
 async function addLogoToVideo(f, g, h) {
-  const i = { "aofnz": "-preset ultrafast", "xPSsT": "-crf 23", "HHmvZ": "start", "zcBkm": "error", "pRYTn": "end" };
+  const i = { "wzSOG": "-c:v libx264", "rOAbI": "-preset ultrafast", "qsRIX": "-crf 23", "jqFWz": "error", "glFNf": "end" };
   return new Promise((j, k) => {
-    a$3(f)["input"](g)["complexFilter"](["[1:v]scale=iw*0.15:-1[logo];[0:v][logo]overlay=W-w-20:H-h-20"])["outputOptions"](["-c:v libx264", i["aofnz"], i["xPSsT"], "-c:a copy"])["on"](i["HHmvZ"], (l) => logger["info"]("🚀 Đang đóng dấu Logo:", l))["on"](i["zcBkm"], (l) => k(l))["on"](i["pRYTn"], () => j(h))["save"](h);
+    a$3(f)["input"](g)["complexFilter"](["[1:v]scale=iw*0.15:-1[logo];[0:v][logo]overlay=W-w-20:H-h-20"])["outputOptions"]([i["wzSOG"], i["rOAbI"], i["qsRIX"], "-c:a copy"])["on"]("start", (l) => logger["info"]("🚀 Đang đóng dấu Logo:", l))["on"](i["jqFWz"], (l) => k(l))["on"](i["glFNf"], () => j(h))["save"](h);
   });
 }
 async function addBackgroundMusic(f, g, h, i = 0.6) {
-  const j = { "WFZHc": function(k, l) {
+  const j = { "fMuOv": function(k, l) {
     return k(l);
-  }, "tbBgz": "-map [a]", "jnfLt": "-shortest", "sQDVO": "end", "KDhjV": "error" };
+  }, "Lbdxk": "end", "kycOF": "error" };
   return new Promise((k, l) => {
-    j["WFZHc"](a$3, f)["input"](g)["complexFilter"](["[1:a]volume=" + i + "[bgm]; [0:a][bgm]amix=inputs=2:duration=first[a]"])["outputOptions"](["-map 0:v", j["tbBgz"], "-c:v copy", j["jnfLt"]])["save"](h)["on"](j["sQDVO"], k)["on"](j["KDhjV"], l);
+    j["fMuOv"](a$3, f)["input"](g)["complexFilter"](["[1:a]volume=" + i + "[bgm]; [0:a][bgm]amix=inputs=2:duration=first[a]"])["outputOptions"](["-map 0:v", "-map [a]", "-c:v copy", "-shortest"])["save"](h)["on"](j["Lbdxk"], k)["on"](j["kycOF"], l);
   });
 }
 const addLogoAndMusic = async (f, g, h, i, j, k) => {
-  const l = { "JliTH": function(m, n, o, p) {
+  const l = { "cBgnk": function(m, n, o, p) {
     return m(n, o, p);
-  }, "WVtWw": "Thêm nhạc nền và cập nhật file thành công!", "RsnCG": "Lỗi trong quá trình xử lý:" };
-  j && b__default["existsSync"](g) && await l["JliTH"](addLogoToVideo, f, g, i);
+  }, "ksWxT": function(m, n, o, p) {
+    return m(n, o, p);
+  } };
+  j && b__default["existsSync"](g) && await l["cBgnk"](addLogoToVideo, f, g, i);
   if (k && b__default["existsSync"](h)) {
     const m = c__default["dirname"](f), n = c__default["join"](m, "temp_" + Date["now"]() + "_video.mp4");
     try {
-      const o = "0|2|3|1|4"["split"]("|");
+      const o = "4|1|3|0|2"["split"]("|");
       let p = 0;
       while (!![]) {
         switch (o[p++]) {
           case "0":
-            b__default["existsSync"](n) && await promises["unlink"](n);
-            continue;
-          case "1":
             await promises["rename"](n, i);
             continue;
+          case "1":
+            await l["ksWxT"](addBackgroundMusic, i, h, n);
+            continue;
           case "2":
-            await addBackgroundMusic(i, h, n);
+            logger["info"]("Thêm nhạc nền và cập nhật file thành công!");
             continue;
           case "3":
             await promises["unlink"](i);
             continue;
           case "4":
-            logger["info"](l["WVtWw"]);
+            b__default["existsSync"](n) && await promises["unlink"](n);
             continue;
         }
         break;
       }
     } catch (q) {
-      logger["error"](l["RsnCG"], q), b__default["existsSync"](n) && await promises["unlink"](n)["catch"](() => {
+      logger["error"]("Lỗi trong quá trình xử lý:", q), b__default["existsSync"](n) && await promises["unlink"](n)["catch"](() => {
       });
     }
   }
 };
 const deletePath = async (b2) => {
-  const c2 = { "oInMA": "ENOENT", "NNfms": "Path not found" };
+  const c2 = { "kZtYR": "Path not found" };
   try {
     const d = await a__default["stat"](b2);
     return d["isDirectory"]() ? (await a__default["rm"](b2, { "recursive": !![], "force": !![] }), console["log"]("✅ Đã xóa folder: " + b2)) : (await a__default["unlink"](b2), console["log"]("✅ Đã xóa file: " + b2)), { "success": !![] };
   } catch (e) {
-    if (e["code"] === c2["oInMA"]) return console["warn"]("⚠️ Đường dẫn không tồn tại: " + b2), { "success": ![], "message": c2["NNfms"] };
+    if (e["code"] === "ENOENT") return console["warn"]("⚠️ Đường dẫn không tồn tại: " + b2), { "success": ![], "message": c2["kZtYR"] };
     console["error"]("❌ Lỗi khi xóa: " + e["message"]);
   }
 };
 const isLinkShopee = async (a2) => {
-  if (a2["includes"]("shopee")) return !![];
+  const b2 = { "TYmbv": "shopee" };
+  if (a2["includes"](b2["TYmbv"])) return !![];
   return ![];
 };
 const isLinkTiktok = async (a2) => {
-  if (a2["includes"]("tiktok")) return !![];
+  const b2 = { "tsfkn": "tiktok" };
+  if (a2["includes"](b2["tsfkn"])) return !![];
   return ![];
 };
 class TiktokService {
   static async ["getInfoProduct"](d, e, f, g, h, i) {
-    const j = { "JWGTD": "[TIKTOK] Lỗi không xác định", "VwjMS": "video:task-log", "GNmsx": "processing", "Ekyly": "[TIKTOK] Không tạo được profile", "mSXmI": "Lấy data thành công", "HRTqH": function(n, o) {
+    const j = { "jfKDy": "[TIKTOK] Lỗi không xác định", "WvJYC": "video:task-log", "dCHBn": "processing", "menfM": "[TIKTOK] Không tạo được profile", "DSodB": "Lấy data thành công", "BtZAR": function(n, o) {
+      return n(o);
+    }, "HigFi": function(n, o) {
       return n * o;
-    } };
-    let k = null, l = null, m = { "success": ![], "message": j["JWGTD"], "data": null };
+    }, "pQsnR": "hard" };
+    let k = null, l = null, m = { "success": ![], "message": j["jfKDy"], "data": null };
     try {
-      d["sender"]["send"](j["VwjMS"], { "status": j["GNmsx"], "message": "[TIKTOK] Tạo profile", "taskId": i["id"] }), k = await e["createProfile"](), logger["info"](k);
-      if (!k) throw new Error(j["Ekyly"]);
-      d["sender"]["send"](j["VwjMS"], { "status": j["GNmsx"], "message": "[TIKTOK] Mở profile", "taskId": i["id"] });
+      d["sender"]["send"](j["WvJYC"], { "status": j["dCHBn"], "message": "[TIKTOK] Tạo profile", "taskId": i["id"] }), k = await e["createProfile"](), logger["info"](k);
+      if (!k) throw new Error(j["menfM"]);
+      d["sender"]["send"](j["WvJYC"], { "status": j["dCHBn"], "message": "[TIKTOK] Mở profile", "taskId": i["id"] });
       const n = await e["startProfile"](k["id"], f);
       if (!n["success"]) throw new Error(n["message"]);
-      n["data"]["remote_debugging_port"] && (l = await TiktokService["puppeteerCollect"](n["data"]["remote_debugging_port"], { ...h, "task": i }), d["sender"]["send"](j["VwjMS"], { "status": j["GNmsx"], "message": "✅ Lấy Info thành công", "data": l, "taskId": i["id"] }), m["success"] = !![], m["message"] = j["mSXmI"], m["data"] = l);
-    } catch (o) {
-      m["success"] = ![], m["message"] = (o == null ? void 0 : o["message"]) ?? j["JWGTD"];
+      if (n["data"]["remote_debugging_port"]) {
+        const o = "2|1|4|3|0"["split"]("|");
+        let p = 0;
+        while (!![]) {
+          switch (o[p++]) {
+            case "0":
+              m["data"] = l;
+              continue;
+            case "1":
+              d["sender"]["send"]("video:task-log", { "status": j["dCHBn"], "message": "✅ Lấy Info thành công", "data": l, "taskId": i["id"] });
+              continue;
+            case "2":
+              l = await TiktokService["puppeteerCollect"](n["data"]["remote_debugging_port"], { ...h, "task": i });
+              continue;
+            case "3":
+              m["message"] = j["DSodB"];
+              continue;
+            case "4":
+              m["success"] = !![];
+              continue;
+          }
+          break;
+        }
+      }
+    } catch (q) {
+      m["success"] = ![], m["message"] = (q == null ? void 0 : q["message"]) ?? j["jfKDy"];
     } finally {
       if (k) {
         try {
-          await e["stopProfile"](k["id"]), await sleep(j["HRTqH"](g, 1e3));
-        } catch (p) {
+          await e["stopProfile"](k["id"]), await j["BtZAR"](sleep, j["HigFi"](g, 1e3));
+        } catch (r) {
         }
-        await e["deleteProfile"](k["id"], "hard");
+        await e["deleteProfile"](k["id"], j["pQsnR"]);
       }
       return m;
     }
   }
   static async ["puppeteerCollect"](d, e) {
     var _a2, _b2, _c2, _d2, _e2, _f2, _g2;
-    const f = { "uEumg": function(g, h) {
+    const f = { "tnxRH": function(g, h) {
       return g(h);
-    }, "FLKQe": "🔗 Đã kết nối thành công vào trình duyệt GPM!", "yMzRu": function(g, h) {
+    }, "pmpXN": "🔗 Đã kết nối thành công vào trình duyệt GPM!", "qyjOi": function(g, h) {
       return g > h;
-    }, "mbxGm": '//span[@class="mt-8 H4-Semibold text-color-UIText1Display"]', "znyiI": '//div[contains(@class, "sectionContent")]', "utSDA": "🚚Set api omocaptcha", "BLUZH": "load", "QDudu": "🚚 Đang mồi trang chủ tiktok...", "ZPsFE": "⚡ Đang phi thẳng vào trang sản phẩm (Chế độ Cướp Cò)...", "gRqfU": "🛑 Đã chặn thành công Shopee JS Redirect!", "wckgd": function(g, h) {
+    }, "gsaaZ": '//span[@class="mt-8 H4-Semibold text-color-UIText1Display"]', "XxLRj": '//div[contains(@class, "sectionContent")]', "KNVpk": '//div[contains(@class, "slick-slide slick-active")]//img', "HlQwa": "🚚Set api omocaptcha", "DuqMc": "load", "IiPcS": "🚚 Đang mồi trang chủ tiktok...", "XrNeo": "https://www.tiktok.com/", "jOBNb": "⚡ Đang phi thẳng vào trang sản phẩm (Chế độ Cướp Cò)...", "LddYu": "🛑 Đã chặn thành công Shopee JS Redirect!", "wRJMw": function(g, h, i) {
+      return g(h, i);
+    }, "VKMSb": function(g, h) {
       return g(h);
-    }, "XOMIw": "❌ Không xóa được file cũ:", "vudLa": "❌ Lỗi xử lý ảnh 9:16:", "Dcwxa": "Tải ảnh thất bại", "UJFmC": "Không tìm thấy link ảnh trong DOM", "TsOMm": "Lỗi bóc tách dữ liệu Tiktok", "Skfqa": "✅ Hoàn tất lấy Info Product!", "GWvZP": "Lỗi Tiktok Service KXD" };
+    }, "tuFWF": "❌ Không xóa được file cũ:", "OxxJs": "❌ Lỗi xử lý ảnh 9:16:", "ASdWx": "Không tìm thấy link ảnh trong DOM", "syZlN": "Lỗi Tiktok Service KXD" };
     try {
-      await f["uEumg"](sleep, 3e3);
+      await f["tnxRH"](sleep, 3e3);
       const g = await puppeteer["connect"]({ "browserURL": "http://127.0.0.1:" + d, "defaultViewport": null });
-      logger["info"](f["FLKQe"]);
-      const h = await g["pages"](), i = f["yMzRu"](h["length"], 0) ? h[0] : await g["newPage"](), j = f["mbxGm"], k = f["znyiI"], l = '//div[contains(@class, "slick-slide slick-active")]//img';
-      logger["info"](f["utSDA"]);
+      logger["info"](f["pmpXN"]);
+      const h = await g["pages"](), i = f["qyjOi"](h["length"], 0) ? h[0] : await g["newPage"](), j = f["gsaaZ"], k = f["XxLRj"], l = f["KNVpk"];
+      logger["info"](f["HlQwa"]);
       if (!((_a2 = e["configVideoMKT"]) == null ? void 0 : _a2["omo_api_key"])) throw new Error("Không tìm thấy api omocaptcha");
-      await i["goto"]("https://omocaptcha.com/set-key?api_key=" + e["configVideoMKT"]["omo_api_key"], { "waitUntil": ((_b2 = e["configVideoMKT"]) == null ? void 0 : _b2["method_load_page"]) ?? f["BLUZH"], "timeout": ((_c2 = e["configVideoMKT"]) == null ? void 0 : _c2["time_loading_page"]) ?? 25e3 })["catch"](() => {
-      }), logger["info"](f["QDudu"]), await i["goto"]("https://www.tiktok.com/", { "waitUntil": ((_d2 = e["configVideoMKT"]) == null ? void 0 : _d2["method_load_page"]) ?? "load", "timeout": ((_e2 = e["configVideoMKT"]) == null ? void 0 : _e2["time_loading_page"]) ?? 25e3 })["catch"](() => {
-      }), logger["info"](f["ZPsFE"]), await i["goto"](e["task"]["productUrl"], { "waitUntil": ((_f2 = e["configVideoMKT"]) == null ? void 0 : _f2["method_load_page"]) ?? f["BLUZH"], "timeout": 15e3 })["catch"](() => {
+      await i["goto"]("https://omocaptcha.com/set-key?api_key=" + e["configVideoMKT"]["omo_api_key"], { "waitUntil": ((_b2 = e["configVideoMKT"]) == null ? void 0 : _b2["method_load_page"]) ?? f["DuqMc"], "timeout": ((_c2 = e["configVideoMKT"]) == null ? void 0 : _c2["time_loading_page"]) ?? 25e3 })["catch"](() => {
+      }), logger["info"](f["IiPcS"]), await i["goto"](f["XrNeo"], { "waitUntil": ((_d2 = e["configVideoMKT"]) == null ? void 0 : _d2["method_load_page"]) ?? f["DuqMc"], "timeout": ((_e2 = e["configVideoMKT"]) == null ? void 0 : _e2["time_loading_page"]) ?? 25e3 })["catch"](() => {
+      }), logger["info"](f["jOBNb"]), await i["goto"](e["task"]["productUrl"], { "waitUntil": ((_f2 = e["configVideoMKT"]) == null ? void 0 : _f2["method_load_page"]) ?? f["DuqMc"], "timeout": 15e3 })["catch"](() => {
       });
       let m = null, n = null, o = null;
       try {
-        await i["waitForSelector"]("xpath/" + j, { "timeout": ((_g2 = e["configVideoMKT"]) == null ? void 0 : _g2["time_wait_getdata"]) ?? 15e3 }), await i["evaluate"](() => window["stop"]()), logger["info"](f["gRqfU"]);
+        await i["waitForSelector"]("xpath/" + j, { "timeout": ((_g2 = e["configVideoMKT"]) == null ? void 0 : _g2["time_wait_getdata"]) ?? 15e3 }), await i["evaluate"](() => window["stop"]()), logger["info"](f["LddYu"]);
         const p = "\n                (() => {\n                    const getByXpath = (xpath) => document.evaluate(xpath, document, null, 9, null).singleNodeValue;\n                    \n                    const titleEl = getByXpath('" + j + "');\n                    const descEl = getByXpath('" + k + "');\n                    const imgEl = getByXpath('" + l + `');
 
                     return {
@@ -96076,28 +96078,28 @@ class TiktokService {
         m = q["title"], n = q["desc"], logger["info"]("💎 Tiêu đề: " + m), logger["info"]("💎 Mô tả: " + n);
         if (q["imgSrcset"]) {
           logger["info"]("🔗 Link ảnh gốc: " + q["imgSrcset"]);
-          const r = await downloadImage(q["imgSrcset"], e["task"]["save_path_project"]);
+          const r = await f["wRJMw"](downloadImage, q["imgSrcset"], e["task"]["save_path_project"]);
           if (r["success"]) try {
             let s = c__default["join"](e["task"]["save_path_project"], r["name"]);
-            const t2 = await f["wckgd"](processImageTo916, s);
+            const t2 = await f["VKMSb"](processImageTo916, s);
             t2 && (o = c__default["join"](e["task"]["save_path_project"], t2));
             try {
               b__default["existsSync"](s) && (b__default["unlinkSync"](s), logger["info"]("🗑️ Đã dọn dẹp file cũ: " + s));
             } catch (u2) {
-              logger["error"](f["XOMIw"], u2);
+              logger["error"](f["tuFWF"], u2);
             }
           } catch (v) {
-            logger["error"](f["vudLa"], v);
+            logger["error"](f["OxxJs"], v);
           }
-          else throw new Error(f["Dcwxa"]);
-        } else throw new Error(f["UJFmC"]);
+          else throw new Error("Tải ảnh thất bại");
+        } else throw new Error(f["ASdWx"]);
       } catch (w) {
         await g["disconnect"](), logger["error"](w);
-        throw new Error((w == null ? void 0 : w["message"]) ?? f["TsOMm"]);
+        throw new Error((w == null ? void 0 : w["message"]) ?? "Lỗi bóc tách dữ liệu Tiktok");
       }
-      return await g["disconnect"](), logger["info"](f["Skfqa"]), { "taskId": e["task"]["id"], "productTitle": m, "productDesc": n, "productPathImage": o };
+      return await g["disconnect"](), logger["info"]("✅ Hoàn tất lấy Info Product!"), { "taskId": e["task"]["id"], "productTitle": m, "productDesc": n, "productPathImage": o };
     } catch (x) {
-      throw new Error((x == null ? void 0 : x["message"]) ?? f["GWvZP"]);
+      throw new Error((x == null ? void 0 : x["message"]) ?? f["syZlN"]);
     }
   }
 }
@@ -96106,203 +96108,212 @@ class TaskRunner {
     __publicField(this, "stoppedTaskIds", /* @__PURE__ */ new Set());
     __publicField(this, "event");
     __publicField(this, "data");
-    const f = { "dNkci": "video:task-log", "rmFAR": "⚠️ Đang đợi hủy task này..." };
-    this["event"] = d, this["data"] = e, ipcMain["on"]("video:stop-single-task", (g, h) => {
-      const i = { "pOUAC": f["dNkci"], "iYCSj": f["rmFAR"] };
+    const f = { "DaJJq": "⚠️ Đang đợi hủy task này...", "QSHFX": "video:stop-single-task" };
+    this["event"] = d, this["data"] = e, ipcMain["on"](f["QSHFX"], (g, h) => {
+      const i = { "HYVWE": "video:task-log", "Osonl": f["DaJJq"] };
       h["forEach"]((j) => {
-        !this["stoppedTaskIds"]["has"](j) && (this["stoppedTaskIds"]["add"](j), this["event"]["sender"]["send"](i["pOUAC"], { "status": "warning", "message": i["iYCSj"], "id": j }));
+        !this["stoppedTaskIds"]["has"](j) && (this["stoppedTaskIds"]["add"](j), this["event"]["sender"]["send"](i["HYVWE"], { "status": "warning", "message": i["Osonl"], "id": j }));
       });
     });
   }
   ["handleCancel"](d, e) {
-    return this["event"]["sender"]["send"]("video:task-log", { "status": "error", "message": "🚫 Task đã được người dùng hủy thành công.", "index": e, "taskId": d }), this["stoppedTaskIds"]["delete"](d), null;
+    const f = { "HiBio": "video:task-log" };
+    return this["event"]["sender"]["send"](f["HiBio"], { "status": "error", "message": "🚫 Task đã được người dùng hủy thành công.", "index": e, "taskId": d }), this["stoppedTaskIds"]["delete"](d), null;
   }
   async ["execute"]() {
-    const d = { "RSprP": "CANCELLED", "JUdyz": function(J, K) {
-      return J !== K;
-    }, "ZLBXN": "video:task-log", "ZosIa": "processing", "TZatl": function(J, K) {
+    const d = { "kXRcA": function(J, K) {
+      return J <= K;
+    }, "TLFfC": "CANCELLED", "hBfHa": function(J) {
+      return J();
+    }, "Mwtjd": "video:task-log", "GqrLA": "processing", "RDGkA": function(J, K) {
       return J < K;
-    }, "kLZTn": "Đang thử lại...", "qJFNy": "Thất bại hoàn toàn!", "vAuJn": function(J, K) {
-      return J === K;
-    }, "GqVDU": "Chỉ lấy thông tin sản phẩm", "kNOMr": function(J, K) {
-      return J % K;
-    }, "RKTow": function(J, K) {
-      return J(K);
-    }, "Dumnh": "error", "AWagJ": "Lỗi cào", "uSSfq": "Ảnh AI", "eWyWj": "Init Grok thất bại", "AaPVk": "female", "StbxQ": "realistic female host", "ZaTDO": "realistic male host", "iafEI": function(J, K) {
+    }, "uYGFa": "Đang thử lại...", "IgfxJ": function(J, K) {
       return J + K;
-    }, "FcWdD": "Grok không vẽ được ảnh", "qojpj": function(J, K) {
-      return J(K);
-    }, "IwdHn": "Cào dữ liệu", "DjNbH": "Thiếu dữ liệu sản phẩm, hãy thử lại!", "sBRTU": function(J, K) {
+    }, "rOoED": "Lỗi cào", "MmbSQ": "Ảnh AI", "cpLDn": function(J, K) {
+      return J % K;
+    }, "kwVLH": "realistic male host", "SnLZb": function(J, K) {
+      return J + K;
+    }, "JthPc": "Grok không vẽ được ảnh", "hKhAY": function(J, K) {
+      return J == K;
+    }, "oCPyh": function(J, K) {
       return J === K;
-    }, "gmaOy": "success", "XjMWD": "Lấy data Shopee thành công!", "rpoUe": function(J, K, L, M) {
+    }, "uTZul": "Chỉ lấy thông tin sản phẩm", "iDVyb": "success", "JwLtz": "Lấy data Shopee thành công!", "NXbxT": "Tạo Prompt AI", "BVcGm": "Khởi tạo & Vẽ ảnh Grok", "IgQcs": function(J, K, L, M) {
       return J(K, L, M);
-    }, "gSmcZ": "Tạo Prompt AI", "yQffM": "Số phân cảnh tạo không đủ", "wfKpe": "Thiếu dữ liệu ảnh AI thử lại", "XJLGG": function(J, K, L, M) {
+    }, "YXGxz": "Tạo giọng đọc AI", "Qwgjv": function(J, K, L, M) {
       return J(K, L, M);
-    }, "MraaW": "Render Video Final", "qYyDF": function(J, K) {
+    }, "KKkAm": function(J, K) {
       return J && K;
-    }, "qsWyv": function(J, K, L, M, N, O, P) {
-      return J(K, L, M, N, O, P);
-    }, "HTGzN": "Lỗi edit cuối:", "GVgIZ": "3|0|4|2|1", "EZgHI": "Rate Limit 429", "IRySE": "Render Video thất bại", "jbDtA": "proccessing", "ZUYJd": function(J, K) {
+    }, "KpgJO": "🎨 Đang chèn Logo và Nhạc nền...", "byvPk": "🎨 Đang chèn Logo...", "pScWQ": "🎵 Đang trộn nhạc nền...", "BNLNy": "Lỗi edit cuối:", "yubGK": "4|2|3|1|0", "ykCos": function(J, K) {
       return J || K;
-    }, "IHpkb": function(J, K) {
+    }, "QYYZj": function(J, K) {
       return J(K);
-    }, "rClpZ": "Vui lòng chọn lại đường dẫn lưu video trong cấu hình.", "OJpZp": function(J, K) {
+    }, "eSMlw": "Vui lòng chọn lại đường dẫn lưu video trong cấu hình.", "TGTda": "Api Gemini ít nhất phải có 1", "JhSmE": function(J, K) {
       return J == K;
-    }, "qqkzc": "Api Gemini ít nhất phải có 1", "VOebC": "Profile Shoppe ít nhất phải có 1", "zXvTn": function(J, K) {
-      return J == K;
-    }, "VBtbg": "Sai cấu hình Vbee AI" }, { tasks: e, configVideoMKT: f } = this["data"], { prompt_review: g, voice_code: h, vbee_app_token: i, isEnabledLogo: j, isEnabledMusic: k, musicPath: l, logoPath: m, vbee_app_id: n, save_shopid_productid: o, profiles_aff: p, thread: q, apikey_gemini: r, delay_between: s, profiles_grok: t2, prompt_image: u2, output_video: v, prompt_video: w, speed_voice: x } = f, y = d["ZUYJd"](q, 1), z = d["IHpkb"](pLimit, y), A = new GeminiService(r), B = new ShopeeProfileManager(p), C = new GrokProfileManager(t2), D = new gpmService(f["api_gpm"]), E = new GrokService(), F = await D["checkConnection"](f["api_gpm"]);
+    }, "oPZdH": "Profile Shoppe ít nhất phải có 1", "yzFyB": "Profile Grok ít nhất phải có 1", "ZkduG": function(J, K) {
+      return J || K;
+    } }, { tasks: e, configVideoMKT: f } = this["data"], { prompt_review: g, voice_code: h, vbee_app_token: i, isEnabledLogo: j, isEnabledMusic: k, musicPath: l, logoPath: m, vbee_app_id: n, save_shopid_productid: o, profiles_aff: p, thread: q, apikey_gemini: r, delay_between: s, profiles_grok: t2, prompt_image: u2, output_video: v, prompt_video: w, speed_voice: x } = f, y = d["ykCos"](q, 1), z = d["QYYZj"](pLimit, y), A = new GeminiService(r), B = new ShopeeProfileManager(p), C = new GrokProfileManager(t2), D = new gpmService(f["api_gpm"]), E = new GrokService(), F = await D["checkConnection"](f["api_gpm"]);
     if (!F["success"]) return { "success": ![], "message": F["message"] };
-    if (!b__default["existsSync"](v)) return { "success": ![], "message": d["rClpZ"] };
-    if (d["OJpZp"](r["length"], 0)) return { "success": ![], "message": d["qqkzc"] };
-    if (p["length"] == 0) return { "success": ![], "message": d["VOebC"] };
-    if (d["zXvTn"](t2["length"], 0)) return { "success": ![], "message": "Profile Grok ít nhất phải có 1" };
-    if (d["ZUYJd"](!n, !i)) return { "success": ![], "message": d["VBtbg"] };
+    if (!b__default["existsSync"](v)) return { "success": ![], "message": d["eSMlw"] };
+    if (d["hKhAY"](r["length"], 0)) return { "success": ![], "message": d["TGTda"] };
+    if (d["JhSmE"](p["length"], 0)) return { "success": ![], "message": d["oPZdH"] };
+    if (d["JhSmE"](t2["length"], 0)) return { "success": ![], "message": d["yzFyB"] };
+    if (d["ZkduG"](!n, !i)) return { "success": ![], "message": "Sai cấu hình Vbee AI" };
     const G2 = async (J, K, L, M = 3) => {
-      for (let N = 1; N <= M; N++) {
-        if (this["stoppedTaskIds"]["has"](L)) throw new Error(d["RSprP"]);
+      for (let N = 1; d["kXRcA"](N, M); N++) {
+        if (this["stoppedTaskIds"]["has"](L)) throw new Error(d["TLFfC"]);
         try {
-          const O = await J();
-          if (O && d["JUdyz"](O["success"], ![])) return O;
+          const O = await d["hBfHa"](J);
+          if (O && O["success"] !== ![]) return O;
           throw new Error((O == null ? void 0 : O["message"]) || "Lỗi tại bước " + K);
         } catch (P) {
-          this["event"]["sender"]["send"](d["ZLBXN"], { "status": d["ZosIa"], "message": "⚠️ " + K + " lỗi lần " + N + ". " + (d["TZatl"](N, M) ? d["kLZTn"] : d["qJFNy"]), "taskId": L });
-          if (d["vAuJn"](N, M)) throw P;
+          this["event"]["sender"]["send"](d["Mwtjd"], { "status": d["GqrLA"], "message": "⚠️ " + K + " lỗi lần " + N + ". " + (d["RDGkA"](N, M) ? d["uYGFa"] : "Thất bại hoàn toàn!"), "taskId": L });
+          if (N === M) throw P;
           await new Promise((Q) => setTimeout(Q, 2e3));
         }
       }
     }, H = e["map"]((J, K) => {
-      const L = { "DnAby": d["RSprP"], "dJzcr": d["ZLBXN"], "WcKHu": "processing", "BfYQi": function(M, N) {
-        return d["iafEI"](M, N);
-      }, "EcGai": function(M, N) {
-        return d["kNOMr"](M, N);
-      }, "CBWvB": d["eWyWj"], "nEDRv": function(M, N) {
-        return M == N;
-      }, "tgFHh": d["EZgHI"], "iFvrZ": d["Dumnh"], "hGGty": d["IRySE"], "NnSwH": d["jbDtA"] };
+      const L = { "FZuAs": function(M, N) {
+        return d["IgfxJ"](M, N);
+      }, "hZkEH": function(M, N) {
+        return M % N;
+      }, "mbeQx": d["TLFfC"], "xvJnP": function(M, N) {
+        return M(N);
+      }, "GPfGa": function(M, N, O, P, Q, R, S, T) {
+        return M(N, O, P, Q, R, S, T);
+      }, "iaMMg": d["Mwtjd"], "lVVAs": "Sai link sản phẩm", "hwbyu": d["rOoED"], "uBkRs": "processing", "KfhVu": d["MmbSQ"], "tSwWt": function(M, N) {
+        return d["cpLDn"](M, N);
+      }, "JbjnB": "Init Grok thất bại", "iVFPQ": "female", "SstxB": d["kwVLH"], "uNcAI": function(M, N) {
+        return d["SnLZb"](M, N);
+      }, "BqSWc": d["JthPc"], "dsVbW": function(M, N) {
+        return M % N;
+      }, "cBjcr": function(M, N) {
+        return d["hKhAY"](M, N);
+      }, "PwiYt": "proccessing", "ooNEP": "Thiếu dữ liệu sản phẩm, hãy thử lại!", "vZsNZ": function(M, N) {
+        return d["oCPyh"](M, N);
+      }, "tnWrL": d["uTZul"], "BnfbG": d["iDVyb"], "pbFBb": d["JwLtz"], "HgVXF": d["NXbxT"], "xkxIW": function(M, N) {
+        return d["RDGkA"](M, N);
+      }, "rJpFu": "Số phân cảnh tạo không đủ", "rzBWl": function(M, N, O, P) {
+        return M(N, O, P);
+      }, "HpGui": d["BVcGm"], "cXJHJ": "error", "ZWZcE": "Thiếu dữ liệu ảnh AI thử lại", "GLbuI": function(M, N, O, P) {
+        return d["IgQcs"](M, N, O, P);
+      }, "fvIcj": d["YXGxz"], "ZlqxP": "🎙️ Đang lồng tiếng...", "aUnnB": function(M, N, O, P) {
+        return d["Qwgjv"](M, N, O, P);
+      }, "clhfw": function(M, N) {
+        return d["KKkAm"](M, N);
+      }, "wMTSH": d["KpgJO"], "WPSvM": d["byvPk"], "yhoHA": d["pScWQ"], "DGKGM": d["BNLNy"], "wvucn": d["yubGK"] };
       return z(async () => {
-        const M = { "USijH": function(R, S) {
-          return R === S;
-        }, "HvuFl": d["GqVDU"], "sZZnp": function(R, S) {
-          return R + S;
-        }, "GCqXf": function(R, S) {
-          return d["kNOMr"](R, S);
-        }, "BbGMV": "CANCELLED", "xcbSq": function(R, S) {
-          return d["RKTow"](R, S);
-        }, "TBRcp": function(R, S, T, U, V, W, X, Y) {
-          return R(S, T, U, V, W, X, Y);
-        }, "jzvYK": d["Dumnh"], "FkyYT": d["AWagJ"], "OWYNn": d["uSSfq"], "WKXDa": d["ZosIa"], "ulQtu": d["eWyWj"], "eUXvJ": d["AaPVk"], "uCPnh": d["StbxQ"], "xDjAx": d["ZaTDO"], "hJghL": function(R, S) {
-          return d["iafEI"](R, S);
-        }, "RelWl": d["FcWdD"], "lZDuf": d["ZLBXN"], "NtuHO": function(R, S) {
-          return d["TZatl"](R, S);
+        const M = { "lqxuP": L["iaMMg"], "DvQdk": "processing", "zXCQV": function(R, S) {
+          return L["uNcAI"](R, S);
         } };
         let N = v;
         if (o) {
-          const R = await d["qojpj"](getShopeeIds, J["productUrl"]);
+          const R = await L["xvJnP"](getShopeeIds, J["productUrl"]);
           (R == null ? void 0 : R["shopId"]) && (N = c__default["join"](v, R == null ? void 0 : R["shopId"], R == null ? void 0 : R["productId"]));
         }
         J["save_path_project"] = N;
         let O = "";
-        const Q = d["kNOMr"](K, t2["length"]);
+        const Q = K % t2["length"];
         try {
-          this["event"]["sender"]["send"](d["ZLBXN"], { "status": d["ZosIa"], "message": "Bắt đầu", "taskId": J["id"] });
+          this["event"]["sender"]["send"](L["iaMMg"], { "status": "processing", "message": "Bắt đầu", "taskId": J["id"] });
           const S = await G2(async () => {
-            if (!(M["USijH"](J["mode"], M["HvuFl"]) || J["mode"]["includes"]("TT"))) return { "productTitle": J["productName"], "productDesc": J["productDesc"], "productPathImage": J["productPathImg"] };
-            const a0 = M["sZZnp"](5e3, M["GCqXf"](K, 100));
-            if (this["stoppedTaskIds"]["has"](J["id"])) throw new Error(M["BbGMV"]);
+            if (!(J["mode"] === "Chỉ lấy thông tin sản phẩm" || J["mode"]["includes"]("TT"))) return { "productTitle": J["productName"], "productDesc": J["productDesc"], "productPathImage": J["productPathImg"] };
+            const a0 = L["FZuAs"](5e3, L["hZkEH"](K, 100));
+            if (this["stoppedTaskIds"]["has"](J["id"])) throw new Error(L["mbeQx"]);
             let a1 = null;
-            if (await M["xcbSq"](isLinkShopee, J["productUrl"])) O = await B["getAvailableProfile"](), a1 = await M["TBRcp"](shopeeService, this["event"], D, O, a0, s, this["data"], J), await B["releaseProfile"](O);
+            if (await L["xvJnP"](isLinkShopee, J["productUrl"])) O = await B["getAvailableProfile"](), a1 = await L["GPfGa"](shopeeService, this["event"], D, O, a0, s, this["data"], J), await B["releaseProfile"](O);
             else {
-              if (await isLinkTiktok(J["productUrl"])) a1 = await TiktokService["getInfoProduct"](this["event"], D, a0, s, this["data"], J);
-              else return this["event"]["sender"]["send"]("video:task-log", { "status": M["jzvYK"], "message": "Sai link sản phẩm", "taskId": J["id"] }), null;
+              if (await L["xvJnP"](isLinkTiktok, J["productUrl"])) a1 = await TiktokService["getInfoProduct"](this["event"], D, a0, s, this["data"], J);
+              else return this["event"]["sender"]["send"](L["iaMMg"], { "status": "error", "message": L["lVVAs"], "taskId": J["id"] }), null;
             }
             O = "";
-            if (!a1["success"]) throw new Error(a1["message"] || M["FkyYT"]);
+            if (!a1["success"]) throw new Error(a1["message"] || L["hwbyu"]);
             return a1["data"];
-          }, d["IwdHn"], J["id"]);
-          if (!S["productTitle"] || !S["productPathImage"] || !b__default["existsSync"](S["productPathImage"])) return this["event"]["sender"]["send"](d["ZLBXN"], { "status": "error", "message": d["DjNbH"], "taskId": J["id"] }), null;
-          if (d["sBRTU"](J["mode"], d["GqVDU"])) return this["event"]["sender"]["send"]("video:task-log", { "status": d["gmaOy"], "message": d["XjMWD"], "taskId": J["id"] }), null;
-          const T = await d["rpoUe"](G2, async () => {
-            if (this["stoppedTaskIds"]["has"](J["id"])) throw new Error(L["DnAby"]);
+          }, "Cào dữ liệu", J["id"]);
+          if (!S["productTitle"] || !S["productPathImage"] || !b__default["existsSync"](S["productPathImage"])) return this["event"]["sender"]["send"]("video:task-log", { "status": "error", "message": L["ooNEP"], "taskId": J["id"] }), null;
+          if (L["vZsNZ"](J["mode"], L["tnWrL"])) return this["event"]["sender"]["send"](L["iaMMg"], { "status": L["BnfbG"], "message": L["pbFBb"], "taskId": J["id"] }), null;
+          const T = await G2(async () => {
+            if (this["stoppedTaskIds"]["has"](J["id"])) throw new Error("CANCELLED");
             const a0 = await A["generateVideoPrompt"](S["productTitle"], S["productDesc"], g, J["outputCount"]);
             if (!a0["success"]) {
-              if (a0["ratelimit"]) return this["event"]["sender"]["send"](L["dJzcr"], { "status": L["WcKHu"], "message": "Gemini bị rate limit", "taskId": J["id"] }), null;
+              if (a0["ratelimit"]) return this["event"]["sender"]["send"]("video:task-log", { "status": L["uBkRs"], "message": "Gemini bị rate limit", "taskId": J["id"] }), null;
               throw new Error(a0["error"]);
             }
-            return this["event"]["sender"]["send"](L["dJzcr"], { "status": "processing", "message": "✅ Prompt thành công", "data": { "prompt": w }, "taskId": J["id"] }), a0["data"];
-          }, d["gSmcZ"], J["id"]);
+            return this["event"]["sender"]["send"](L["iaMMg"], { "status": L["uBkRs"], "message": "✅ Prompt thành công", "data": { "prompt": w }, "taskId": J["id"] }), a0["data"];
+          }, L["HgVXF"], J["id"]);
           if (!T) return null;
-          if (d["TZatl"](T["length"], J["outputCount"])) throw new Error(d["yQffM"]);
-          const U = await d["rpoUe"](G2, async () => {
-            if (this["stoppedTaskIds"]["has"](J["id"])) throw new Error(M["BbGMV"]);
-            if (!J["mode"]["includes"](M["OWYNn"])) return J["aiImagePath"];
-            this["event"]["sender"]["send"]("video:task-log", { "status": M["WKXDa"], "message": "Chuẩn bị tạo ảnh từ grok " + t2[Q], "taskId": J["id"] });
-            const a0 = M["sZZnp"](5e3, K % 100), a1 = await E["initHeaderGrok"](this["event"], J["id"], E, C, D, t2[Q], a0, s);
-            if (!a1["success"]) throw new Error(M["ulQtu"]);
+          if (L["xkxIW"](T["length"], J["outputCount"])) throw new Error(L["rJpFu"]);
+          const U = await L["rzBWl"](G2, async () => {
+            if (this["stoppedTaskIds"]["has"](J["id"])) throw new Error(L["mbeQx"]);
+            if (!J["mode"]["includes"](L["KfhVu"])) return J["aiImagePath"];
+            this["event"]["sender"]["send"]("video:task-log", { "status": "processing", "message": "Chuẩn bị tạo ảnh từ grok " + t2[Q], "taskId": J["id"] });
+            const a0 = L["FZuAs"](5e3, L["tSwWt"](K, 100)), a1 = await E["initHeaderGrok"](this["event"], J["id"], E, C, D, t2[Q], a0, s);
+            if (!a1["success"]) throw new Error(L["JbjnB"]);
             logger["info"]("✅ Đã bốc được Header cho Task " + J["id"] + ", chuẩn bị nhả Profile " + t2[Q]);
-            let a2 = h["includes"](M["eUXvJ"]) ? M["uCPnh"] : M["xDjAx"];
-            const a3 = await E["generateReviewVideoImage"](M["hJghL"](u2, "\n " + a2), S["productPathImage"], t2[Q], N, J["id"]);
-            if (!a3["success"]) throw new Error(M["RelWl"]);
+            let a2 = h["includes"](L["iVFPQ"]) ? "realistic female host" : L["SstxB"];
+            const a3 = await E["generateReviewVideoImage"](L["uNcAI"](u2, "\n " + a2), S["productPathImage"], t2[Q], N, J["id"]);
+            if (!a3["success"]) throw new Error(L["BqSWc"]);
             return a3["filePath"];
-          }, "Khởi tạo & Vẽ ảnh Grok", J["id"]);
-          if (!U || !b__default["existsSync"](U)) return this["event"]["sender"]["send"](d["ZLBXN"], { "status": d["Dumnh"], "message": d["wfKpe"], "taskId": J["id"] }), null;
-          else this["event"]["sender"]["send"](d["ZLBXN"], { "status": d["ZosIa"], "message": "Cập nhật ảnh AI", "taskId": J["id"], "data": { "imageAIPath": U } });
-          const V = await d["XJLGG"](G2, async () => {
-            if (this["stoppedTaskIds"]["has"](J["id"])) throw new Error(L["DnAby"]);
-            this["event"]["sender"]["send"](L["dJzcr"], { "status": L["WcKHu"], "message": "Chuẩn bị tạo video từ grok " + t2[Q], "taskId": J["id"] });
-            const a0 = L["BfYQi"](5e3, L["EcGai"](K, 100)), a1 = await E["initHeaderGrok"](this["event"], J["id"], E, C, D, t2[Q], a0, s);
-            if (!a1["success"]) throw new Error(L["CBWvB"]);
+          }, L["HpGui"], J["id"]);
+          if (!U || !b__default["existsSync"](U)) return this["event"]["sender"]["send"](L["iaMMg"], { "status": L["cXJHJ"], "message": L["ZWZcE"], "taskId": J["id"] }), null;
+          else this["event"]["sender"]["send"](L["iaMMg"], { "status": L["uBkRs"], "message": "Cập nhật ảnh AI", "taskId": J["id"], "data": { "imageAIPath": U } });
+          const V = await L["rzBWl"](G2, async () => {
+            if (this["stoppedTaskIds"]["has"](J["id"])) throw new Error(L["mbeQx"]);
+            this["event"]["sender"]["send"](L["iaMMg"], { "status": L["uBkRs"], "message": "Chuẩn bị tạo video từ grok " + t2[Q], "taskId": J["id"] });
+            const a0 = L["FZuAs"](5e3, L["dsVbW"](K, 100)), a1 = await E["initHeaderGrok"](this["event"], J["id"], E, C, D, t2[Q], a0, s);
+            if (!a1["success"]) throw new Error("Init Grok thất bại");
             logger["info"]("✅ Đã bốc được Header cho Task " + J["id"] + ", chuẩn bị nhả Profile " + t2[Q]);
             const a2 = await E["createVideoForPromptCore"](this["event"], T, J["id"], w, N, Q, t2[Q], U, J["outputCount"]);
             logger["info"](a2);
-            if (L["nEDRv"](a2["error"], L["tgFHh"])) return this["event"]["sender"]["send"](L["dJzcr"], { "status": L["iFvrZ"], "message": "Profile " + t2[Q] + " grok đã bị rate limit", "taskId": J["id"], "index": K }), null;
-            if (!a2["success"]) throw new Error(L["hGGty"]);
-            return this["event"]["sender"]["send"](L["dJzcr"], { "status": L["NnSwH"], "message": "✅Tạo AI Video: " + a2["filename"], "data": { "videoAIPath": a2["filename"] }, "taskId": J["id"], "index": K }), a2["filename"];
-          }, d["MraaW"], J["id"]);
+            if (L["cBjcr"](a2["error"], "Rate Limit 429")) return this["event"]["sender"]["send"](L["iaMMg"], { "status": "error", "message": "Profile " + t2[Q] + " grok đã bị rate limit", "taskId": J["id"], "index": K }), null;
+            if (!a2["success"]) throw new Error("Render Video thất bại");
+            return this["event"]["sender"]["send"](L["iaMMg"], { "status": L["PwiYt"], "message": "✅Tạo AI Video: " + a2["filename"], "data": { "videoAIPath": a2["filename"] }, "taskId": J["id"], "index": K }), a2["filename"];
+          }, "Render Video Final", J["id"]);
           if (!V) return null;
-          const W = await d["rpoUe"](G2, async () => {
-            if (this["stoppedTaskIds"]["has"](J["id"])) throw new Error(M["BbGMV"]);
-            this["event"]["sender"]["send"](M["lZDuf"], { "status": M["WKXDa"], "message": "🎙️ Đang tạo giọng đọc AI cho " + T["length"] + " phân cảnh...", "taskId": J["id"] });
+          const W = await L["GLbuI"](G2, async () => {
+            if (this["stoppedTaskIds"]["has"](J["id"])) throw new Error("CANCELLED");
+            this["event"]["sender"]["send"](M["lqxuP"], { "status": M["DvQdk"], "message": "🎙️ Đang tạo giọng đọc AI cho " + T["length"] + " phân cảnh...", "taskId": J["id"] });
             const a0 = new VbeeService(i, n), a1 = c__default["join"](N, "temp_audio_" + J["id"]);
             if (!b__default["existsSync"](a1)) b__default["mkdirSync"](a1, { "recursive": !![] });
             const a2 = [];
-            for (let a3 = 0; M["NtuHO"](a3, T["length"]); a3++) {
+            for (let a3 = 0; a3 < T["length"]; a3++) {
               const a4 = T[a3], a5 = await a0["downloadAudio"](a4["voice_content"], a1, h, x);
-              if (!a5) throw new Error("Lỗi tải giọng đọc ở phân cảnh " + M["sZZnp"](a3, 1));
+              if (!a5) throw new Error("Lỗi tải giọng đọc ở phân cảnh " + M["zXCQV"](a3, 1));
               a2["push"](a5);
             }
-            return this["event"]["sender"]["send"](M["lZDuf"], { "status": "processing", "message": "✅ Đã tạo xong " + a2["length"] + " file giọng đọc", "taskId": J["id"] }), a2;
-          }, "Tạo giọng đọc AI", J["id"]), X = W;
-          this["event"]["sender"]["send"](d["ZLBXN"], { "status": d["ZosIa"], "message": "🎙️ Đang lồng tiếng...", "taskId": J["id"] });
-          const Y = await mergeAudioToVideo(V, X, c__default["join"](N, "temp_voice_" + J["id"] + ".mp4"));
-          await deletePath(c__default["dirname"](X[0])), await d["RKTow"](deletePath, V);
+            return this["event"]["sender"]["send"](M["lqxuP"], { "status": "processing", "message": "✅ Đã tạo xong " + a2["length"] + " file giọng đọc", "taskId": J["id"] }), a2;
+          }, L["fvIcj"], J["id"]), X = W;
+          this["event"]["sender"]["send"](L["iaMMg"], { "status": L["uBkRs"], "message": L["ZlqxP"], "taskId": J["id"] });
+          const Y = await L["aUnnB"](mergeAudioToVideo, V, X, c__default["join"](N, "temp_voice_" + J["id"] + ".mp4"));
+          await L["xvJnP"](deletePath, c__default["dirname"](X[0])), await L["xvJnP"](deletePath, V);
           let Z = c__default["join"](N, "video_good_" + J["id"] + "_" + Date["now"]() + ".mp4");
           if (j || k) {
-            const a0 = d["qYyDF"](j, k) ? "🎨 Đang chèn Logo và Nhạc nền..." : j ? "🎨 Đang chèn Logo..." : "🎵 Đang trộn nhạc nền...";
-            this["event"]["sender"]["send"](d["ZLBXN"], { "status": "processing", "message": a0, "taskId": J["id"] });
+            const a0 = L["clhfw"](j, k) ? L["wMTSH"] : j ? L["WPSvM"] : L["yhoHA"];
+            this["event"]["sender"]["send"](L["iaMMg"], { "status": L["uBkRs"], "message": a0, "taskId": J["id"] });
             try {
-              await d["qsWyv"](addLogoAndMusic, Y, m, l, Z, j, k);
+              await addLogoAndMusic(Y, m, l, Z, j, k);
               if (b__default["existsSync"](Y)) b__default["unlinkSync"](Y);
             } catch (a1) {
-              console["error"](d["HTGzN"], a1), b__default["renameSync"](Y, Z);
+              console["error"](L["DGKGM"], a1), b__default["renameSync"](Y, Z);
             }
           } else b__default["renameSync"](Y, Z);
-          this["event"]["sender"]["send"](d["ZLBXN"], { "status": d["gmaOy"], "message": "Hoàn thiện video", "data": { "videoAIPath": Z }, "taskId": J["id"], "index": K });
+          this["event"]["sender"]["send"](L["iaMMg"], { "status": L["BnfbG"], "message": "Hoàn thiện video", "data": { "videoAIPath": Z }, "taskId": J["id"], "index": K });
         } catch (a2) {
-          const a3 = d["GVgIZ"]["split"]("|");
+          const a3 = L["wvucn"]["split"]("|");
           let a4 = 0;
           while (!![]) {
             switch (a3[a4++]) {
               case "0":
-                continue;
-              case "1":
                 return null;
+              case "1":
+                this["event"]["sender"]["send"](L["iaMMg"], { "status": L["cXJHJ"], "message": "❌ Fail: " + a2["message"], "taskId": J["id"] });
+                continue;
               case "2":
-                this["event"]["sender"]["send"](d["ZLBXN"], { "status": d["Dumnh"], "message": "❌ Fail: " + a2["message"], "taskId": J["id"] });
                 continue;
               case "3":
-                if (O) await B["releaseProfile"](O);
+                if (L["vZsNZ"](a2["message"], L["mbeQx"])) return this["handleCancel"](J["id"], K);
                 continue;
               case "4":
-                if (a2["message"] === d["RSprP"]) return this["handleCancel"](J["id"], K);
+                if (O) await B["releaseProfile"](O);
                 continue;
             }
             break;
@@ -97033,16 +97044,16 @@ var dist = { exports: {} };
 var distExports = dist.exports;
 const getUniqueDeviceId = () => {
   var _a2;
-  const d = { "PLFOr": function(e) {
+  const d = { "RoDkM": function(e) {
     return e();
-  }, "nlrBH": function(e, f) {
+  }, "KdeNr": function(e, f) {
     return e + f;
-  }, "DptmV": "sha256", "LVEnn": "hex", "bWIdT": "Lỗi lấy Device ID:", "xXZBz": "MM-UNKNOWN-DEVICE-ID" };
+  }, "iZQkY": "hex", "elzMK": "Lỗi lấy Device ID:", "tJXKw": "MM-UNKNOWN-DEVICE-ID" };
   try {
-    const e = d["PLFOr"](distExports.machineIdSync), f = d["nlrBH"](require$$1$1["hostname"](), require$$1$1["userInfo"]()["username"]), g = require$$1$2["createHash"](d["DptmV"])["update"](d["nlrBH"](e, f))["digest"](d["LVEnn"])["toUpperCase"]()["substring"](0, 24);
+    const e = d["RoDkM"](distExports.machineIdSync), f = d["KdeNr"](require$$1$1["hostname"](), require$$1$1["userInfo"]()["username"]), g = require$$1$2["createHash"]("sha256")["update"](e + f)["digest"](d["iZQkY"])["toUpperCase"]()["substring"](0, 24);
     return "MM-" + ((_a2 = g["match"](/.{1,6}/g)) == null ? void 0 : _a2["join"]("-"));
   } catch (h) {
-    return logger["error"](d["bWIdT"], h), d["xXZBz"];
+    return logger["error"](d["elzMK"], h), d["tJXKw"];
   }
 };
 class LicenseService {
@@ -97050,26 +97061,28 @@ class LicenseService {
     __publicField(this, "PUBLIC_KEY", "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlrUvdXGRzSwv5T+SCqJp\ndLSrd2doTZJyuxjFpbzho9/gpKJNfRNUJeJ7OP9PbzKeg3KElOHMpj0DV4jOxPnO\ndCJMMErAKqmJvR/myBWe0pk3FCDfJlxYsxFvE+9svbG1QjuWuG3lPrKQGz4L685j\no/6WgPRVT5ty12qLdwCqkd0mzGEVmxne3C/8JvfTYUkJ5qr4b7quCDf8fgeLSmIR\nkG7MNwq3FoIvxS6kGjngapkU3a6W4TL1FPgw+Q4kBKzv+9JbWhJlAgX6v/Kb3Lq2\nA5bn46e7LlUg9Nh4H3e+tsYSyWk2QJD+g7rt0FMXcxQeElsiRFtGIzyngiYcpc2C\n8wIDAQAB\n-----END PUBLIC KEY-----");
   }
   ["obfuscate"](d) {
-    const e = { "FWMgk": function(g, h) {
+    const e = { "gCqMZ": "MINMIN_SECRET_2026", "xyChz": function(g, h) {
       return g + h;
-    }, "dYCdq": "base64" }, f = "MINMIN_SECRET_2026";
-    return Buffer["from"](e["FWMgk"](e["FWMgk"](d, "|"), f))["toString"](e["dYCdq"])["split"]("")["reverse"]()["join"]("");
+    }, "IZrup": function(g, h) {
+      return g + h;
+    }, "oTQhd": "base64" }, f = e["gCqMZ"];
+    return Buffer["from"](e["xyChz"](e["IZrup"](d, "|"), f))["toString"](e["oTQhd"])["split"]("")["reverse"]()["join"]("");
   }
   async ["checkKey"]() {
     var _a2, _b2;
-    const d = { "JedsC": function(e) {
+    const d = { "VzYzZ": function(e) {
       return e();
-    }, "BcywH": "base64", "jbFbw": "sha256", "eoPRF": "hex", "oDnLk": "Dữ liệu bản quyền bị giả mạo!", "Enadq": function(e, f) {
+    }, "OxhsV": "aHR0cHM6Ly9hY2NvdW50Lm1pbm1pbnRvb2wuc2l0ZS9hcGkvdmVyaWZ5LnBocA==", "xInXj": "utf-8", "OmLdr": "sha256", "EzaEi": "hex", "yvFXH": function(e, f) {
       return e !== f;
-    }, "KHylF": "Mã máy không khớp!", "dbsHK": "Lỗi xác thực:", "bCTFU": "Không thể kết nối Server bảo quyền!" };
+    }, "nssjW": "Mã máy không khớp!", "DkzoU": "Basic", "hafxY": "Không thể kết nối Server bảo quyền!" };
     try {
-      const e = d["JedsC"](getUniqueDeviceId), f = this["obfuscate"](e), g = await axios["post"](Buffer["from"]("aHR0cHM6Ly9hY2NvdW50Lm1pbm1pbnRvb2wuc2l0ZS9hcGkvdmVyaWZ5LnBocA==", d["BcywH"])["toString"]("utf-8"), { "key": e, "data": f }, { "timeout": 1e4 }), { signedData: h, signature: i } = g["data"], j = require$$1$2["verify"](d["jbFbw"], Buffer["from"](h), { "key": this["PUBLIC_KEY"] }, Buffer["from"](i, d["eoPRF"]));
-      if (!j) throw new Error(d["oDnLk"]);
+      const e = d["VzYzZ"](getUniqueDeviceId), f = this["obfuscate"](e), g = await axios["post"](Buffer["from"](d["OxhsV"], "base64")["toString"](d["xInXj"]), { "key": e, "data": f }, { "timeout": 1e4 }), { signedData: h, signature: i } = g["data"], j = require$$1$2["verify"](d["OmLdr"], Buffer["from"](h), { "key": this["PUBLIC_KEY"] }, Buffer["from"](i, d["EzaEi"]));
+      if (!j) throw new Error("Dữ liệu bản quyền bị giả mạo!");
       const k = JSON["parse"](h);
-      if (d["Enadq"](k["deviceId"], e)) throw new Error(d["KHylF"]);
+      if (d["yvFXH"](k["deviceId"], e)) throw new Error(d["nssjW"]);
       return { ...k };
     } catch (l) {
-      return logger["error"](d["dbsHK"], l["message"]), { "status": ![], "deviceId": "", "maxDevices": 0, "plan": "Basic", "expiredAt": "", "permissions": [], "message": ((_b2 = (_a2 = l["response"]) == null ? void 0 : _a2["data"]) == null ? void 0 : _b2["message"]) || l["message"] || d["bCTFU"] };
+      return logger["error"]("Lỗi xác thực:", l["message"]), { "status": ![], "deviceId": "", "maxDevices": 0, "plan": d["DkzoU"], "expiredAt": "", "permissions": [], "message": ((_b2 = (_a2 = l["response"]) == null ? void 0 : _a2["data"]) == null ? void 0 : _b2["message"]) || l["message"] || d["hafxY"] };
     }
   }
 }
@@ -97079,8 +97092,8 @@ class TaskPostReelsRunner {
     __publicField(this, "event");
     __publicField(this, "data");
     __publicField(this, "profileLocks", /* @__PURE__ */ new Map());
-    const e = { "hxDqM": "reels:stop-single-task" };
-    this["event"] = c2, this["data"] = d, ipcMain["on"](e["hxDqM"], (f, g) => {
+    const e = { "Wgqml": "reels:stop-single-task" };
+    this["event"] = c2, this["data"] = d, ipcMain["on"](e["Wgqml"], (f, g) => {
       g["forEach"]((h) => this["stoppedTaskIds"]["add"](h));
     });
   }
@@ -97095,59 +97108,46 @@ class TaskPostReelsRunner {
     return this["profileLocks"]["set"](c2, e), d;
   }
   ["sendLog"](c2, d, e = "running") {
-    const f = { "uKBzA": "reels:task-log" };
-    this["event"]["sender"]["send"](f["uKBzA"], { "id": c2, "message": d, "status": e });
+    this["event"]["sender"]["send"]("reels:task-log", { "id": c2, "message": d, "status": e });
   }
   async ["execute"]() {
-    const c2 = { "hjGLw": "running", "HABVE": function(j, k) {
+    const c2 = { "yBtCW": "running", "hApZB": function(j, k) {
       return j + k;
-    }, "FpbHz": function(j, k) {
+    }, "WINhp": function(j, k) {
       return j % k;
-    }, "pcFoS": "done", "Mzjjq": "error", "PophC": function(j, k) {
-      return j(k);
-    }, "yhmKv": function(j, k) {
+    }, "USvgc": "error", "SOeqE": function(j) {
+      return j();
+    }, "LvBNt": function(j, k) {
       return j(k);
     } }, { tasks: d, api_gpm: e, thread: f, delay_between: g } = this["data"];
-    logger["info"](c2["PophC"](String, f));
-    const h = c2["yhmKv"](pLimit, f), i = d["map"]((j, k) => h(async () => {
+    logger["info"](c2["LvBNt"](String, f));
+    const h = c2["LvBNt"](pLimit, f), i = d["map"]((j, k) => h(async () => {
       if (this["stoppedTaskIds"]["has"](j["id"])) return this["handleCancel"](j["id"]);
-      this["sendLog"](j["id"], "⏳ Đang đợi Profile " + j["profile_id"] + " rảnh...", c2["hjGLw"]);
+      this["sendLog"](j["id"], "⏳ Đang đợi Profile " + j["profile_id"] + " rảnh...", c2["yBtCW"]);
       const l = await this["waitAndLockProfile"](j["profile_id"]);
       try {
-        const m = c2["HABVE"](5e3, c2["FpbHz"](k, 100)), n = this["getWindowPosition"](k);
-        await this["processSingleTask"](j, e, m, n["sizeStr"], n["posStr"], n["scale"]), this["sendLog"](j["id"], "✅ Hoàn thành Task!", c2["pcFoS"]);
+        const m = c2["hApZB"](5e3, c2["WINhp"](k, 100)), n = this["getWindowPosition"](k);
+        await this["processSingleTask"](j, e, m, n["sizeStr"], n["posStr"], n["scale"]), this["sendLog"](j["id"], "✅ Hoàn thành Task!", "done");
       } catch (o) {
-        this["sendLog"](j["id"], "❌ Lỗi: " + o["message"], c2["Mzjjq"]);
+        this["sendLog"](j["id"], "❌ Lỗi: " + o["message"], c2["USvgc"]);
       } finally {
-        l(), this["profileLocks"]["delete"](j["profile_id"]), await new Promise((p) => setTimeout(p, g * 1e3));
+        c2["SOeqE"](l), this["profileLocks"]["delete"](j["profile_id"]), await new Promise((p) => setTimeout(p, g * 1e3));
       }
     }));
     await Promise["all"](i);
   }
   ["getWindowPosition"](c2) {
-    const d = { "ztVHM": function(k, l) {
-      return k % l;
-    }, "tDFuQ": function(k, l) {
+    const d = { "mEXoo": function(k, l) {
       return k * l;
-    }, "VZSsQ": function(k, l) {
+    }, "AwMIu": function(k, l) {
+      return k * l;
+    }, "omraL": function(k, l) {
       return k(l);
-    }, "cAWea": function(k, l) {
-      return k * l;
-    }, "Qeuei": function(k, l) {
-      return k / l;
-    }, "LPBnP": function(k, l) {
-      return k * l;
-    }, "GqrZI": function(k, l) {
-      return k(l);
-    } }, e = 800, f = 900, g = 5, h = "0.7", i = d["ztVHM"](c2, g) * d["tDFuQ"](e, d["VZSsQ"](parseFloat, h)), j = d["cAWea"](Math["floor"](d["Qeuei"](c2, g)), d["LPBnP"](f, d["GqrZI"](parseFloat, h)));
+    } }, e = 800, f = 900, g = 5, h = "0.7", i = d["mEXoo"](c2 % g, d["AwMIu"](e, d["omraL"](parseFloat, h))), j = d["AwMIu"](Math["floor"](c2 / g), f * parseFloat(h));
     return { "x": Math["floor"](i), "y": Math["floor"](j), "width": e, "height": f, "scale": h, "sizeStr": e + "," + f, "posStr": Math["floor"](i) + "," + Math["floor"](j) };
   }
   async ["processSingleTask"](c2, d, e, f, g, h) {
-    const i = { "YXoxp": function(m, n) {
-      return m > n;
-    }, "gClnY": "Task đã dừng", "YbINP": "xpath///span[text()='Chuyển ngay' or text()='Switch Now']", "XzqVP": "networkidle2", "cLtik": "https://www.facebook.com/reels/create", "jcZnB": 'input[type="file"]', "YyXll": "video", "Gbjsa": "xpath///span[text()='Tiếp' or text()='Next']", "lJOFK": "xpath///span[text()='Đăng' or text()='Post']", "MWPhN": 'xpath///div[contains(text(), "Bình luận dưới tên") or contains(text(), "Viết bình luận") or contains(text(), "Comment as") or contains(text(), "Comment")]', "vqLXC": function(m, n) {
-      return m > n;
-    }, "lOAVf": "0|2|5|6|4|1|3", "PIzjD": "Enter", "zdQGu": "done", "yqrgu": "running", "alPkK": "error" };
+    const i = { "axfmk": "networkidle2", "fsEMG": "Task đã dừng", "MmTGb": "https://www.facebook.com/reels/create", "grDhs": 'input[type="file"]', "ZZWYI": "xpath///span[text()='Tiếp' or text()='Next']", "jtggN": "xpath///span[text()='Đăng' or text()='Post']", "GNOtb": 'xpath///div[contains(text(), "Bình luận dưới tên") or contains(text(), "Viết bình luận") or contains(text(), "Comment as") or contains(text(), "Comment")]', "sVCoM": "5|0|1|4|2|6|3", "TuQLi": "Enter", "LAShk": "done", "ZQkff": "error" };
     this["sendLog"](c2["id"], "🚀 Đang mở trình duyệt GPM...");
     const j = new GpmService(d);
     if (!await j["checkConnection"](d)) ;
@@ -97156,26 +97156,26 @@ class TaskPostReelsRunner {
     if (!k["data"]["remote_debugging_port"]) ;
     const l = await puppeteer["connect"]({ "browserURL": "http://127.0.0.1:" + k["data"]["remote_debugging_port"], "defaultViewport": null });
     try {
-      const m = await l["pages"](), n = i["YXoxp"](m["length"], 0) ? m[0] : await l["newPage"]();
-      await n["goto"](c2["link_page"], { "waitUntil": "networkidle2" }), this["sendLog"](c2["id"], "🔍 Kiểm tra nút Chuyển ngay...");
+      const m = await l["pages"](), n = m["length"] > 0 ? m[0] : await l["newPage"]();
+      await n["goto"](c2["link_page"], { "waitUntil": i["axfmk"] }), this["sendLog"](c2["id"], "🔍 Kiểm tra nút Chuyển ngay...");
       if (this["stoppedTaskIds"]["has"](c2["id"])) {
         this["handleCancel"](c2["id"]);
-        throw new Error(i["gClnY"]);
+        throw new Error(i["fsEMG"]);
       }
       ;
-      const o = await n["$"](i["YbINP"]);
-      o && (await o["click"](), await n["waitForNavigation"]({ "waitUntil": i["XzqVP"] }), this["sendLog"](c2["id"], "🔄 Đã chuyển sang Page."));
+      const o = await n["$"]("xpath///span[text()='Chuyển ngay' or text()='Switch Now']");
+      o && (await o["click"](), await n["waitForNavigation"]({ "waitUntil": i["axfmk"] }), this["sendLog"](c2["id"], "🔄 Đã chuyển sang Page."));
       if (this["stoppedTaskIds"]["has"](c2["id"])) {
         this["handleCancel"](c2["id"]);
-        throw new Error("Task đã dừng");
+        throw new Error(i["fsEMG"]);
       }
       ;
-      await n["goto"](i["cLtik"], { "waitUntil": i["XzqVP"] }), this["sendLog"](c2["id"], "Vào đăng reels"), this["sendLog"](c2["id"], "Up video");
-      const p = await n["$$"](i["jcZnB"]);
+      await n["goto"](i["MmTGb"], { "waitUntil": i["axfmk"] }), this["sendLog"](c2["id"], "Vào đăng reels"), this["sendLog"](c2["id"], "Up video");
+      const p = await n["$$"](i["grDhs"]);
       let q;
       for (const y of p) {
         const z = await n["evaluate"]((A) => A["getAttribute"]("accept"), y);
-        if (z && z["includes"](i["YyXll"])) {
+        if (z && z["includes"]("video")) {
           q = y;
           break;
         }
@@ -97186,22 +97186,22 @@ class TaskPostReelsRunner {
         throw new Error("Task đã dừng");
       }
       ;
-      const r = i["Gbjsa"], s = await n["waitForSelector"](r, { "visible": !![], "timeout": 3e4 });
+      const r = i["ZZWYI"], s = await n["waitForSelector"](r, { "visible": !![], "timeout": 3e4 });
       s && (await s["click"](), this["sendLog"](c2["id"], "Đã tiếp"));
       if (this["stoppedTaskIds"]["has"](c2["id"])) {
         this["handleCancel"](c2["id"]);
-        throw new Error("Task đã dừng");
+        throw new Error(i["fsEMG"]);
       }
       ;
       await new Promise((A) => setTimeout(A, 5e3));
       if (this["stoppedTaskIds"]["has"](c2["id"])) {
         this["handleCancel"](c2["id"]);
-        throw new Error(i["gClnY"]);
+        throw new Error(i["fsEMG"]);
       }
       ;
       if (this["stoppedTaskIds"]["has"](c2["id"])) {
         this["handleCancel"](c2["id"]);
-        throw new Error(i["gClnY"]);
+        throw new Error("Task đã dừng");
       }
       ;
       this["sendLog"](c2["id"], "Nhập title");
@@ -97209,10 +97209,10 @@ class TaskPostReelsRunner {
       await n["waitForSelector"](t2, { "visible": !![], "timeout": 3e4 }), await n["click"](t2), await n["keyboard"]["type"](c2["description"], { "delay": 50 });
       if (this["stoppedTaskIds"]["has"](c2["id"])) {
         this["handleCancel"](c2["id"]);
-        throw new Error(i["gClnY"]);
+        throw new Error(i["fsEMG"]);
       }
       ;
-      const u2 = i["Gbjsa"], v = await n["waitForSelector"](u2, { "visible": !![], "timeout": 3e4 });
+      const u2 = i["ZZWYI"], v = await n["waitForSelector"](u2, { "visible": !![], "timeout": 3e4 });
       v && (await v["click"](), this["sendLog"](c2["id"], "Đã tiếp"));
       await new Promise((A) => setTimeout(A, 1e4));
       if (this["stoppedTaskIds"]["has"](c2["id"])) {
@@ -97220,79 +97220,79 @@ class TaskPostReelsRunner {
         throw new Error("Task đã dừng");
       }
       ;
-      const w = i["lJOFK"], x = await n["waitForSelector"](w, { "visible": !![], "timeout": 3e4 });
+      const w = i["jtggN"], x = await n["waitForSelector"](w, { "visible": !![], "timeout": 3e4 });
       x && (await x["click"](), this["sendLog"](c2["id"], "Đã tiếp"));
       this["sendLog"](c2["id"], "💬 Bắt đầu quy trình bình luận bài viết...");
       if (this["stoppedTaskIds"]["has"](c2["id"])) {
         this["handleCancel"](c2["id"]);
-        throw new Error(i["gClnY"]);
+        throw new Error(i["fsEMG"]);
       }
       ;
       this["sendLog"](c2["id"], "⏳ Đợi 20s cho Facebook xử lý video..."), await new Promise((A) => setTimeout(A, 2e4));
       if (this["stoppedTaskIds"]["has"](c2["id"])) {
         this["handleCancel"](c2["id"]);
-        throw new Error(i["gClnY"]);
+        throw new Error("Task đã dừng");
       }
       ;
-      await n["goto"](c2["link_page"], { "waitUntil": "networkidle2" }), this["sendLog"](c2["id"], "🔍 Đang tìm bài viết mới nhất...");
+      await n["goto"](c2["link_page"], { "waitUntil": i["axfmk"] }), this["sendLog"](c2["id"], "🔍 Đang tìm bài viết mới nhất...");
       if (this["stoppedTaskIds"]["has"](c2["id"])) {
         this["handleCancel"](c2["id"]);
-        throw new Error("Task đã dừng");
+        throw new Error(i["fsEMG"]);
       }
       ;
       try {
         await n["evaluate"](() => window["scrollBy"](0, 500)), await new Promise((C) => setTimeout(C, 2e3));
         if (this["stoppedTaskIds"]["has"](c2["id"])) {
           this["handleCancel"](c2["id"]);
-          throw new Error(i["gClnY"]);
+          throw new Error(i["fsEMG"]);
         }
         ;
-        const A = i["MWPhN"];
+        const A = i["GNOtb"];
         await n["waitForSelector"](A, { "visible": !![], "timeout": 15e3 });
         const B = await n["$$"](A);
-        if (i["vqLXC"](B["length"], 0)) {
-          const C = i["lOAVf"]["split"]("|");
+        if (B["length"] > 0) {
+          const C = i["sVCoM"]["split"]("|");
           let D = 0;
           while (!![]) {
             switch (C[D++]) {
               case "0":
-                await B[0]["click"]();
+                await n["keyboard"]["type"]("Mua ở đây nè " + c2["affiliate"], { "delay": 100 });
                 continue;
               case "1":
-                ;
+                await n["keyboard"]["press"](i["TuQLi"]);
                 continue;
               case "2":
-                await n["keyboard"]["type"]("Mua ở đây nè " + c2["affiliate"], { "delay": 100 });
+                if (this["stoppedTaskIds"]["has"](c2["id"])) {
+                  this["handleCancel"](c2["id"]);
+                  throw new Error(i["fsEMG"]);
+                }
                 continue;
               case "3":
                 await new Promise((E) => setTimeout(E, 1e4));
                 continue;
               case "4":
-                if (this["stoppedTaskIds"]["has"](c2["id"])) {
-                  this["handleCancel"](c2["id"]);
-                  throw new Error(i["gClnY"]);
-                }
+                this["sendLog"](c2["id"], '✅ Đã gửi bình luận: "' + c2["affiliate"] + '"', i["LAShk"]);
                 continue;
               case "5":
-                await n["keyboard"]["press"](i["PIzjD"]);
+                await B[0]["click"]();
                 continue;
               case "6":
-                this["sendLog"](c2["id"], '✅ Đã gửi bình luận: "' + c2["affiliate"] + '"', i["zdQGu"]);
+                ;
                 continue;
             }
             break;
           }
-        } else this["sendLog"](c2["id"], "⚠️ Không tìm thấy ô bình luận nào trên trang.", i["yqrgu"]);
+        } else this["sendLog"](c2["id"], "⚠️ Không tìm thấy ô bình luận nào trên trang.", "running");
       } catch (E) {
-        this["sendLog"](c2["id"], "❌ Lỗi khi comment: Bài viết chưa hiện hoặc Selector thay đổi.", i["alPkK"]);
+        this["sendLog"](c2["id"], "❌ Lỗi khi comment: Bài viết chưa hiện hoặc Selector thay đổi.", i["ZQkff"]);
       }
     } finally {
       await l["disconnect"](), await j["stopProfile"](c2["profile_id"]);
     }
   }
   ["handleCancel"](c2) {
-    const d = { "KPkld": "error" };
-    return this["sendLog"](c2, "🚫 Task đã bị hủy.", d["KPkld"]), this["stoppedTaskIds"]["delete"](c2), null;
+    const d = { "ucELm": "error" };
+    return this["sendLog"](c2, "🚫 Task đã bị hủy.", d["ucELm"]), this["stoppedTaskIds"]["delete"](c2), null;
   }
 }
 const pathFFmpeg = b$2["path"]["replace"]("app.asar", "app.asar.unpacked");
@@ -97308,29 +97308,31 @@ const RENDERER_DIST = c["join"](process["env"]["APP_ROOT"], "dist");
 process["env"]["VITE_PUBLIC"] = VITE_DEV_SERVER_URL ? c["join"](process["env"]["APP_ROOT"], "public") : RENDERER_DIST;
 let win = null, splashWindow = null;
 function checkUpdates() {
-  const h = { "xcuIv": "update_available", "AyyLo": "update-available" };
-  main$4.autoUpdater["checkForUpdatesAndNotify"](), main$4.autoUpdater["on"](h["AyyLo"], () => {
-    win == null ? void 0 : win["webContents"]["send"](h["xcuIv"]);
-  }), main$4.autoUpdater["on"]("update-downloaded", () => {
-    win == null ? void 0 : win["webContents"]["send"]("update_downloaded");
+  const h = { "UQzzp": "update_available", "ZwIgu": "update_downloaded", "eezgk": "update-downloaded" };
+  main$4.autoUpdater["checkForUpdatesAndNotify"](), main$4.autoUpdater["on"]("update-available", () => {
+    win == null ? void 0 : win["webContents"]["send"](h["UQzzp"]);
+  }), main$4.autoUpdater["on"](h["eezgk"], () => {
+    win == null ? void 0 : win["webContents"]["send"](h["ZwIgu"]);
   });
 }
 ipcMain["handle"]("adb:mirror-device", async (h, i) => {
-  const j = { "ejhWa": "Đang chạy lệnh:" }, k = c["join"](binPath, "scrcpy.exe"), l = '"' + k + '" -s ' + i + ' --always-on-top --window-title "MinMin Mirror - ' + i + '"';
-  return logger["info"](j["ejhWa"], l), exec(l, { "cwd": binPath }, (m) => {
+  const j = { "WVyoN": "scrcpy.exe" }, k = c["join"](binPath, j["WVyoN"]), l = '"' + k + '" -s ' + i + ' --always-on-top --window-title "MinMin Mirror - ' + i + '"';
+  return logger["info"]("Đang chạy lệnh:", l), exec(l, { "cwd": binPath }, (m) => {
     m && logger["error"]("Lỗi Scrcpy: " + m["message"]);
   }), { "success": !![] };
 }), ipcMain["handle"]("adb:viewphone", async (h, i, j, k, l, m) => {
-  const n = { "wpBPT": "scrcpy.exe", "ZNApE": "--no-control", "kYfxf": "--always-on-top", "ojmGW": "--window-title", "YJPaF": function(r, s) {
+  const n = { "bmzJx": "scrcpy.exe", "GaHst": "--no-control", "XNtCN": "--window-title", "DRlaE": "--window-x", "BvXUJ": function(r, s) {
     return r(s);
-  }, "RhSAX": "--window-y", "pjBab": "--window-width", "lUNwg": "--window-height", "IOKCb": "--max-fps", "EBwzP": "--video-bit-rate", "xQUDH": "--no-audio", "bMOQl": function(r, s, t2) {
+  }, "nsMqx": "--window-y", "gFAqt": "--window-width", "pVOWS": function(r, s) {
+    return r(s);
+  }, "Ajxos": "--window-height", "bmfgD": "--max-fps", "mNDvh": "--video-bit-rate", "CRyFR": "--no-audio", "nJJsB": function(r, s, t2) {
     return r(s, t2);
-  }, "xAtoD": "data", "AbnFf": "close" }, o = c["join"](binPath, n["wpBPT"]), p = ["-s", i, n["ZNApE"], n["kYfxf"], n["ojmGW"], "view-" + i, "--window-x", Math["floor"](n["YJPaF"](Number, j))["toString"](), n["RhSAX"], Math["floor"](n["YJPaF"](Number, k))["toString"](), n["pjBab"], Math["floor"](n["YJPaF"](Number, l))["toString"](), n["lUNwg"], Math["floor"](n["YJPaF"](Number, m))["toString"](), n["IOKCb"], "15", n["EBwzP"], "2M", n["xQUDH"]], q = n["bMOQl"](spawn, o, p);
-  q["stdout"]["on"](n["xAtoD"], (r) => {
+  }, "UBWgP": "data" }, o = c["join"](binPath, n["bmzJx"]), p = ["-s", i, n["GaHst"], "--always-on-top", n["XNtCN"], "view-" + i, n["DRlaE"], Math["floor"](n["BvXUJ"](Number, j))["toString"](), n["nsMqx"], Math["floor"](Number(k))["toString"](), n["gFAqt"], Math["floor"](n["pVOWS"](Number, l))["toString"](), n["Ajxos"], Math["floor"](n["BvXUJ"](Number, m))["toString"](), n["bmfgD"], "15", n["mNDvh"], "2M", n["CRyFR"]], q = n["nJJsB"](spawn, o, p);
+  q["stdout"]["on"](n["UBWgP"], (r) => {
     logger["info"]("[Scrcpy Log " + i + "]: " + r);
   }), q["stderr"]["on"]("data", (r) => {
     logger["error"]("[Scrcpy Error " + i + "]: " + r);
-  }), q["on"](n["AbnFf"], (r) => {
+  }), q["on"]("close", (r) => {
     logger["info"]("Scrcpy " + i + " exited with code " + r);
   });
 }), ipcMain["handle"]("get-version", () => {
@@ -97338,126 +97340,136 @@ ipcMain["handle"]("adb:mirror-device", async (h, i) => {
 }), ipcMain["handle"]("open-path", (h, i) => {
   i && shell["showItemInFolder"](i);
 }), ipcMain["handle"]("adb:get-devices", async () => {
-  const h = { "nYsBf": "ro.product.model", "lSlJC": "Unknown Device", "moAEp": "Access Denied", "zoahj": "ADB Error:" };
+  const h = { "hhpdu": "ro.product.model", "tctQf": "Access Denied", "hdNmV": "ADB Error:" };
   try {
     const i = await client["listDevices"](), j = await Promise["all"](i["map"](async (k) => {
       try {
         const l = await client["getProperties"](k["id"]);
-        return { "id": k["id"], "status": k["type"], "model": l[h["nYsBf"]] || h["lSlJC"] };
+        return { "id": k["id"], "status": k["type"], "model": l[h["hhpdu"]] || "Unknown Device" };
       } catch (m) {
-        return { "id": k["id"], "status": k["type"], "model": h["moAEp"] };
+        return { "id": k["id"], "status": k["type"], "model": h["tctQf"] };
       }
     }));
     return j;
   } catch (k) {
-    return logger["error"](h["zoahj"], k), [];
+    return logger["error"](h["hdNmV"], k), [];
   }
 }), ipcMain["handle"]("get-license-info", async () => {
   return await new LicenseService()["checkKey"]();
 }), ipcMain["handle"]("adb:screencap", async (h, i) => {
-  const j = { "WaLDq": "base64", "hhTsK": function(k, l) {
+  const j = { "HaEKa": "base64", "hnVQP": function(k, l) {
     return k(l);
-  }, "Rzvuw": "end", "bvbjX": "/sdcard/screen.png", "TfcoO": "Lỗi chụp ảnh:" };
+  }, "tjhCU": "data", "LMSmB": "end" };
   try {
     await client["shell"](i, "screencap -p /sdcard/screen.png");
-    const k = await client["pull"](i, j["bvbjX"]), l = [];
+    const k = await client["pull"](i, "/sdcard/screen.png"), l = [];
     return new Promise((m, n) => {
-      k["on"]("data", (o) => l["push"](o)), k["on"](j["Rzvuw"], () => {
-        const o = Buffer["concat"](l), p = o["toString"](j["WaLDq"]);
-        j["hhTsK"](m, "data:image/png;base64," + p);
+      k["on"](j["tjhCU"], (o) => l["push"](o)), k["on"](j["LMSmB"], () => {
+        const o = Buffer["concat"](l), p = o["toString"](j["HaEKa"]);
+        j["hnVQP"](m, "data:image/png;base64," + p);
       }), k["on"]("error", n);
     });
   } catch (m) {
-    return logger["error"](j["TfcoO"], m), null;
+    return logger["error"]("Lỗi chụp ảnh:", m), null;
   }
 }), ipcMain["handle"]("adb:dump-ui", async (h, i) => {
-  const j = { "qCqtQ": "end", "ncXRT": "error", "qZxZG": "/sdcard/window_dump.xml", "ioMfK": "temp", "IaIcL": "minmin_view.xml", "KEfds": "utf-8", "BnErh": "Lỗi Dump UI:" };
+  const j = { "gBUlM": "end", "jmXBc": "/sdcard/window_dump.xml", "KcQgV": "minmin_view.xml", "QmWyu": "utf-8", "hogSA": "Lỗi Dump UI:" };
   try {
-    const k = j["qZxZG"], l = c["join"](app["getPath"](j["ioMfK"]), j["IaIcL"]), m = await client["shell"](i, "uiautomator dump " + k);
+    const k = j["jmXBc"], l = c["join"](app["getPath"]("temp"), j["KcQgV"]), m = await client["shell"](i, "uiautomator dump " + k);
     await Adb["util"]["readAll"](m), await new Promise((p) => setTimeout(p, 500));
     const n = await client["pull"](i, k);
     await new Promise((p, q) => {
       const r = b["createWriteStream"](l);
-      n["on"](j["qCqtQ"], p), n["on"](j["ncXRT"], q), n["pipe"](r);
+      n["on"](j["gBUlM"], p), n["on"]("error", q), n["pipe"](r);
     });
-    const o = await a$2["readFile"](l, j["KEfds"]);
+    const o = await a$2["readFile"](l, j["QmWyu"]);
     return o;
   } catch (p) {
-    return logger["error"](j["BnErh"], p), null;
+    return logger["error"](j["hogSA"], p), null;
   }
 }), ipcMain["handle"]("select-file-apk", async () => {
-  const h = { "YpDNT": "openFile", "deJhL": "APK Files", "xjFHZ": "apk" }, { canceled: i, filePaths: j } = await dialog["showOpenDialog"]({ "properties": [h["YpDNT"]], "filters": [{ "name": h["deJhL"], "extensions": [h["xjFHZ"]] }] });
+  const h = { "JhuaS": "openFile", "yIDBL": "APK Files" }, { canceled: i, filePaths: j } = await dialog["showOpenDialog"]({ "properties": [h["JhuaS"]], "filters": [{ "name": h["yIDBL"], "extensions": ["apk"] }] });
   if (i) return null;
   return j[0];
 }), ipcMain["handle"]("select-file", async () => {
-  const h = { "SrEZM": "openFile" }, { canceled: i, filePaths: j } = await dialog["showOpenDialog"]({ "properties": [h["SrEZM"]] });
-  if (i) return null;
-  return j[0];
-}), ipcMain["handle"]("select-folder", async () => {
-  const { canceled: h, filePaths: i } = await dialog["showOpenDialog"]({ "properties": ["openDirectory"] });
+  const { canceled: h, filePaths: i } = await dialog["showOpenDialog"]({ "properties": ["openFile"] });
   if (h) return null;
   return i[0];
+}), ipcMain["handle"]("select-folder", async () => {
+  const h = { "YJEcK": "openDirectory" }, { canceled: i, filePaths: j } = await dialog["showOpenDialog"]({ "properties": [h["YJEcK"]] });
+  if (i) return null;
+  return j[0];
 }), ipcMain["handle"]("adb:list-app", async (h, i) => {
+  const j = { "frFSV": "pm list packages -3", "Lwkhk": "Lỗi khi lấy danh sách App:" };
   try {
-    const j = await client["shell"](i, "pm list packages -3"), k = await Adb["util"]["readAll"](j), l = k["toString"]()["split"]("\n")["map"]((m) => m["replace"]("package:", "")["trim"]())["filter"]((m) => m["length"] > 0);
-    return l;
-  } catch (m) {
-    return logger["error"]("Lỗi khi lấy danh sách App:", m), [];
+    const k = await client["shell"](i, j["frFSV"]), l = await Adb["util"]["readAll"](k), m = l["toString"]()["split"]("\n")["map"]((n) => n["replace"]("package:", "")["trim"]())["filter"]((n) => n["length"] > 0);
+    return m;
+  } catch (n) {
+    return logger["error"](j["Lwkhk"], n), [];
   }
 }), ipcMain["handle"]("get-deviceId", async () => {
-  const h = { "HUmXm": function(i) {
-    return i();
-  } };
-  return h["HUmXm"](getUniqueDeviceId);
+  return getUniqueDeviceId();
 }), ipcMain["on"]("open-external", (h, i) => {
   (i["startsWith"]("https://") || i["startsWith"]("http://")) && shell["openExternal"](i);
 });
 async function ensureADBKeyboard(h) {
-  const i = { "Inzfq": "com.android.adbkeyboard", "anfcC": "keyboard.apk", "SRxnw": function(j, k) {
+  const i = { "Mcaje": function(j, k) {
     return j(k);
-  }, "vBYbC": function(j, k) {
+  }, "dikji": "com.android.adbkeyboard", "UPeAz": "keyboard.apk", "JyJHA": function(j, k) {
     return j(k);
-  }, "lMYsd": "ADB Keyboard đã sẵn sàng!" };
+  }, "fMvtA": function(j, k) {
+    return j(k);
+  }, "ixqoK": "ADB Keyboard đã sẵn sàng!" };
   try {
-    const j = execSync("adb -s " + h + " shell pm list packages com.android.adbkeyboard")["toString"]();
-    if (!j["includes"](i["Inzfq"])) {
+    const j = i["Mcaje"](execSync, "adb -s " + h + " shell pm list packages com.android.adbkeyboard")["toString"]();
+    if (!j["includes"](i["dikji"])) {
       logger["info"]("[" + h + "] Đang cài đặt ADB Keyboard...");
-      const k = c["join"](keyboardPtr, i["anfcC"]);
-      execSync("adb -s " + h + ' install "' + k + '"'), logger["info"]("[" + h + "] Cài đặt thành công!");
+      const k = c["join"](keyboardPtr, i["UPeAz"]);
+      i["JyJHA"](execSync, "adb -s " + h + ' install "' + k + '"'), logger["info"]("[" + h + "] Cài đặt thành công!");
     }
-    return i["SRxnw"](execSync, "adb -s " + h + " shell ime enable com.android.adbkeyboard/.AdbIME"), i["vBYbC"](execSync, "adb -s " + h + " shell ime set com.android.adbkeyboard/.AdbIME "), { "success": !![], "message": i["lMYsd"] };
+    return i["fMvtA"](execSync, "adb -s " + h + " shell ime enable com.android.adbkeyboard/.AdbIME"), i["Mcaje"](execSync, "adb -s " + h + " shell ime set com.android.adbkeyboard/.AdbIME "), { "success": !![], "message": i["ixqoK"] };
   } catch (l) {
     return logger["error"]("[" + h + "] Lỗi thiết lập bàn phím:", l["message"]), { "success": ![], "message": l["message"] };
   }
 }
 ipcMain["handle"]("adb:execute", async (h, { deviceId: i, action: j, params: k }) => {
-  const l = { "eMWux": "data", "RFbEx": "end", "CmfRt": "[ADB] ✅ Đẩy file thành công!", "bukun": function(m, n) {
+  const l = { "xiRIM": "data", "MGlgu": "end", "nRxFC": "error", "dJQSj": "[ADB] ❌ Lỗi khi đẩy file:", "LbwfO": function(m, n) {
     return m(n);
-  }, "HYFPg": "[ADB] ❌ Lỗi khi đẩy file:", "rtbAi": "error", "KWjVA": "screen_on", "vHggi": "input swipe 500 1500 500 500 200", "ftVuy": "tap_xy", "gEJrr": "tap_xpath", "SSnfm": "/sdcard/view_click.xml", "YunJK": "utf-8", "fZbHD": function(m, n) {
+  }, "gMrVD": "screen_on", "dBTdM": "input swipe 500 1500 500 500 200", "cwfbU": "tap_xy", "ulAAt": "tap_xpath", "eRKLw": "/sdcard/view_click.xml", "BUMpL": "utf-8", "ixRrc": function(m, n) {
     return m > n;
-  }, "ZNVif": "bounds", "nulsZ": function(m, n) {
-    return m + n;
-  }, "MlGmo": function(m, n) {
-    return m(n);
-  }, "tyOKS": function(m, n) {
+  }, "cGlWc": "bounds", "yyEEi": function(m, n) {
     return m / n;
-  }, "OZxQW": function(m, n) {
+  }, "llPrY": function(m, n) {
     return m + n;
-  }, "fmiJc": "Không tìm thấy phần tử", "IaFku": "[ADB] ❌ Lỗi xử lý XPath cực nặng:", "wxyfA": "Lỗi kết nối ADB", "tRIRg": "paste", "clWPy": "copy", "WBmnv": "type_text", "utsrx": "Lỗi gõ tiếng Việt:", "GOsNK": "NFD", "ZBDwz": "open_app", "hfYnO": "close_app", "oefEV": "key_event", "VIOPJ": "push_file", "Diqiy": "Thiếu đường dẫn file nguồn hoặc đích!", "ozfWK": "delete_file", "AhaHD": "wait", "ByMNw": "Chưa chọn file APK!", "odnsR": "Hành động chưa được hỗ trợ" };
+  }, "UXsbf": function(m, n) {
+    return m + n;
+  }, "awcBe": function(m, n) {
+    return m(n);
+  }, "swocN": "Không tìm thấy phần tử", "nMMAE": "[ADB] ❌ Lỗi xử lý XPath cực nặng:", "lXZyy": "Lỗi kết nối ADB", "mchqd": "paste", "XZoGb": "copy", "oBVvs": "type_text", "ajkZE": function(m, n) {
+    return m(n);
+  }, "SUPkg": "Lỗi gõ tiếng Việt:", "cSoKE": "NFD", "ebNZo": "open_app", "hdhZI": "close_app", "PeQQc": "Thiếu đường dẫn file nguồn hoặc đích!", "LtYJC": "delete_file", "ZGpfE": "wait", "qJcgI": function(m, n) {
+    return m(n);
+  }, "Esuxy": function(m, n) {
+    return m * n;
+  }, "qDvhP": function(m, n) {
+    return m + n;
+  }, "mKNwb": function(m, n) {
+    return m - n;
+  }, "bLXLF": "install_apk", "BQbFC": "Chưa chọn file APK!", "pxFop": "Hành động chưa được hỗ trợ" };
   try {
     logger["info"]("[ADB] Đang thực hiện " + j + " trên thiết bị " + i);
     const m = (n) => new Promise((o) => setTimeout(o, n));
     switch (j) {
-      case l["KWjVA"]:
-        await client["shell"](i, "input keyevent KEYCODE_WAKEUP"), await new Promise((n) => setTimeout(n, 500)), await client["shell"](i, l["vHggi"]);
+      case l["gMrVD"]:
+        await client["shell"](i, "input keyevent KEYCODE_WAKEUP"), await new Promise((n) => setTimeout(n, 500)), await client["shell"](i, l["dBTdM"]);
         break;
-      case l["ftVuy"]: {
+      case l["cwfbU"]: {
         const n = k["x"], o = k["y"];
         logger["info"]("[ADB] 👆 Chạm vào tọa độ: " + n + ", " + o), await client["shell"](i, "input tap " + n + " " + o);
         break;
       }
-      case l["gEJrr"]: {
-        const p = k["xpath"], q = l["SSnfm"];
+      case l["ulAAt"]: {
+        const p = k["xpath"], q = l["eRKLw"];
         try {
           await client["shell"](i, "rm " + q)["then"]((A) => Adb["util"]["readAll"](A))["catch"](() => {
           }), logger["info"]("[ADB] 🔍 Đang quét màn hình tìm XPath...");
@@ -97465,85 +97477,88 @@ ipcMain["handle"]("adb:execute", async (h, { deviceId: i, action: j, params: k }
           await Adb["util"]["readAll"](r), await new Promise((A) => setTimeout(A, 500));
           const s = await client["pull"](i, q), t2 = await new Promise((A, B) => {
             const C = [];
-            s["on"](l["eMWux"], (D) => C["push"](D)), s["on"](l["RFbEx"], () => A(Buffer["concat"](C))), s["on"]("error", (D) => B(D));
-          }), u2 = t2["toString"](l["YunJK"]), v = new DOMParser_1(), w = v["parseFromString"](u2, "text/xml"), z = a$1["select"](p, w);
-          if (z && l["fZbHD"](z["length"], 0)) {
-            const A = z[0]["getAttribute"](l["ZNVif"]), B = A["match"](/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/);
+            s["on"](l["xiRIM"], (D) => C["push"](D)), s["on"](l["MGlgu"], () => A(Buffer["concat"](C))), s["on"](l["nRxFC"], (D) => B(D));
+          }), u2 = t2["toString"](l["BUMpL"]), v = new DOMParser_1(), w = v["parseFromString"](u2, "text/xml"), z = a$1["select"](p, w);
+          if (z && l["ixRrc"](z["length"], 0)) {
+            const A = z[0]["getAttribute"](l["cGlWc"]), B = A["match"](/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/);
             if (B) {
-              const C = Math["floor"](l["nulsZ"](l["bukun"](parseInt, B[1]), l["MlGmo"](parseInt, B[3])) / 2), D = Math["floor"](l["tyOKS"](l["OZxQW"](parseInt(B[2]), parseInt(B[4])), 2));
+              const C = Math["floor"](l["yyEEi"](l["llPrY"](parseInt(B[1]), l["LbwfO"](parseInt, B[3])), 2)), D = Math["floor"](l["UXsbf"](l["awcBe"](parseInt, B[2]), l["LbwfO"](parseInt, B[4])) / 2);
               await client["shell"](i, "input tap " + C + " " + D);
               const E = "Click thành công: " + C + ", " + D;
               return logger["info"]("[ADB] ✅ " + E), { "success": !![], "log": E };
             }
           } else {
             const F = "Không tìm thấy: " + p["substring"](0, 20) + "...";
-            return logger["warn"]("[ADB] ⚠️ " + F), { "success": ![], "error": l["fmiJc"], "log": F };
+            return logger["warn"]("[ADB] ⚠️ " + F), { "success": ![], "error": l["swocN"], "log": F };
           }
         } catch (G2) {
-          return logger["error"](l["IaFku"], G2["message"]), { "success": ![], "error": "Mất kết nối (ECONNRESET): " + G2["message"], "log": l["wxyfA"] };
+          return logger["error"](l["nMMAE"], G2["message"]), { "success": ![], "error": "Mất kết nối (ECONNRESET): " + G2["message"], "log": l["lXZyy"] };
         }
         break;
       }
-      case l["tRIRg"]: {
+      case l["mchqd"]: {
         await client["shell"](i, "input keyevent 279");
         break;
       }
-      case l["clWPy"]: {
+      case l["XZoGb"]: {
         await client["shell"](i, "input keyevent 286"), await client["shell"](i, "input keyevent 278");
         break;
       }
-      case l["WBmnv"]:
+      case l["oBVvs"]:
         try {
-          await ensureADBKeyboard(i), await client["shell"](i, "am broadcast -a ADB_INPUT_TEXT --es msg '" + k["content"] + "'");
+          await l["ajkZE"](ensureADBKeyboard, i), await client["shell"](i, "am broadcast -a ADB_INPUT_TEXT --es msg '" + k["content"] + "'");
         } catch (H) {
-          logger["error"](l["utsrx"], H);
-          const I = k["content"]["normalize"](l["GOsNK"])["replace"](/[\u0300-\u036f]/g, "");
+          logger["error"](l["SUPkg"], H);
+          const I = k["content"]["normalize"](l["cSoKE"])["replace"](/[\u0300-\u036f]/g, "");
           await client["shell"](i, 'input text "' + I + '"');
         }
         break;
-      case l["ZBDwz"]:
+      case l["ebNZo"]:
         await client["shell"](i, "monkey -p " + k["package"] + " -c android.intent.category.LAUNCHER 1");
         break;
-      case l["hfYnO"]:
+      case l["hdhZI"]:
         await client["shell"](i, "am force-stop " + k["package_close"]);
         break;
-      case l["oefEV"]:
+      case "key_event":
         await client["shell"](i, "input keyevent " + k["key_event"]);
         break;
-      case l["VIOPJ"]: {
+      case "push_file": {
         const { path_file: J, path_phone: K } = k;
-        if (!J || !K) throw new Error(l["Diqiy"]);
+        if (!J || !K) throw new Error(l["PeQQc"]);
         logger["info"]("[ADB] 📤 Đang đẩy file: " + J + " -> " + K);
         const L = await client["push"](i, J, K);
         await new Promise((M, N) => {
-          L["on"]("progress", (O) => {
-            logger["info"]("[ADB] Đang đẩy: " + O["bytesTransferred"] + " bytes");
-          }), L["on"](l["RFbEx"], () => {
-            logger["info"](l["CmfRt"]), l["bukun"](M, !![]);
-          }), L["on"](l["rtbAi"], (O) => {
-            logger["error"](l["HYFPg"], O), N(O);
+          const O = { "XABiw": function(P, Q) {
+            return l["LbwfO"](P, Q);
+          } };
+          L["on"]("progress", (P) => {
+            logger["info"]("[ADB] Đang đẩy: " + P["bytesTransferred"] + " bytes");
+          }), L["on"](l["MGlgu"], () => {
+            logger["info"]("[ADB] ✅ Đẩy file thành công!"), O["XABiw"](M, !![]);
+          }), L["on"]("error", (P) => {
+            logger["error"](l["dJQSj"], P), N(P);
           });
         });
         K["match"](/\.(jpg|jpeg|png|mp4)$/i) && await client["shell"](i, "am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://" + K);
         break;
       }
-      case l["ozfWK"]: {
+      case l["LtYJC"]: {
         await client["shell"](i, "rm " + k["file_delete"]);
         break;
       }
-      case l["AhaHD"]: {
-        const M = l["MlGmo"](parseInt, k["ms_min"]) || 1e3, N = parseInt(k["ms_max"]) || 2e3, O = Math["floor"](Math["random"]() * l["OZxQW"](N - M, 1)) + M;
+      case l["ZGpfE"]: {
+        const M = l["qJcgI"](parseInt, k["ms_min"]) || 1e3, N = parseInt(k["ms_max"]) || 2e3, O = l["llPrY"](Math["floor"](l["Esuxy"](Math["random"](), l["qDvhP"](l["mKNwb"](N, M), 1))), M);
         logger["info"]("[ADB] ⏳ Đang đợi ngẫu nhiên: " + O + "ms (Khoảng: " + M + "-" + N + "ms)"), await m(O), logger["info"]("[ADB] ✅ Đã đợi xong " + O + "ms, chuyển sang bước tiếp theo.");
         break;
       }
-      case "install_apk": {
+      case l["bLXLF"]: {
         const P = k["path_apk_install"];
-        if (!P) throw new Error(l["ByMNw"]);
+        if (!P) throw new Error(l["BQbFC"]);
         logger["info"]("[ADB] 📦 Đang đẩy file và cài đặt APK: " + P), await client["install"](i, P), logger["info"]("[ADB] ✅ Cài đặt hoàn tất: " + P);
         break;
       }
       default:
-        return { "success": ![], "error": l["odnsR"] };
+        return { "success": ![], "error": l["pxFop"] };
     }
     return { "success": !![] };
   } catch (Q) {
@@ -97551,22 +97566,22 @@ ipcMain["handle"]("adb:execute", async (h, { deviceId: i, action: j, params: k }
   }
 });
 function setupGpmHandlers() {
-  const h = { "dDLVV": "gpm:get-profiles", "TMMMa": "gpm:start-profile" };
-  ipcMain["handle"]("gpm:check-connection", async (i, j) => {
+  const h = { "XrudE": "gpm:check-connection", "sutEL": "gpm:get-profiles", "lIbvH": "gpm:start-profile" };
+  ipcMain["handle"](h["XrudE"], async (i, j) => {
     return logger["info"](j), await new gpmService(j)["checkConnection"](j);
-  }), ipcMain["handle"](h["dDLVV"], async () => {
-  }), ipcMain["handle"](h["TMMMa"], async (i, j) => {
+  }), ipcMain["handle"](h["sutEL"], async () => {
+  }), ipcMain["handle"](h["lIbvH"], async (i, j) => {
     logger["info"]("🚀 MinMin đang ra lệnh mở Profile: " + j);
   });
 }
 function setupTaskAffHandle() {
-  const h = { "zOwXo": "video:run-tasks" };
-  ipcMain["handle"](h["zOwXo"], async (i, j) => {
+  const h = { "TxGYW": "video:run-tasks", "byRCJ": "reels:run-tasks" };
+  ipcMain["handle"](h["TxGYW"], async (i, j) => {
     if ((await new LicenseService()["checkKey"]())["status"]) {
       const k = new TaskRunner(i, j);
       return await k["execute"]();
     }
-  }), ipcMain["handle"]("reels:run-tasks", async (i, j) => {
+  }), ipcMain["handle"](h["byRCJ"], async (i, j) => {
     if ((await new LicenseService()["checkKey"]())["status"]) {
       const k = new TaskPostReelsRunner(i, j);
       return await k["execute"]();
@@ -97574,58 +97589,65 @@ function setupTaskAffHandle() {
   });
 }
 async function createWindow() {
-  const h = { "Ibvmf": "status", "VzPCK": "Đang kiểm tra cập nhật...", "eIHLg": function(i, j, k) {
+  const h = { "ThKYR": function(i) {
+    return i();
+  }, "hkfdj": "status", "GimWE": "Đang kiểm tra cập nhật...", "rXMLh": "Phát hiện bản mới, đang tải về...", "HheCQ": "Dữ liệu đã sẵn sàng!", "hoezx": function(i, j, k) {
     return i(j, k);
-  }, "hgpLc": "Cập nhật xong! Đang khởi động lại...", "iQEvY": function(i, j) {
+  }, "axbNq": "Cập nhật xong! Đang khởi động lại...", "ejWJB": "Bỏ qua cập nhật, đang vào App...", "Amyho": function(i, j, k) {
+    return i(j, k);
+  }, "YGdHa": function(i, j) {
     return i + j;
-  }, "Dvuwj": "Tốc độ: ", "FBzAc": function(i, j) {
+  }, "QubpR": "Tốc độ: ", "MPVYB": function(i, j) {
     return i / j;
-  }, "IQDfu": "KB/s", "gLhWX": function(i, j) {
+  }, "QOOXM": "KB/s", "nNJCU": function(i, j) {
     return i + j;
-  }, "pcHsy": "download-progress", "xbADA": "preload.mjs", "OZnGA": "../public/splash.html", "GPVix": "🛠️ Đang ở chế độ Dev - Bỏ qua check update, vào App sau 2s", "wfjoJ": "Chế độ Dev: Đang kết nối Server...", "zRsVg": "devtools-opened", "ieauB": "update-available", "HZgfk": "update-downloaded" };
-  splashWindow = new BrowserWindow({ "width": 400, "height": 500, "transparent": !![], "frame": ![], "alwaysOnTop": !![], "webPreferences": { "nodeIntegration": !![], "contextIsolation": ![], "preload": c["join"](__dirname$1, h["xbADA"]) } }), splashWindow["loadFile"](c["join"](__dirname$1, h["OZnGA"])), win = new BrowserWindow({ "icon": c["join"](process["env"]["VITE_PUBLIC"], "logo.ico"), "webPreferences": { "webSecurity": ![], "preload": c["join"](__dirname$1, h["xbADA"]) }, "show": ![] }), win["setMenu"](null), win["setMenuBarVisibility"](![]), VITE_DEV_SERVER_URL ? (win["loadURL"](VITE_DEV_SERVER_URL), logger["info"](h["GPVix"]), splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["Ibvmf"], h["wfjoJ"]), h["eIHLg"](setTimeout, () => {
-    launchMainApp();
-  }, 2e3)) : (app["isPackaged"] && win["webContents"]["on"](h["zRsVg"], () => {
+  }, "PCeFv": function(i, j) {
+    return i + j;
+  }, "JmQjw": "download-progress", "JAygR": "../public/splash.html", "fKRKy": "logo.ico", "nttVT": "preload.mjs", "pMeNQ": "🛠️ Đang ở chế độ Dev - Bỏ qua check update, vào App sau 2s", "EZeEL": "Chế độ Dev: Đang kết nối Server...", "OSLeU": "devtools-opened", "xQQHN": "index.html", "amuFM": "checking-for-update", "acBKV": "update-available", "XwSeF": "update-downloaded", "kddlQ": "error" };
+  splashWindow = new BrowserWindow({ "width": 400, "height": 500, "transparent": !![], "frame": ![], "alwaysOnTop": !![], "webPreferences": { "nodeIntegration": !![], "contextIsolation": ![], "preload": c["join"](__dirname$1, "preload.mjs") } }), splashWindow["loadFile"](c["join"](__dirname$1, h["JAygR"])), win = new BrowserWindow({ "icon": c["join"](process["env"]["VITE_PUBLIC"], h["fKRKy"]), "webPreferences": { "webSecurity": ![], "preload": c["join"](__dirname$1, h["nttVT"]) }, "show": ![] }), win["setMenu"](null), win["setMenuBarVisibility"](![]), VITE_DEV_SERVER_URL ? (win["loadURL"](VITE_DEV_SERVER_URL), logger["info"](h["pMeNQ"]), splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["hkfdj"], h["EZeEL"]), setTimeout(() => {
+    h["ThKYR"](launchMainApp);
+  }, 2e3)) : (app["isPackaged"] && win["webContents"]["on"](h["OSLeU"], () => {
     win == null ? void 0 : win["webContents"]["closeDevTools"]();
-  }), win["loadFile"](c["join"](RENDERER_DIST, "index.html")), main$4.autoUpdater["checkForUpdatesAndNotify"](), main$4.autoUpdater["on"]("checking-for-update", () => {
-    splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["Ibvmf"], h["VzPCK"]);
-  }), main$4.autoUpdater["on"](h["ieauB"], () => {
-    splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["Ibvmf"], "Phát hiện bản mới, đang tải về...");
+  }), win["loadFile"](c["join"](RENDERER_DIST, h["xQQHN"])), main$4.autoUpdater["checkForUpdatesAndNotify"](), main$4.autoUpdater["on"](h["amuFM"], () => {
+    splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["hkfdj"], h["GimWE"]);
+  }), main$4.autoUpdater["on"](h["acBKV"], () => {
+    splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["hkfdj"], h["rXMLh"]);
   }), main$4.autoUpdater["on"]("update-not-available", () => {
-    splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["Ibvmf"], "Dữ liệu đã sẵn sàng!"), h["eIHLg"](setTimeout, launchMainApp, 1e3);
-  }), main$4.autoUpdater["on"](h["HZgfk"], () => {
-    splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["Ibvmf"], h["hgpLc"]), main$4.autoUpdater["quitAndInstall"]();
-  }), main$4.autoUpdater["on"]("error", () => {
-    splashWindow == null ? void 0 : splashWindow["webContents"]["send"]("status", "Bỏ qua cập nhật, đang vào App..."), h["eIHLg"](setTimeout, launchMainApp, 1e3);
-  }), main$4.autoUpdater["on"](h["pcHsy"], (i) => {
-    let j = h["iQEvY"](h["iQEvY"](h["Dvuwj"], Math["floor"](h["FBzAc"](i["bytesPerSecond"], 1024))), h["IQDfu"]);
-    j = h["gLhWX"](h["gLhWX"](j + " - Đã tải ", Math["floor"](i["percent"])), "%"), splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["Ibvmf"], j), splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["pcHsy"], i["percent"]);
+    splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["hkfdj"], h["HheCQ"]), h["hoezx"](setTimeout, launchMainApp, 1e3);
+  }), main$4.autoUpdater["on"](h["XwSeF"], () => {
+    splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["hkfdj"], h["axbNq"]), main$4.autoUpdater["quitAndInstall"]();
+  }), main$4.autoUpdater["on"](h["kddlQ"], () => {
+    splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["hkfdj"], h["ejWJB"]), h["Amyho"](setTimeout, launchMainApp, 1e3);
+  }), main$4.autoUpdater["on"](h["JmQjw"], (i) => {
+    let j = h["YGdHa"](h["QubpR"] + Math["floor"](h["MPVYB"](i["bytesPerSecond"], 1024)), h["QOOXM"]);
+    j = h["nNJCU"](h["PCeFv"](j + " - Đã tải ", Math["floor"](i["percent"])), "%"), splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["hkfdj"], j), splashWindow == null ? void 0 : splashWindow["webContents"]["send"](h["JmQjw"], i["percent"]);
   })), await new LicenseService()["checkKey"]();
 }
 function launchMainApp() {
-  win && splashWindow && (win["maximize"](), win["show"](), win["webContents"]["openDevTools"](), splashWindow && (splashWindow["destroy"](), splashWindow = null));
+  const h = { "UIVMH": function(i, j) {
+    return i && j;
+  } };
+  h["UIVMH"](win, splashWindow) && (win["maximize"](), win["show"](), win["webContents"]["openDevTools"](), splashWindow && (splashWindow["destroy"](), splashWindow = null));
 }
 app["on"]("will-quit", () => {
   globalShortcut["unregisterAll"]();
 }), app["on"]("window-all-closed", () => {
-  const h = { "OzWOI": function(i, j) {
+  const h = { "OKZFI": function(i, j) {
     return i !== j;
-  }, "EfwIZ": "darwin" };
-  h["OzWOI"](process["platform"], h["EfwIZ"]) && (app["quit"](), win = null);
+  }, "XaYCx": "darwin" };
+  h["OKZFI"](process["platform"], h["XaYCx"]) && (app["quit"](), win = null);
 }), app["on"]("activate", () => {
-  const h = { "zogop": function(i, j) {
+  const h = { "IIQyd": function(i, j) {
     return i === j;
-  }, "nNawa": function(i) {
+  }, "cehJf": function(i) {
     return i();
   } };
-  h["zogop"](BrowserWindow["getAllWindows"]()["length"], 0) && (h["nNawa"](createWindow), checkUpdates());
+  h["IIQyd"](BrowserWindow["getAllWindows"]()["length"], 0) && (h["cehJf"](createWindow), h["cehJf"](checkUpdates));
 }), app["whenReady"]()["then"](() => {
-  const h = { "EzSBu": function(i) {
+  const h = { "JVJXy": function(i) {
     return i();
-  }, "ghPrP": "Control+Shift+I", "tDVVu": "F12", "ghaDF": "Control+R", "ZPKvg": function(i) {
-    return i();
-  } };
-  setupGpmHandlers(), h["EzSBu"](setupTaskAffHandle), app["isPackaged"] && (globalShortcut["register"](h["ghPrP"], () => ![]), globalShortcut["register"](h["tDVVu"], () => ![]), globalShortcut["register"](h["ghaDF"], () => ![])), h["ZPKvg"](createWindow);
+  }, "AJmCQ": "Control+Shift+I", "LXMva": "F12", "VdseQ": "Control+R" };
+  h["JVJXy"](setupGpmHandlers), setupTaskAffHandle(), app["isPackaged"] && (globalShortcut["register"](h["AJmCQ"], () => ![]), globalShortcut["register"](h["LXMva"], () => ![]), globalShortcut["register"](h["VdseQ"], () => ![])), createWindow();
 });
 export {
   stringToBase64 as $,
@@ -97726,8 +97748,8 @@ export {
   getVersionComparator as j,
   resolveBuildId as k,
   launch$1 as l,
-  getAugmentedNamespace as m,
-  commonjsGlobal as n,
+  commonjsGlobal as m,
+  getAugmentedNamespace as n,
   CDPSession as o,
   TargetCloseError as p,
   CallbackRegistry as q,

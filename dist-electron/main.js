@@ -2,7 +2,7 @@ import "electron";
 import "node:module";
 import "node:url";
 import "node:child_process";
-import { aR, aS, aT, aU, aV } from "./main-DMr9lMBX.js";
+import { aR, aS, aT, aU, aV } from "./main-BS_prEXG.js";
 import "fs";
 import "fs/promises";
 import "path";
