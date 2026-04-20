@@ -1,5 +1,5 @@
-import { B as Browser, d as detectBrowserPlatform, r as resolveDefaultUserDataDir } from "./main-Cdsppxot.js";
-import { a, b, C, c, e, I, P, T, W, f, g, h, i, j, l, k, u } from "./main-Cdsppxot.js";
+import { B as Browser, d as detectBrowserPlatform, r as resolveDefaultUserDataDir } from "./main-CXtS2dHA.js";
+import { a, b, C, c, e, I, P, T, W, f, g, h, i, j, l, k, u } from "./main-CXtS2dHA.js";
 import "node:process";
 import "node:readline";
 export {

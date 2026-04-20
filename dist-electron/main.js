@@ -2,7 +2,7 @@ import "electron";
 import "node:module";
 import "node:url";
 import "node:child_process";
-import { aR, aS, aT, aU, aV } from "./main-Cdsppxot.js";
+import { aR, aS, aT, aU, aV } from "./main-CXtS2dHA.js";
 import "fs";
 import "fs/promises";
 import "path";

@@ -12,7 +12,7 @@ import zlib from "node:zlib";
 import Stream, { PassThrough, pipeline as pipeline$1 } from "node:stream";
 import { Buffer as Buffer$1 } from "node:buffer";
 import { types, deprecate, promisify } from "node:util";
-import { m as commonjsGlobal } from "./main-Cdsppxot.js";
+import { m as commonjsGlobal } from "./main-CXtS2dHA.js";
 import { format } from "node:url";
 import { isIP } from "node:net";
 import { promises } from "node:fs";
@@ -4809,7 +4809,7 @@ class Body {
       }
       return formData;
     }
-    const { toFormData } = await import("./multipart-parser-Blf24tuV.js");
+    const { toFormData } = await import("./multipart-parser-Ds5dy7lR.js");
     return toFormData(this.body, ct);
   }
   /**
