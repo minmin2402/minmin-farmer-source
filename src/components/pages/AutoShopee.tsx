@@ -4,10 +4,8 @@ import {
   Trash2,
   Download,
   Search,
-
   FolderOpen,
   Copy,
-
   Square,
   Pause,
   Table,
@@ -149,38 +147,45 @@ export const AutoShopee = () => {
 
     let currentNodeId = startNode.id;
     const visited = new Set();
-    
-    // 🚀 KHỞI TẠO BIẾN
+
+    // 🚀 KHỞI TẠO BIẾN: Đưa 3 biến truyền tay vào bộ nhớ ngay từ đầu
     const executionVars: Record<string, string> = {
       videoPath: manualVars.videoPath || "",
       affiliate: manualVars.affiliate || "",
       title: manualVars.title || "",
     };
 
-    // 2. Vòng lặp duyệt node
+    // 2. Vòng lặp duyệt node "thần thánh" của MinMin
     while (currentNodeId) {
       if (isStoppingTaskRef.current.includes(taskId)) {
         setLogTasks((prev: any) => ({
           ...prev,
           [taskId]: [
             ...(prev[taskId] || []),
-            `🚫 Task ${taskId} dừng theo lệnh.`,
+            "🚫 Task ${taskId} dừng theo lệnh của bạn.",
           ],
         }));
-        
+        console.log(`🚫 Task ${taskId} dừng theo lệnh của MinMin.`);
+
+        // QUAN TRỌNG: Dừng xong thì tự xóa mình khỏi danh sách để lần sau Play lại được
         isStoppingTaskRef.current = isStoppingTaskRef.current.filter(
           (id) => id !== taskId,
         );
-        break; // Phanh khẩn cấp!
+
+        break; // Thoát vòng lặp, "phanh" khẩn cấp!
       }
-      
       if (visited.has(currentNodeId)) break;
       visited.add(currentNodeId);
+
       const node = nodes.find((n) => n.id === currentNodeId);
       if (!node) break;
 
-      if (node.type !== "start") {
+      if (node.data.type !== "start") {
+        // Logic xử lý biến {{ten_bien}}
         let finalParams = JSON.parse(JSON.stringify(node.data || {}));
+        if (!finalParams?.handleError){
+          finalParams.handleError="Stop workflow"
+        }
         const replaceVars = (str: any) => {
           if (typeof str !== "string") return str;
           return str.replace(
@@ -193,13 +198,11 @@ export const AutoShopee = () => {
           finalParams[key] = replaceVars(finalParams[key]);
         });
 
-        // --- 🚀 LOGIC XỬ LÝ LỖI (HANDLE ERROR) ---
-        const errorStrategy = node.data.handleError || "Stop workflow";
-        const maxRetries = errorStrategy === "Retry 3 times" ? 3 : 1;
+        // Gửi lệnh xuống Electron
+        
+        const maxRetries = finalParams.handleError === "Retry 3 times" ? 3 : 1;
         let attempt = 0;
         let result: any = null;
-
-        // Vòng lặp Retry
         while (attempt < maxRetries) {
           attempt++;
           
@@ -207,7 +210,7 @@ export const AutoShopee = () => {
             ...prev,
             [taskId]: [
               ...(prev[taskId] || []),
-              `Đang chạy lệnh ${node.data.type} ${maxRetries > 1 ? `(Lần ${attempt}/${maxRetries})` : ""}`,
+              `Đang chạy lệnh ${node.data.type}${maxRetries > 1 ? ` (Lần ${attempt}/${maxRetries})` : ""}`,
             ],
           }));
 
@@ -217,7 +220,13 @@ export const AutoShopee = () => {
             action: node.data.type,
             params: finalParams,
           });
+          console.log({
+            deviceId,
+            action: node.data.type,
+            params: finalParams,
+          })
 
+          // 3. Nếu thành công -> Ghi log và thoát vòng lặp retry ngay lập tức
           if (result?.success) {
             setLogTasks((prev: any) => ({
               ...prev,
@@ -228,6 +237,7 @@ export const AutoShopee = () => {
             }));
             break; 
           } else {
+            // 4. Nếu thất bại -> Ghi log lỗi
             setLogTasks((prev: any) => ({
               ...prev,
               [taskId]: [
@@ -236,29 +246,32 @@ export const AutoShopee = () => {
               ],
             }));
             
+            // Đợi 1.5s rồi mới thử lại (để Android kịp phản hồi, chống lag)
             if (attempt < maxRetries) {
               await new Promise((r) => setTimeout(r, 1500));
             }
           }
         }
 
-        // --- KIỂM TRA KẾT QUẢ ---
+        // 5. CHỐT KẾT QUẢ SAU KHI HẾT LƯỢT THỬ
         if (!result?.success) {
-          if (errorStrategy === "Ignore and continue") {
-            setLogTasks((prev: any) => ({
-              ...prev,
-              [taskId]: [...(prev[taskId] || []), `⚠️ Bỏ qua lỗi và đi tiếp`],
-            }));
+          if (finalParams.handleError === "Ignore and continue") {
+             // Bỏ qua và đi tiếp, có thể thêm log cảnh báo nhẹ ở đây nếu muốn
+             setLogTasks((prev: any) => ({
+               ...prev,
+               [taskId]: [...(prev[taskId] || []), `⚠️ Bỏ qua lỗi và đi tiếp bước sau`],
+             }));
           } else {
-            setLogTasks((prev: any) => ({
-              ...prev,
-              [taskId]: [...(prev[taskId] || []), `🛑 Dừng kịch bản do lỗi!`],
-            }));
-            updateTaskStatus(taskId, "error");
-            break; 
+             // Áp dụng cho "Stop workflow" VÀ "Retry 3 times" (đã thử 3 lần mà vẫn xịt)
+             setLogTasks((prev: any) => ({
+               ...prev,
+               [taskId]: [...(prev[taskId] || []), `🛑 Dừng kịch bản do lỗi không thể phục hồi!`],
+             }));
+             break; // Phanh khẩn cấp, thoát luồng!
           }
         }
 
+        // Nếu là node gán biến, lưu vào bộ nhớ
         if (node.data.type === "set_var") {
           setLogTasks((prev: any) => ({
             ...prev,
@@ -270,6 +283,7 @@ export const AutoShopee = () => {
           executionVars[node.data.var_name] = finalParams.var_value;
         }
 
+        // Đợi delay giữa các node
         setLogTasks((prev: any) => ({
           ...prev,
           [taskId]: [...(prev[taskId] || []), `Đợi ${node.data?.delay} ms`],
@@ -277,6 +291,7 @@ export const AutoShopee = () => {
         await new Promise((r) => setTimeout(r, node.data?.delay || 500));
       }
 
+      // Tìm node tiếp theo
       const edge = edges.find((e) => e.source === currentNodeId);
       currentNodeId = edge ? edge.target : null;
     }
@@ -329,7 +344,10 @@ export const AutoShopee = () => {
     ];
     // 2. Kiểm tra xem có trường nào trống không
     const missingField = requiredFields.find(
-      (field) => !task[field.key] || task[field.key].trim() === "" || task[field.key].trim() === "none",
+      (field) =>
+        !task[field.key] ||
+        task[field.key].trim() === "" ||
+        task[field.key].trim() === "none",
     );
 
     if (missingField) {
@@ -411,9 +429,9 @@ export const AutoShopee = () => {
     }
   };
   const handleImport = (newTasks: AutoShopeeTask[]) => {
-      // Gộp task cũ và task mới từ Excel
-      setTasks((prev) => [...prev, ...newTasks]);
-    };
+    // Gộp task cũ và task mới từ Excel
+    setTasks((prev) => [...prev, ...newTasks]);
+  };
   const runTaskSelected = () => {
     // 1. Kiểm tra xem có đang chọn dòng nào không
     if (selectedIds.length === 0) {
@@ -479,8 +497,7 @@ export const AutoShopee = () => {
             label="Mẫu Excel"
           />
           <HeaderButton icon={<Download size={14} />} label="Xuất Excel" />
-          <ExcelImportAutoPost onImportSuccess={handleImport}/>
-
+          <ExcelImportAutoPost onImportSuccess={handleImport} />
         </div>
       </div>
 
@@ -668,12 +685,11 @@ export const AutoShopee = () => {
                         className="w-full bg-transparent outline-none cursor-pointer appearance-none 
                    text-slate-700 font-medium focus:text-blue-600 transition-colors"
                       >
-                        <option value={"none"}  className="text-slate-300">
+                        <option value={"none"} className="text-slate-300">
                           Chọn workflow...
                         </option>
 
                         {availableWorkflows.map((wfName) => (
-                          
                           <option
                             key={wfName}
                             value={wfName}
