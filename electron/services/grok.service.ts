@@ -90,6 +90,7 @@ export class GrokService {
     async refreshGrokHeaderViaGPM(port: number) {
         let browser: any = null;
         try {
+            await new Promise(r => setTimeout(r, 5000));
             browser = await puppeteer.connect({
                 browserURL: `http://127.0.0.1:${port}`,
                 defaultViewport: null
