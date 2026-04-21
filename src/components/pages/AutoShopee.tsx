@@ -672,7 +672,7 @@ export const AutoShopee = () => {
                           Chọn workflow...
                         </option>
 
-                        {availableWorkflows.map((wfName, idx) => (
+                        {availableWorkflows.map((wfName) => (
                           
                           <option
                             key={wfName}
