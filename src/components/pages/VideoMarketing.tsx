@@ -12,6 +12,8 @@ import {
   Pause,
   Box,
   Table,
+  Link,
+  X,
 } from "lucide-react";
 import { ConfigModalVideoMKT } from "../modals/ConfigModalVideoMKT";
 import { STORAGE_KEY } from "../../types/KeyLocalStorage";
@@ -32,6 +34,7 @@ interface ConfigVideoMKT {
   delay_between: number;
   api_gpm: string;
   profiles_aff: string[];
+  useProfileAff: boolean;
   method_load_page:
     | "load"
     | "domcontentloaded"
@@ -91,6 +94,7 @@ export const VideoMarketingPage = () => {
     delay_between: 3,
     api_gpm: "http://localhost:9495",
     profiles_aff: [],
+    useProfileAff: false,
     method_load_page: "domcontentloaded",
     time_loading_page: 60000,
     time_wait_getdata: 20000,
@@ -132,7 +136,48 @@ export const VideoMarketingPage = () => {
   });
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isResultModalOpen, setIsResultModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importLinksText, setImportLinksText] = useState("");
 
+  const handleImportLinksSubmit = () => {
+    // 1. Tách từng dòng và xóa khoảng trắng 2 đầu, lọc bỏ các dòng rỗng
+    const rawLinks = importLinksText.split("\n");
+    const validLinks = rawLinks
+      .map((link) => link.trim())
+      .filter((link) => link !== "");
+
+    if (validLinks.length === 0) {
+      alert("MinMin ơi, chưa có link nào hợp lệ cả!");
+      return;
+    }
+
+    // 2. Map các link này thành các Task mới
+    const newTasks: VideoTask[] = validLinks.map((link) => {
+      return {
+      id: Date.now(), // Dùng timestamp làm ID duy nhất
+      productUrl: link,
+      productName: "",
+      productDesc: "",
+      productPathImg: "",
+      mode: "TT + Prompt + Video + Ảnh AI",
+      outputCount: 2,
+      status: "none",
+      log: "",
+      aiImagePath: "",
+      finalVideoPath: "",
+      prompt: "",
+      resultVideoCount: null,
+    }
+    });
+
+    // 3. Nối mảng task mới vào danh sách task hiện tại
+    setTasks((prev) => [...newTasks,...prev]);
+
+    // 4. Dọn dẹp: Reset ô nhập và đóng Modal
+    setImportLinksText("");
+    setIsImportModalOpen(false);
+    console.log(`✅ Đã import thành công ${newTasks.length} link vào mảng!`);
+  };
   const handleBulkChangeMode = (newMode: any) => {
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
@@ -522,13 +567,19 @@ export const VideoMarketingPage = () => {
               bgColor="#e87717"
               onClick={handleExportExcel}
             />
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="bg-orange-500 text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:bg-orange-600 shadow-lg  active:scale-95 transition-all"
+            >
+              <Link size={16} /> Nhập Link Hàng Loạt
+            </button>
 
             {/* ➕ NÚT THÊM: Kích nổ thêm hàng mới */}
             <button
               onClick={handleAddTask}
               className="bg-blue-600 text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 active:scale-95 transition-all"
             >
-              <Plus size={16} /> Thêm
+              <Plus size={16} /> Thêm Task
             </button>
           </div>
         </div>
@@ -846,6 +897,62 @@ export const VideoMarketingPage = () => {
           </div>
         )}
       </div>
+      {/* 🚀 MODAL NHẬP LINK HÀNG LOẠT */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-125 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header Modal */}
+            <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+              <h3 className="text-sm font-black text-slate-700 uppercase tracking-tight">
+                Nhập Link Shopee / TikTok Hàng Loạt
+              </h3>
+              <button
+                onClick={() => setIsImportModalOpen(false)}
+                className="p-1 text-slate-400 hover:bg-slate-200 hover:text-rose-500 rounded-lg transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Body Modal - Chỗ nhập liệu */}
+            <div className="p-5 space-y-2">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                Danh sách Link (Mỗi dòng 1 link)
+              </label>
+              <textarea
+                value={importLinksText}
+                onChange={(e) => setImportLinksText(e.target.value)}
+                placeholder="https://shopee.vn/product/123...&#10;https://vt.tiktok.com/ZS9LWESc..."
+                className="w-full h-48 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 resize-none transition-all"
+              />
+              <div className="text-right text-[10px] font-bold text-orange-500">
+                Phát hiện:{" "}
+                {
+                  importLinksText.split("\n").filter((l) => l.trim() !== "")
+                    .length
+                }{" "}
+                link
+              </div>
+            </div>
+
+            {/* Footer Modal - Nút hành động */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2">
+              <button
+                onClick={() => setIsImportModalOpen(false)}
+                className="px-5 py-2 text-xs font-bold text-slate-500 hover:bg-slate-200 rounded-xl transition-all"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                onClick={handleImportLinksSubmit}
+                className="px-5 py-2 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md active:scale-95 transition-all"
+              >
+                Tạo Task ngay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

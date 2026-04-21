@@ -33,9 +33,10 @@ export const ConfigModalVideoMKT = ({
     "idle" | "loading" | "success" | "error"
   >("idle");
   const allPrompts = [...DEFAULT_PROMPTS, ...configVideoMKT.customPrompts];
-  const currentPrompt = allPrompts.find(p => p.id === configVideoMKT.activePromptId) || DEFAULT_PROMPTS[0];
+  const currentPrompt =
+    allPrompts.find((p) => p.id === configVideoMKT.activePromptId) ||
+    DEFAULT_PROMPTS[0];
 
-  
   const handleSaveAndClose = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(configVideoMKT));
     onClose(); // Lưu xong mới đóng
@@ -66,15 +67,15 @@ export const ConfigModalVideoMKT = ({
     setConfigVideoMKT({
       ...configVideoMKT,
       customPrompts: [...configVideoMKT.customPrompts, newPrompt],
-      activePromptId: newId
+      activePromptId: newId,
     });
   };
   // Hàm cập nhật nội dung prompt đang sửa
   const updateCurrentPrompt = (field: keyof PromptSet, value: string) => {
     if (currentPrompt.isDefault) return; // Không cho sửa hàng hệ thống
 
-    const updatedCustom = configVideoMKT.customPrompts.map((p:any) => 
-      p.id === currentPrompt.id ? { ...p, [field]: value } : p
+    const updatedCustom = configVideoMKT.customPrompts.map((p: any) =>
+      p.id === currentPrompt.id ? { ...p, [field]: value } : p,
     );
     setConfigVideoMKT({ ...configVideoMKT, customPrompts: updatedCustom });
   };
@@ -337,23 +338,56 @@ export const ConfigModalVideoMKT = ({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[11px] font-black text-slate-400 uppercase">
-                Danh sách Profile ID đang login Shopee/Tiktok
-              </label>
-              <textarea
-                placeholder="Danh sách Profile ID login Shopee, TikTok (mỗi dòng 1 ID)"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm outline-none focus:border-indigo-500 h-24 resize-none transition-all"
-                // 1. HIỂN THỊ: Biến mảng thành chuỗi có dấu xuống dòng 🔄
-                value={configVideoMKT.profiles_aff.join("\n")}
-                // 2. LƯU: Biến chuỗi từ textarea thành mảng 📥
-                onChange={handleTextareaChangeProfilesAff}
-              ></textarea>
+            <div className="p-4 border border-slate-100 rounded-xl bg-white shadow-sm space-y-3">
+              {/* TIÊU ĐỀ VÀ CÔNG TẮC TOGGLE */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-[12px] font-black text-slate-700 uppercase">
+                    Sử dụng Profile tạo sẵn
+                  </label>
+                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                    Cào thông tin shopee/tiktok từ profile tạo sẵn
+                  </p>
+                </div>
 
-              {/* Hiển thị số lượng ID đã nhập cho chuyên nghiệp */}
-              <div className="text-[10px] text-right text-indigo-500 font-bold">
-                Đã nhập: {configVideoMKT.profiles_aff.length} Profile
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    // Thay biến này bằng state thực tế của ông
+                    checked={configVideoMKT.useProfileAff || false}
+                    onChange={(e) => {
+                      setConfigVideoMKT({
+                        ...configVideoMKT,
+                        useProfileAff: e.target.checked,
+                      });
+                    }}
+                  />
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
               </div>
+
+              {/* 🚀 KHU VỰC NHẬP LIỆU: BẬT MỚI HIỆN, TẮT LÀ BIẾN MẤT */}
+              {configVideoMKT.useProfileAff && (
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-slate-400 uppercase">
+                    Danh sách Profile ID đang login Shopee/Tiktok
+                  </label>
+                  <textarea
+                    placeholder="Danh sách Profile ID login Shopee, TikTok (mỗi dòng 1 ID)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm outline-none focus:border-indigo-500 h-24 resize-none transition-all"
+                    // 1. HIỂN THỊ: Biến mảng thành chuỗi có dấu xuống dòng 🔄
+                    value={configVideoMKT.profiles_aff.join("\n")}
+                    // 2. LƯU: Biến chuỗi từ textarea thành mảng 📥
+                    onChange={handleTextareaChangeProfilesAff}
+                  ></textarea>
+
+                  {/* Hiển thị số lượng ID đã nhập cho chuyên nghiệp */}
+                  <div className="text-[10px] text-right text-indigo-500 font-bold">
+                    Đã nhập: {configVideoMKT.profiles_aff.length} Profile
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -710,63 +744,80 @@ export const ConfigModalVideoMKT = ({
               </svg>
               Hướng dẫn Vbee AI
             </a>
-              {/* PROMPT*/}
-              <div className="space-y-6 p-4 bg-white rounded-2xl shadow-sm border border-slate-100">
-      
-      {/* Header Selector */}
-      <div className="flex items-center justify-between border-b pb-4">
-        <div className="flex flex-col">
-          <label className="text-[11px] font-black text-slate-400 uppercase">Chọn bộ cấu trúc Prompt</label>
-          <select 
-            value={configVideoMKT.activePromptId}
-            onChange={(e) => setConfigVideoMKT({...configVideoMKT, activePromptId: e.target.value})}
-            className="mt-1 bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
-          >
-            {allPrompts.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </div>
-        
-        <button 
-          onClick={handleAddNewPrompt}
-          className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-all"
-        >
-          + Tạo bộ mới
-        </button>
-      </div>
+            {/* PROMPT*/}
+            <div className="space-y-6 p-4 bg-white rounded-2xl shadow-sm border border-slate-100">
+              {/* Header Selector */}
+              <div className="flex items-center justify-between border-b pb-4">
+                <div className="flex flex-col">
+                  <label className="text-[11px] font-black text-slate-400 uppercase">
+                    Chọn bộ cấu trúc Prompt
+                  </label>
+                  <select
+                    value={configVideoMKT.activePromptId}
+                    onChange={(e) =>
+                      setConfigVideoMKT({
+                        ...configVideoMKT,
+                        activePromptId: e.target.value,
+                      })
+                    }
+                    className="mt-1 bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
+                  >
+                    {allPrompts.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-      {/* Thông báo nếu là hàng mặc định */}
-      {currentPrompt.isDefault && (
-        <div className="p-2 bg-amber-50 border border-amber-100 rounded-lg text-[10px] text-amber-600 font-medium">
-          ⚠️ Đây là mẫu hệ thống, bạn không thể chỉnh sửa. Hãy "Tạo bộ mới" nếu muốn tùy chỉnh.
-        </div>
-      )}
+                <button
+                  onClick={handleAddNewPrompt}
+                  className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-all"
+                >
+                  + Tạo bộ mới
+                </button>
+              </div>
 
-      {/* List Textareas */}
-      <div className="grid grid-cols-1 gap-4">
-        {[
-          { id: 'prompt_review', label: 'Cấu trúc Prompt Review' },
-          { id: 'prompt_image', label: 'Cấu hình Prompt (Ảnh)' },
-          { id: 'prompt_video', label: 'Cấu hình Prompt (Video)' },
-        ].map((item) => (
-          <div key={item.id} className="space-y-2">
-            <label className="text-[11px] font-black text-slate-400 uppercase">{item.label}</label>
-            <textarea
-              readOnly={currentPrompt.isDefault}
-              value={currentPrompt[item.id as keyof PromptSet] as string}
-              onChange={(e) => updateCurrentPrompt(item.id as keyof PromptSet, e.target.value)}
-              className={`custom-scrollbar w-full border rounded-xl p-4 text-sm outline-none transition-all h-32 resize-none ${
-                currentPrompt.isDefault 
-                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
-                : "bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-600"
-              }`}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-            
+              {/* Thông báo nếu là hàng mặc định */}
+              {currentPrompt.isDefault && (
+                <div className="p-2 bg-amber-50 border border-amber-100 rounded-lg text-[10px] text-amber-600 font-medium">
+                  ⚠️ Đây là mẫu hệ thống, bạn không thể chỉnh sửa. Hãy "Tạo bộ
+                  mới" nếu muốn tùy chỉnh.
+                </div>
+              )}
+
+              {/* List Textareas */}
+              <div className="grid grid-cols-1 gap-4">
+                {[
+                  { id: "prompt_review", label: "Cấu trúc Prompt Review" },
+                  { id: "prompt_image", label: "Cấu hình Prompt (Ảnh)" },
+                  { id: "prompt_video", label: "Cấu hình Prompt (Video)" },
+                ].map((item) => (
+                  <div key={item.id} className="space-y-2">
+                    <label className="text-[11px] font-black text-slate-400 uppercase">
+                      {item.label}
+                    </label>
+                    <textarea
+                      readOnly={currentPrompt.isDefault}
+                      value={
+                        currentPrompt[item.id as keyof PromptSet] as string
+                      }
+                      onChange={(e) =>
+                        updateCurrentPrompt(
+                          item.id as keyof PromptSet,
+                          e.target.value,
+                        )
+                      }
+                      className={`custom-scrollbar w-full border rounded-xl p-4 text-sm outline-none transition-all h-32 resize-none ${
+                        currentPrompt.isDefault
+                          ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                          : "bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-600"
+                      }`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
 
           {/* PHẦN 5: Cấu Hình riêng */}

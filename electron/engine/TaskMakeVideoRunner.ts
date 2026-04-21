@@ -55,7 +55,7 @@ export class TaskRunner {
     async execute() {
 
         const { tasks, configVideoMKT } = this.data;
-        const { prompt_review, voice_code, vbee_app_token, isUseVbee, isEnabledLogo, isEnabledMusic, musicPath, logoPath, vbee_app_id, save_shopid_productid, profiles_aff, thread, apikey_gemini, delay_between, profiles_grok, prompt_image, output_video, prompt_video, speed_voice } = configVideoMKT;
+        const { prompt_review, voice_code, vbee_app_token,useProfileAff, isUseVbee, isEnabledLogo, isEnabledMusic, musicPath, logoPath, vbee_app_id, save_shopid_productid, profiles_aff, thread, apikey_gemini, delay_between, profiles_grok, prompt_image, output_video, prompt_video, speed_voice } = configVideoMKT;
 
         // Cho phép chạy tối đa số thread người dùng nhập, không quan tâm có bao nhiêu profile
         const maxThreads = thread || 1;
@@ -156,9 +156,17 @@ export class TaskRunner {
 
                         let res = null;
                         if (await isLinkShopee(task.productUrl)) {
-                            currentProfileId = await shopeeManager.getAvailableProfile();
-                            res = await shopeeService(this.event, gpmClient, currentProfileId, port, delay_between, this.data, task);
-                            await shopeeManager.releaseProfile(currentProfileId);
+                            if (useProfileAff){
+                                currentProfileId = await shopeeManager.getAvailableProfile();
+                            }
+                            
+                            res = await shopeeService(this.event, gpmClient,currentProfileId,useProfileAff, port, delay_between, this.data, task);
+                            try {
+                                await shopeeManager.releaseProfile(currentProfileId);
+                            } catch (error) {
+                                
+                            }
+                            
 
                         } else if (await isLinkTiktok(task.productUrl)) {
 
@@ -452,7 +460,12 @@ export class TaskRunner {
 
                 } catch (error: any) {
                     // Giải phóng tài nguyên tồn đọng nếu tất cả các lần retry đều fail
-                    if (currentProfileId) await shopeeManager.releaseProfile(currentProfileId);
+                    try {
+                        if (currentProfileId) await shopeeManager.releaseProfile(currentProfileId);
+                    } catch (error) {
+                        
+                    }
+                    
                     if (currentProfileGrokId) await grokManager.releaseProfile(currentProfileGrokId);
 
                     if (error.message === "CANCELLED") {

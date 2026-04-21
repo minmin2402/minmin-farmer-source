@@ -20,7 +20,7 @@ export const getShopeeIds = (url: string): ShopeeProductIds | null => {
     try {
         // Regex 1: Định dạng tên-sản-phẩm-i.60034313.24800471037
         const type1Regex = /i\.(\d+)\.(\d+)/;
-        
+
         // Regex 2: Định dạng /product/60034313/43363406360
         const type2Regex = /product\/(\d+)\/(\d+)/;
 
@@ -65,16 +65,16 @@ async function getInfoProduct(port: number, data: any) {
         await page.goto('https://shopee.vn', {
             waitUntil: data.configVideoMKT?.method_load_page ?? "load",
             timeout: data.configVideoMKT?.time_loading_page ?? 25000
-        }).catch(() => {});
+        }).catch(() => { });
 
         // 4. Vít ga "Cướp cò" link sản phẩm
         logger.info("⚡ Đang phi thẳng vào trang sản phẩm (Chế độ Cướp Cò)...");
-        
+
         // Sửa 'commit' thành 'domcontentloaded'
         await page.goto(data.task.productUrl, {
-            waitUntil: 'domcontentloaded', 
+            waitUntil: 'domcontentloaded',
             timeout: 15000
-        }).catch(() => {});
+        }).catch(() => { });
 
         let productTitle = null;
         let productDesc = null;
@@ -118,7 +118,7 @@ async function getInfoProduct(port: number, data: any) {
             // Gán data (Lúc này TypeScript đã hiểu và hết báo lỗi)
             productTitle = productData.title;
             productDesc = productData.desc;
-            
+
             logger.info(`💎 Tiêu đề: ${productTitle}`);
             logger.info(`💎 Mô tả: ${productDesc}`);
 
@@ -126,20 +126,20 @@ async function getInfoProduct(port: number, data: any) {
             if (productData.imgSrcset) {
                 logger.info(`🔗 Link ảnh gốc: ${productData.imgSrcset}`);
                 const highRawSrcset = productData.imgSrcset.replace("resize_w82", "resize_w780");
-                
+
                 // Tiến hành tải ảnh
                 const resultSaveImage = await downloadImage(highRawSrcset, data.task.save_path_project);
-                
+
                 if (resultSaveImage.success) {
                     try {
                         let oldImg = path.join(data.task.save_path_project, resultSaveImage.name);
-                        
+
                         // Xử lý ảnh 9:16
                         const imagePathFinally = await processImageTo916(oldImg);
                         if (imagePathFinally) {
                             productPathImage = path.join(data.task.save_path_project, imagePathFinally);
                         }
-                        
+
                         // Dọn dẹp ảnh cũ
                         try {
                             if (fs.existsSync(oldImg)) {
@@ -168,7 +168,7 @@ async function getInfoProduct(port: number, data: any) {
         // 9. Ngắt kết nối (Chỉ ngắt kết nối điều khiển, KHÔNG ĐÓNG trình duyệt)
         await browser.disconnect();
         logger.info("✅ Hoàn tất lấy Info Product!");
-        
+
         return { taskId: data.task.id, productTitle, productDesc, productPathImage };
 
     } catch (error: any) {
@@ -176,17 +176,29 @@ async function getInfoProduct(port: number, data: any) {
     }
 }
 
-export async function shopeeService(_event: IpcMainInvokeEvent,gpmClient: GpmService,profileId:string,port:number,delay_between:number,data:any,task:any) {
-    let productInfo=null
-    let result : {success:boolean, message:string,data: any} = {success: false,message:"[ShopeeService] Lỗi không xác định",data:null} ;
-    try {
-        _event.sender.send('video:task-log', { status: 'processing', message: `🚀 Mở trình duyệt lấy Info`, taskId: task.id });
+export async function shopeeService(_event: IpcMainInvokeEvent, gpmClient: GpmService, currentProfileId: string,useProfileAff:boolean, port: number, delay_between: number, data: any, task: any) {
 
-        const startResult = await gpmClient.startProfile(profileId, port);
+    let newProfile = {
+        id: currentProfileId
+    };
+    let productInfo = null;
+    let result: { success: boolean, message: string, data: any } = { success: false, message: "[ShopeeService] Lỗi không xác định", data: null };
+    try {
+  
+        if (!useProfileAff) {
+            _event.sender.send('video:task-log', { status: 'processing', message: `[SHOPEE] Tạo profile`, taskId: task.id });
+            newProfile = await gpmClient.createProfile()
+            if (!newProfile) throw new Error("[SHOPEE] Không tạo được profile");
+        }
+
+
+
+        _event.sender.send('video:task-log', { status: 'processing', message: `[SHOPEE] Mở profile`, taskId: task.id });
+        const startResult = await gpmClient.startProfile(newProfile.id, port);
         if (!startResult.success) throw new Error(startResult.message);
 
-     
-  
+
+
         if (startResult.data.remote_debugging_port) {
             productInfo = await getInfoProduct(startResult.data.remote_debugging_port, { ...data, task });
 
@@ -197,22 +209,32 @@ export async function shopeeService(_event: IpcMainInvokeEvent,gpmClient: GpmSer
                 taskId: task.id
             });
 
-            result.success=true
+            result.success = true
             result.message = "Lấy data thành công"
             result.data = productInfo;
 
         }
-    } catch (err:any) {
+    } catch (err: any) {
         _event.sender.send('video:task-log', { status: 'processing', message: `Lỗi cào dữ liệu: ${err}`, taskId: task.id });
         result.success = false
         result.message = err?.message ?? "[ShopeeService] Lỗi không xác định"
 
     } finally {
-        // QUAN TRỌNG: Xong việc với Browser là ĐÓNG NGAY để nhả Profile cho task tiếp theo
-        await gpmClient.stopProfile(profileId);
-        await sleep(delay_between * 1000);
-        logger.info(`🔓 Nhả Profile ${profileId} cho luồng khác.`);
-        return result
+        if (newProfile) {
+            try {
+                await gpmClient.stopProfile(newProfile.id);
+                await sleep(delay_between * 1000)
+            } catch (error) {
+
+            }
+            try {
+                await gpmClient.deleteProfile(newProfile.id, 'hard');
+            } catch (error) {
+                
+            }
+            
+        }
+        return result;
     }
 
 }
