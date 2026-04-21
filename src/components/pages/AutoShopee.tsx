@@ -183,8 +183,8 @@ export const AutoShopee = () => {
       if (node.data.type !== "start") {
         // Logic xử lý biến {{ten_bien}}
         let finalParams = JSON.parse(JSON.stringify(node.data || {}));
-        if (!finalParams?.handleError){
-          finalParams.handleError="Stop workflow"
+        if (!finalParams?.handleError) {
+          finalParams.handleError = "Stop workflow";
         }
         const replaceVars = (str: any) => {
           if (typeof str !== "string") return str;
@@ -199,13 +199,13 @@ export const AutoShopee = () => {
         });
 
         // Gửi lệnh xuống Electron
-        
+
         const maxRetries = finalParams.handleError === "Retry 3 times" ? 3 : 1;
         let attempt = 0;
         let result: any = null;
         while (attempt < maxRetries) {
           attempt++;
-          
+
           setLogTasks((prev: any) => ({
             ...prev,
             [taskId]: [
@@ -224,7 +224,7 @@ export const AutoShopee = () => {
             deviceId,
             action: node.data.type,
             params: finalParams,
-          })
+          });
 
           // 3. Nếu thành công -> Ghi log và thoát vòng lặp retry ngay lập tức
           if (result?.success) {
@@ -235,7 +235,7 @@ export const AutoShopee = () => {
                 `✅ Chạy lệnh ${node.data.type} thành công`,
               ],
             }));
-            break; 
+            break;
           } else {
             // 4. Nếu thất bại -> Ghi log lỗi
             setLogTasks((prev: any) => ({
@@ -245,7 +245,7 @@ export const AutoShopee = () => {
                 `❌ ${node.data.type} Thất bại: ${result?.error}`,
               ],
             }));
-            
+
             // Đợi 1.5s rồi mới thử lại (để Android kịp phản hồi, chống lag)
             if (attempt < maxRetries) {
               await new Promise((r) => setTimeout(r, 1500));
@@ -256,18 +256,24 @@ export const AutoShopee = () => {
         // 5. CHỐT KẾT QUẢ SAU KHI HẾT LƯỢT THỬ
         if (!result?.success) {
           if (finalParams.handleError === "Ignore and continue") {
-             // Bỏ qua và đi tiếp, có thể thêm log cảnh báo nhẹ ở đây nếu muốn
-             setLogTasks((prev: any) => ({
-               ...prev,
-               [taskId]: [...(prev[taskId] || []), `⚠️ Bỏ qua lỗi và đi tiếp bước sau`],
-             }));
+            // Bỏ qua và đi tiếp, có thể thêm log cảnh báo nhẹ ở đây nếu muốn
+            setLogTasks((prev: any) => ({
+              ...prev,
+              [taskId]: [
+                ...(prev[taskId] || []),
+                `⚠️ Bỏ qua lỗi và đi tiếp bước sau`,
+              ],
+            }));
           } else {
-             // Áp dụng cho "Stop workflow" VÀ "Retry 3 times" (đã thử 3 lần mà vẫn xịt)
-             setLogTasks((prev: any) => ({
-               ...prev,
-               [taskId]: [...(prev[taskId] || []), `🛑 Dừng kịch bản do lỗi không thể phục hồi!`],
-             }));
-             break; // Phanh khẩn cấp, thoát luồng!
+            // Áp dụng cho "Stop workflow" VÀ "Retry 3 times" (đã thử 3 lần mà vẫn xịt)
+            setLogTasks((prev: any) => ({
+              ...prev,
+              [taskId]: [
+                ...(prev[taskId] || []),
+                `🛑 Dừng kịch bản do lỗi không thể phục hồi!`,
+              ],
+            }));
+            break; // Phanh khẩn cấp, thoát luồng!
           }
         }
 
@@ -432,7 +438,7 @@ export const AutoShopee = () => {
     // Gộp task cũ và task mới từ Excel
     setTasks((prev) => [...prev, ...newTasks]);
   };
-  const runTaskSelected = () => {
+  const runTaskSelected = async () => {
     // 1. Kiểm tra xem có đang chọn dòng nào không
     if (selectedIds.length === 0) {
       alert("MinMin ơi, chưa chọn dòng nào để chạy cả!");
@@ -450,18 +456,19 @@ export const AutoShopee = () => {
 
       // 4. CHẠY SONG SONG: Dùng map để kích hoạt tất cả cùng lúc
       // Chúng ta không dùng await ở đây để nó không đợi từng task hoàn thành
-      tasksToRun.map((task) => {
-        // Kiểm tra sơ bộ xem có đủ Serial và Workflow không
+      for (const task of tasksToRun) {
         if (task.serial && task.workflow) {
-          // Gọi hàm chạy (Hàm này đã có try/catch và updateTaskStatus bên trong)
-          handleRunTask(task).catch((err) =>
-            console.error(`Lỗi máy ${task.serial}:`, err),
-          );
+          try {
+            // Dùng await để ép nó đứng chờ máy này chạy xong mới qua vòng lặp tiếp theo
+            await handleRunTask(task);
+          } catch (err) {
+            console.error(`Lỗi máy ${task.serial}:`, err);
+          }
         } else {
           console.warn(`Task ${task.id} thiếu thông tin, bỏ qua.`);
           updateTaskStatus(task.id, "error");
         }
-      });
+      }
 
       // 5. Sau khi kích hoạt xong thì bỏ chọn (Reset checkbox)
       setSelectedIds([]);
