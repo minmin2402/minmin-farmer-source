@@ -1090,7 +1090,7 @@ export class GrokService {
             const downloadHeaders = this.buildDownloadHeaders(profileId);
             sendLog(`[P${profileId}] Bước 3: Download video...`);
             const downloadUrl = `https://assets.grok.com/${currentVideoUrl}?cache=1&dl=1`;
-            const finalFilename = path.join(outputDir, `video_${taskId}_${Date.now()}.mp4`);
+            const finalFilePathVideo = path.join(outputDir, `video_${taskId}_${Date.now()}.mp4`);
 
             const res3 = await axios.get(downloadUrl, {
                 headers: downloadHeaders,
@@ -1098,11 +1098,11 @@ export class GrokService {
                 timeout: 120000
             });
 
-            fs.writeFileSync(finalFilename, res3.data);
-            sendLog(`✅ [P${profileId}] Tải xong video: ${path.basename(finalFilename)}`);
+            fs.writeFileSync(finalFilePathVideo, res3.data);
+            sendLog(`✅ [P${profileId}] Tải xong video: ${path.basename(finalFilePathVideo)}`);
 
             result.success = true;
-            result.filename = finalFilename;
+            result.filePathVideo = finalFilePathVideo;
 
         } catch (error: any) {
             logger.error(error.message)

@@ -67,6 +67,37 @@ export async function mergeAudioToVideo(videoPath: string, audioFiles: string[],
     });
 }
 
+export async function normalizeVideo(inputPath: string, outputPath: string) {
+    return new Promise((resolve, reject) => {
+        ffmpeg(inputPath)
+            .outputOptions([
+                // 🎬 Video chuẩn
+                '-c:v libx264',
+                '-preset veryfast',
+                '-crf 23',
+
+                // 🔊 Audio chuẩn
+                '-c:a aac',
+                '-ar 44100',
+                '-ac 2',
+
+                // 🔥 FIX video AI lỗi
+                '-vsync 2',
+                '-async 1',
+
+                // tránh lỗi timestamp
+                '-fflags +genpts',
+
+                // tối ưu web
+                '-movflags +faststart'
+            ])
+            .on('start', cmd => console.log("🔧 Normalize:", cmd))
+            .on('end', () => resolve(outputPath))
+            .on('error', reject)
+            .save(outputPath);
+    });
+}
+
 export async function addLogoToVideo(videoPath: string, logoPath: string, outputPath: string) {
     return new Promise((resolve, reject) => {
         ffmpeg(videoPath)
@@ -110,12 +141,29 @@ export async function addBackgroundMusic(videoPath: string, audioPath: string, o
     });
 }
 
+
 export const addLogoAndMusic = async (inputVideo: string, logoPath: string, musicPath: string, isLogo: boolean, isMusic: boolean) => {
+
+    // BƯỚC 0: NORMALIZE VIDEO
+    const folder = path.dirname(inputVideo);
+    const normalizedPath = path.join(folder, `norm_${Date.now()}_${Math.random()}.mp4`);
+
+    try {
+        await normalizeVideo(inputVideo, normalizedPath);
+
+        // thay thế file gốc
+        await fsc.unlink(inputVideo);
+        await fsc.rename(normalizedPath, inputVideo);
+
+        logger.info("✅ Normalize video thành công");
+    } catch (err) {
+        logger.warn("⚠️ Normalize lỗi, dùng video gốc:", err);
+    }
 
     // --- BƯỚC 1: Xử lý Video (Logo) ---
     if (isLogo && fs.existsSync(logoPath)) {
         const folder = path.dirname(inputVideo);
-        const tempOutput = path.join(folder, `temp_${Date.now()}_video.mp4`);
+        const tempOutput = path.join(folder, `temp_${Date.now()}_${Math.random()}.mp4`);
         try {
             // 2. Kiểm tra nếu file temp đã tồn tại từ trước thì xóa
             if (fs.existsSync(tempOutput)) {
@@ -141,7 +189,8 @@ export const addLogoAndMusic = async (inputVideo: string, logoPath: string, musi
     if (isMusic && fs.existsSync(musicPath)) {
         // 1. Xác định thư mục của file gốc để tạo file temp cùng chỗ
         const folder = path.dirname(inputVideo);
-        const tempOutput = path.join(folder, `temp_${Date.now()}_video.mp4`); // Dùng Date.now() để tên file là duy nhất
+        const tempOutput = path.join(folder, `temp_${Date.now()}_${Math.random()}.mp4`);
+
 
         try {
             // 2. Kiểm tra nếu file temp đã tồn tại từ trước thì xóa

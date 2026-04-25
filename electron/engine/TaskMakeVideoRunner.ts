@@ -90,7 +90,7 @@ export class TaskRunner {
         }
         if (apikey_gemini.length == 0)
             return { success: false, message: "Api Gemini ít nhất phải có 1" };
-        if (profiles_aff.length == 0)
+        if (profiles_aff.length == 0 && useProfileAff)
             return { success: false, message: "Profile Shoppe ít nhất phải có 1" };
         if (profiles_grok.length == 0)
             return { success: false, message: "Profile Grok ít nhất phải có 1" };
@@ -400,12 +400,12 @@ export class TaskRunner {
 
                         this.event.sender.send('video:task-log', {
                             status: 'proccessing',
-                            message: `✅Tạo AI Video: ${resVideo.filename}`,
-                            data: { videoAIPath: resVideo.filename },
+                            message: `✅Tạo AI Video: ${resVideo.filePathVideo}`,
+                            data: { videoAIPath: resVideo.filePathVideo },
                             taskId: task.id,
                             index
                         });
-                        return resVideo.filename;
+                        return resVideo.filePathVideo;
                     }, "Render Video Final", task.id, 1);
 
 
@@ -486,12 +486,14 @@ export class TaskRunner {
 
                     // --- CHẶNG 6: HOÀN THIỆN (LOGO & BGM) ----
 
-
+                    logger.info(`Video chặng 6 ${finalVideoPath}`)
                     // Giả sử các biến isEnabledLogo, isEnabledMusic, logoPath, backgroundMusicPath đã có sẵn
                     if (isEnabledLogo || isEnabledMusic) {
+                        logger.info(`Thêm logo và music vào ${finalVideoPath}`)
+
                         const msg = (isEnabledLogo && isEnabledMusic) ? '🎨 Đang chèn Logo và Nhạc nền...' : (isEnabledLogo ? '🎨 Đang chèn Logo...' : '🎵 Đang trộn nhạc nền...');
                         this.event.sender.send('video:task-log', { status: 'processing', message: msg, taskId: task.id });
-
+                        
 
                         await addLogoAndMusic(
                             finalVideoPath,
