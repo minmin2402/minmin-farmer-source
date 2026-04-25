@@ -1,6 +1,6 @@
 [
   {
-    "version": "2.0.1",
+    "version": "2.0.2",
     "date": "2026-04-25",
     "content": [
       "+ Thêm log RateLimit từ hàm check limit grok",
