@@ -314,7 +314,7 @@ export class TaskRunner {
                                 profiles_grok[profileNum],
                                 save_path_project,
                                 isUseCharacter,
-                                characterSelected.imagePath,
+                                characterSelected?.imagePath ?? "",
                                 task.id
                             );
                             if (!imgRes.success) throw new Error(`Grok không vẽ được ảnh: ${imgRes?.message ?? "KXD"}`);
