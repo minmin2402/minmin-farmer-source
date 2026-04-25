@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/* Định nghĩa màu sắc thương hiệu MinMin tại đây */
+@theme {
+  --color-dark-bg: #0b0e14;
+  --color-card-bg: #161b22;
+  --color-accent: #3b82f6;
+}
+
+@layer base {
+  body {
+    @apply bg-dark-bg text-slate-200 antialiased overflow-hidden;
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+/* Tùy chỉnh thanh cuộn cho Chrome, Safari và Edge */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px; /* Độ mỏng của thanh cuộn */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* Màu nền của đường ray */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1; /* Màu của thanh trượt (slate-300) */
+  border-radius: 20px; /* Bo tròn */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8; /* Màu khi rê chuột vào (slate-400) */
+}
+
+/* Cho Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Hiệu ứng kính mờ cho app sang trọng */
+.glass {
+  background: rgba(22, 27, 34, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+/* Phóng to điểm bắt đầu và kết thúc của Node */
+.react-flow__handle {
+  width: 12px !important;    /* To gấp 3 lần mặc định */
+  height: 12px !important;
+  background-color: #3b82f6 !important; /* Màu xanh Blue-600 */
+  border: 2px solid white !important;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+}
+
+/* Hiệu ứng khi di chuột vào điểm nối */
+.react-flow__handle:hover {
+  width: 16px !important;
+  height: 16px !important;
+  background-color: #10b981 !important; /* Đổi sang màu xanh lá khi hover */
+  cursor: crosshair;
+}
+
+/* Làm cho vùng nhận diện click rộng ra (dễ bấm trúng hơn) */
+.react-flow__handle-connecting {
+  background: #ff5722 !important;
+}
+
+/* CSS để biết dây nào đang được chọn để xóa */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #ef4444 !important; /* Đổi sang màu đỏ rực */
+  stroke-width: 4;            /* Làm dày dây lên */
+  animation: dash 0.5s linear infinite;
+}
+
+@keyframes dash {
+  from { stroke-dashoffset: 10; }
+  to { stroke-dashoffset: 0; }
+}

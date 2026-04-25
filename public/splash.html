@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      background: #0f172a; /* Nền tối sâu hơn */
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Hiệu ứng ánh sáng nền */
+    .bg-glow {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      background: #3b82f6;
+      filter: blur(80px);
+      opacity: 0.2;
+      z-index: -1;
+    }
+
+    /* Container chính */
+    .container {
+      text-align: center;
+      z-index: 1;
+    }
+
+    .logo {
+      width: 120px;
+      margin-bottom: 30px;
+      filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.5));
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* Thanh Progress Bar xịn xò */
+    .progress-container {
+      width: 280px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 25px;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .progress-bar {
+      width: 30%; /* Sẽ thay đổi theo script */
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      box-shadow: 0 0 10px #3b82f6;
+      border-radius: 10px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #94a3b8;
+      font-weight: 600;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .version {
+  position: absolute;
+  bottom: 20px;
+  font-size: 10px;
+  color: #64748b; /* Màu slate nhẹ nhàng */
+  letter-spacing: 2px;
+  font-weight: bold;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  
+  <div class="container">
+    <img src="icon.png" class="logo" id="logo">
+    
+    <p class="status" id="status">Khởi tạo hệ thống...</p>
+    
+    <div class="progress-container">
+      <div class="progress-bar" id="progress"></div>
+    </div>
+    <div style="width:250px" class="version">MINMIN FARMER V<span id="version-text">0.0.0</span></div>
+  </div>
+
+  <script>
+  const statusText = document.getElementById('status');
+  const progressBar = document.getElementById('progress');
+  const versionText = document.getElementById('version-text');
+
+  // 🚀 Vít ga thông qua Preload API
+  if (window.electronAPI) {
+
+    window.electronAPI.getVersionApp().then(info => {
+      if (info && info.version) {
+        versionText.innerText = info.version;
+      }
+    });
+    // Nghe chữ status (ví dụ: "Đang kiểm tra cập nhật...")
+    window.electronAPI.onUpdateStatus((text) => {
+      statusText.innerText = text;
+      
+      // Logic tự động tăng thanh progress dựa trên từ khóa
+      if (text.includes("Kiểm tra")) progressBar.style.width = "25%";
+      if (text.includes("tải về")) progressBar.style.width = "60%";
+      if (text.includes("sẵn sàng")) progressBar.style.width = "100%";
+    });
+
+    // Nghe số % chuẩn từ autoUpdater
+    window.electronAPI.onDownloadProgress((percent) => {
+      progressBar.style.width = percent + "%";
+    });
+  }
+</script>
+</body>
+</html>
