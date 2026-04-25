@@ -76,7 +76,49 @@ export const VideoMarketingPage = () => {
     const savedTasks = localStorage.getItem("minmin_videoMKT_tasks");
     return savedTasks ? JSON.parse(savedTasks) : [];
   });
-
+  // State quản lý Modal Task Thông Minh
+  const [isCustomTaskModalOpen, setIsCustomTaskModalOpen] = useState(false);
+  const [customTaskForm, setCustomTaskForm] = useState({
+    productUrl: "",
+    productName: "",
+    productDesc: "",
+    productPathImg: "",
+    aiImagePath: "",
+    mode: "TT + Prompt + Video + Ảnh AI",
+    outputCount: 2,
+  });
+  const submitCustomTask = () => {
+    const newTask: VideoTask = {
+      id: Date.now(),
+      productUrl: customTaskForm.productUrl,
+      productName: customTaskForm.productName,
+      productDesc: customTaskForm.productDesc,
+      productPathImg: customTaskForm.productPathImg,
+      aiImagePath: customTaskForm.aiImagePath,
+      mode: customTaskForm.mode as any,
+      outputCount: customTaskForm.outputCount,
+      status: "none",
+      log: "Tạo task thủ công",
+      finalVideoPath: "",
+      prompt: "",
+      resultVideoCount: null,
+    };
+    
+    setTasks([newTask, ...tasks]); // Đẩy lên đầu bảng
+    setIsCustomTaskModalOpen(false); // Đóng modal
+    toast.success("Đã thêm Task tùy chỉnh thành công!");
+    
+    // Reset form
+    setCustomTaskForm({
+      productUrl: "",
+      productName: "",
+      productDesc: "",
+      productPathImg: "",
+      aiImagePath: "",
+      mode: "TT + Prompt + Video + Ảnh AI",
+      outputCount: 2,
+    });
+  };
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const filteredTasks = tasks.filter((task) => {
     if (filterStatus === "all") return true;
@@ -751,6 +793,13 @@ export const VideoMarketingPage = () => {
             >
               <Plus size={16} /> Thêm Task
             </button>
+            {/* ➕ NÚT THÊM TASK TÙY CHỈNH */}
+            <button
+              onClick={() => setIsCustomTaskModalOpen(true)}
+              className="bg-pink-600 text-white flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold hover:bg-pink-700 shadow-lg shadow-blue-100 active:scale-95 transition-all"
+            >
+              <Plus size={16} /> Thêm Task Tùy Chỉnh
+            </button>
           </div>
         </div>
       </div>
@@ -1126,6 +1175,170 @@ export const VideoMarketingPage = () => {
                 className="px-5 py-2 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md active:scale-95 transition-all"
               >
                 Tạo Task ngay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 🚀 MODAL TẠO TASK THÔNG MINH (CUSTOM TASK) */}
+      {isCustomTaskModalOpen && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-150 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header Modal */}
+            <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Settings2 size={18} className="text-blue-600" />
+                <h3 className="text-sm font-black text-slate-700 uppercase tracking-tight">
+                  Tạo Task Video Tùy Chỉnh
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsCustomTaskModalOpen(false)}
+                className="p-1 text-slate-400 hover:bg-slate-200 hover:text-rose-500 rounded-lg transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Body Modal - Form nhập liệu */}
+            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              
+              {/* Row 1: Link & Chế độ */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2 space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase">Link Sản Phẩm (Tùy chọn)</label>
+                  <input
+                    value={customTaskForm.productUrl}
+                    onChange={(e) => setCustomTaskForm({...customTaskForm, productUrl: e.target.value})}
+                    placeholder="https://shopee..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 transition-all"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase">Chế độ chạy</label>
+                  <select
+                    value={customTaskForm.mode}
+                    onChange={(e) => setCustomTaskForm({...customTaskForm, mode: e.target.value})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-bold text-slate-700 outline-none focus:border-blue-500 transition-all cursor-pointer"
+                  >
+                    <option value="Chỉ lấy thông tin sản phẩm">Chỉ lấy thông tin SP</option>
+                    <option value="Prompt + Video">Prompt + Video</option>
+                    <option value="Prompt + Ảnh AI + Video">Prompt + Ảnh AI + Video</option>
+                    <option value="TT + Prompt + Video + Ảnh AI">Full: TT + Ảnh + Video</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 2: Tên & Số lượng */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="col-span-3 space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase">Tên Sản Phẩm / Tiêu đề</label>
+                  <input
+                    value={customTaskForm.productName}
+                    onChange={(e) => setCustomTaskForm({...customTaskForm, productName: e.target.value})}
+                    placeholder="Nhập tên sản phẩm để AI hiểu..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 transition-all"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase text-center block">Đoạn Video</label>
+                  <input
+                    type="number"
+                    min="1" max="5"
+                    value={customTaskForm.outputCount}
+                    onChange={(e) => setCustomTaskForm({...customTaskForm, outputCount: Number(e.target.value)})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-blue-600 outline-none focus:border-blue-500 transition-all text-center"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Mô tả chi tiết */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-500 uppercase">Mô tả sản phẩm (Để AI làm kịch bản)</label>
+                <textarea
+                  value={customTaskForm.productDesc}
+                  onChange={(e) => setCustomTaskForm({...customTaskForm, productDesc: e.target.value})}
+                  placeholder="Mô tả công dụng, tính năng nổi bật..."
+                  className="w-full h-20 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 transition-all resize-none custom-scrollbar"
+                />
+              </div>
+
+              {/* Row 4: Upload Ảnh Sản phẩm & Ảnh AI */}
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                {/* Chọn ảnh SP */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                    Ảnh Sản Phẩm (Gốc)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={customTaskForm.productPathImg}
+                      placeholder="Chưa chọn ảnh..."
+                      className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-medium text-slate-600 outline-none truncate"
+                    />
+                    <button
+                      onClick={async () => {
+                        //@ts-ignore
+                        const path = await window.electronAPI.selectFile({
+                            title: "Chọn Ảnh Sản Phẩm",
+                            filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg"] }],
+                        });
+                        if (path) setCustomTaskForm({...customTaskForm, productPathImg: path});
+                      }}
+                      className="px-3 py-2 bg-white border border-slate-200 hover:border-blue-300 hover:text-blue-600 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
+                    >
+                      Chọn file
+                    </button>
+                  </div>
+                </div>
+
+                {/* Chọn ảnh AI */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                    Ảnh AI (Có sẵn)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={customTaskForm.aiImagePath}
+                      placeholder="Chưa chọn ảnh AI..."
+                      className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-medium text-slate-600 outline-none truncate"
+                    />
+                    <button
+                      onClick={async () => {
+                        //@ts-ignore
+                        const path = await window.electronAPI.selectFile({
+                            title: "Chọn Ảnh AI đã có",
+                            filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg"] }],
+                        });
+                        if (path) setCustomTaskForm({...customTaskForm, aiImagePath: path});
+                      }}
+                      className="px-3 py-2 bg-white border border-slate-200 hover:border-blue-300 hover:text-blue-600 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
+                    >
+                      Chọn file
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer Modal - Nút hành động */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2">
+              <button
+                onClick={() => setIsCustomTaskModalOpen(false)}
+                className="px-5 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-200 rounded-xl transition-all"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                onClick={submitCustomTask}
+                className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-100 active:scale-95 transition-all flex items-center gap-2"
+              >
+                <Plus size={16} /> Tạo Task Vào Bảng
               </button>
             </div>
           </div>
