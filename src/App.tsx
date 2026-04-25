@@ -20,7 +20,23 @@ function App() {
 
   return (
     <>
-    <Toaster position="bottom-right" reverseOrder={false} />
+    <Toaster
+  position="bottom-right"
+  toastOptions={{
+    success: {
+      style: {
+        background: "#16a34a",
+        color: "#fff",
+      },
+    },
+    error: {
+      style: {
+        background: "#dc2626",
+        color: "#fff",
+      },
+    },
+  }}
+/>
     <div className="flex h-screen bg-[#f8fafc] text-slate-800 font-sans overflow-hidden">
       {/* Sidebar nhận thêm props để điều hướng */}
       <Sidebar currentTab={activeTab} onTabChange={setActiveTab} />

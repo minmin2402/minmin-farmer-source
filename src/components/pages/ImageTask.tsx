@@ -23,7 +23,7 @@ interface ImageTask {
   prompt: string;
   inputImagePath: string | null;
   resultImagePath: string | null;
-  log:string;
+  log: string;
   status: "idle" | "processing" | "success" | "error";
 }
 
@@ -86,26 +86,42 @@ export const ImageGenerationPage = () => {
   }, []);
   // Giả sử đây là danh sách profile ông quét được từ thư mục grok_profiles
   const handleRunGenImage = async () => {
-    setRunningTasks(true);
-    toast.success(
-      `Đang khởi chạy với ${runConfig.selectedProfiles.length} tài khoản...`,
-    );
+    try {
+      setRunningTasks(true);
+      toast.success(
+        `Đang khởi chạy với ${runConfig.selectedProfiles.length} tài khoản...`,
+      );
 
-    //@ts-ignore
-    const result = await window.electronAPI.runTaskAutoImage({
-      ...runConfig,
-      tasks,
-      gpm_api_key: generalSettings?.gpm_api_key,
-    });
-    setRunningTasks(false);
-    toast.success("Tác vụ đã hoàn tất hoặc được dừng an toàn!");
+      //@ts-ignore
+      const result = await window.electronAPI.runTaskAutoImage({
+        ...runConfig,
+        tasks,
+        gpm_api_key: generalSettings?.gpm_api_key,
+      });
+      if (result?.message){
+        if (result?.success){
+        toast.success(result?.message);
+
+        }else{
+        toast.error(result?.message);
+
+        }
+      }
+      
+      setRunningTasks(false);
+      if (result?.success){
+        toast.success("Tác vụ đã hoàn tất hoặc được dừng an toàn!");
+      }
+    } catch (error:any) {
+      setRunningTasks(false);
+      toast.error(error?.message ?? "Lỗi KXD")
+    }
   };
-  const handleStopGenImage = async ()=>{
-    toast("Đang dừng tác vụ")
+  const handleStopGenImage = async () => {
+    toast("Đang dừng tác vụ");
     //@ts-ignore
-    await window.electronAPI.stopTaskAutoImage()
-    
-  }
+    await window.electronAPI.stopTaskAutoImage();
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
@@ -154,7 +170,7 @@ export const ImageGenerationPage = () => {
         inputImagePath: null,
         status: "idle",
         resultImagePath: null,
-        log:""
+        log: "",
       },
       ...tasks,
     ]);
@@ -165,7 +181,7 @@ export const ImageGenerationPage = () => {
       ...taskToCopy,
       id: `task_${Date.now()}_${Math.random()}`,
       status: "idle",
-      resultImagePath: null
+      resultImagePath: null,
     };
 
     // Nhét newTask lên đầu tiên, sau đó rải toàn bộ các task cũ nối đuôi theo sau
@@ -500,7 +516,6 @@ export const ImageGenerationPage = () => {
                   </td> */}
                   <td className="px-6 py-6 text-center">
                     <div className="flex flex-col items-center">
-
                       <span className="text-[10px] font-black text-black">
                         {task.log}
                       </span>
