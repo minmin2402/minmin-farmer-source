@@ -142,6 +142,45 @@ export async function addBackgroundMusic(videoPath: string, audioPath: string, o
 }
 
 
+/**
+ * Xoá toàn bộ âm thanh gốc của video và tự động ghi đè lại vào file gốc
+ */
+export async function removeAudioFromVideo(inputVideo: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        // Tạo đường dẫn file tạm
+        const folder = path.dirname(inputVideo);
+        const tempOutput = path.join(folder, `temp_no_audio_${Date.now()}_${Math.random()}.mp4`);
+
+        ffmpeg(inputVideo)
+            .outputOptions([
+                '-c:v copy', // Copy luồng video, xử lý siêu tốc
+                '-an'        // Xoá track audio
+            ])
+            .on('start', (cmd) => logger.info('🚀 Đang xoá âm thanh gốc của video:', cmd))
+            .on('error', async (err) => {
+                logger.error('⚠️ Lỗi khi xoá âm thanh:', err);
+                // Dọn dẹp file temp nếu quá trình lỗi giữa chừng
+                if (fs.existsSync(tempOutput)) {
+                    await fsc.unlink(tempOutput).catch(() => {});
+                }
+                reject(err);
+            })
+            .on('end', async () => {
+                try {
+                    // Quá trình FFmpeg xong -> Xoá file gốc và đổi tên file tạm thành file gốc
+                    await fsc.unlink(inputVideo);
+                    await fsc.rename(tempOutput, inputVideo);
+                    
+                    logger.info('✅ Đã xoá âm thanh và lưu đè file gốc thành công');
+                    resolve(inputVideo); // Trả về lại đúng đường dẫn ban đầu
+                } catch (fsError) {
+                    logger.error('⚠️ Lỗi khi tráo đổi file:', fsError);
+                    reject(fsError);
+                }
+            })
+            .save(tempOutput); // FFmpeg lưu vào file tạm
+    });
+}
 export const addLogoAndMusic = async (inputVideo: string, logoPath: string, musicPath: string, isLogo: boolean, isMusic: boolean) => {
 
     // BƯỚC 0: NORMALIZE VIDEO

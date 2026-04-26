@@ -86,6 +86,7 @@ export class TiktokService {
                 waitUntil: data.configVideoMKT?.method_load_page ?? "load",
                 timeout: data.configVideoMKT?.time_loading_page ?? 25000
             }).catch(() => { });
+            await sleep(5000)
 
             logger.info("🚚 Đang mồi trang chủ tiktok...");
             await page.goto('https://www.tiktok.com/', {

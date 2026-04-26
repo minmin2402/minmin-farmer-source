@@ -12,6 +12,7 @@ import { CharacterCreatorPage } from "./components/pages/CharacterCreatorPage";
 import { GeneralSettings } from "./components/pages/GeneralSettings";
 import { VideoLibrary } from "./components/pages/VideoLibrary";
 import { ImageGenerationPage } from "./components/pages/ImageTask";
+import { CheckLimitGrok } from "./components/pages/CheckLimitGrok";
 
 
 function App() {
@@ -82,6 +83,7 @@ function App() {
       {activeTab === "storage_video" && <VideoLibrary />}
 
       {activeTab === "imagen" && <ImageGenerationPage />}
+      {activeTab === "check_limit_grok" && <CheckLimitGrok />}
     </div>
     </>
     

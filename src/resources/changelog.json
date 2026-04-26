@@ -1,5 +1,14 @@
 [
   {
+    "version": "2.0.9",
+    "date": "2026-04-26",
+    "content": [
+      "Fix chức năng Tắt Giọng Đọc",
+      "Check Limit Grok"
+
+    ]
+  },
+  {
     "version": "2.0.8",
     "date": "2026-04-25",
     "content": [

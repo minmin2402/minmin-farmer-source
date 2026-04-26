@@ -28,7 +28,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onDownloadProgress: (callback: (arg0: any) => void) => {
     ipcRenderer.on('download-progress', (_event, value) => callback(value));
   },
-
+  checkGrokLimit: (profileId: string) => ipcRenderer.invoke('grok:check-limit', profileId),
   getGpmProfiles: () => ipcRenderer.invoke('gpm:get-profiles'),
   startGpmProfile: (id: any) => ipcRenderer.invoke('gpm:start-profile', id),
   stopGpmProfile: (id: any) => ipcRenderer.invoke('gpm:stop-profile', id),
@@ -86,6 +86,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getCharacters: () => ipcRenderer.invoke('character:list'),
   generateCharacter: (data: any) => ipcRenderer.invoke('character:generate', data),
   deleteCharacter: (id: string) => ipcRenderer.invoke('character:delete', id),
+
 
 
   getPinnedVideos: (folderStore:string) => ipcRenderer.invoke('library:get-all',folderStore),

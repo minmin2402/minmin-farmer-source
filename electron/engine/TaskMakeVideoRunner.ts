@@ -10,7 +10,7 @@ import { GrokProfileManager, ShopeeProfileManager } from "../manager/ProfileMana
 import fs from 'fs';
 import path from "path";
 import { VbeeService } from "../services/vbee.service";
-import { addLogoAndMusic, mergeAudioToVideo } from "../services/ffmpeg.service";
+import { addLogoAndMusic, mergeAudioToVideo, removeAudioFromVideo } from "../services/ffmpeg.service";
 import { logger } from "../utils/logger";
 import { deletePath } from "../utils/file";
 import { isLinkShopee, isLinkTiktok } from "../utils/tool";
@@ -488,6 +488,15 @@ export class TaskRunner {
 
                     logger.info(`Video chặng 6 ${finalVideoPath}`)
                     // Giả sử các biến isEnabledLogo, isEnabledMusic, logoPath, backgroundMusicPath đã có sẵn
+                    if (!isUseVoice){
+                        try {
+                            await removeAudioFromVideo(finalVideoPath);
+                        } catch (error) {
+                            
+                        }
+                        
+                    }
+
                     if (isEnabledLogo || isEnabledMusic) {
                         logger.info(`Thêm logo và music vào ${finalVideoPath}`)
 

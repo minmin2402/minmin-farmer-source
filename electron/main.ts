@@ -28,6 +28,7 @@ import { TaskPostReelsRunner } from './engine/TaskPostReelsRunner';
 import { registerCharacterHandlers } from './controllers/character.controller';
 import { VideoLibraryController } from './controllers/video-library.controller';
 import { TaskRunnerImage } from './engine/TaskMakeImageRunner';
+import { GrokService } from './services/grok.service';
 
 const pathFFmpeg = ffmpegPath.path.replace('app.asar', 'app.asar.unpacked');
 ffmpeg.setFfmpegPath(pathFFmpeg);
@@ -633,6 +634,15 @@ export function setupGpmHandlers() {
 
 }
 
+ipcMain.handle('grok:check-limit', async (_event, profileId) => {
+    try {
+        // Gọi thẳng vào hàm checkRateLimit có sẵn trong class của bạn
+        const result = await new GrokService().checkRateLimit(profileId);
+        return result;
+    } catch (error: any) {
+        return { success: false, message: error.message };
+    }
+});
 export function setupTaskAffHandle() {
   // Hứng lệnh lấy danh sách profile
 

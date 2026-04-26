@@ -16,7 +16,8 @@ import {
   Bot,
   Fingerprint,
   UserCheck,
-  UserCog
+  UserCog,
+  Gauge,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -75,7 +76,6 @@ export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
 
       {/* 2. MENU NAVIGATION (Cuộn được nếu quá dài) */}
       <nav className="flex-1 overflow-y-auto px-4 space-y-6 scrollbar-hide custom-scrollbar">
-        
         {/* GROUP 1: CHỨC NĂNG AI */}
         <div className="space-y-1">
           <div className="flex items-center gap-2 px-2 mb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -131,7 +131,6 @@ export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
             active={currentTab === "auto_shopee"}
             onClick={() => onTabChange("auto_shopee")}
           />
-         
         </div>
 
         {/* GROUP 3: AUTO LOGIN */}
@@ -139,35 +138,39 @@ export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
           <div className="flex items-center gap-2 px-2 mb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
             <UserCheck size={12} className="text-green-500" /> AUTO PROFILE
           </div>
-          
+
           <NavItem
-            icon={<Fingerprint size={18} />} 
+            icon={<Fingerprint size={18} />}
             label="Auto Login FB"
             active={currentTab === "auto_login_fb"}
             onClick={() => onTabChange("auto_login_fb")}
           />
           <NavItem
-            icon={<Bot size={18} />} 
+            icon={<Bot size={18} />}
             label="Auto Login Grok"
             active={currentTab === "auto_login_grok"} // 👈 Đã fix lỗi copy-paste
             onClick={() => onTabChange("auto_login_grok")} // 👈 Đã fix lỗi copy-paste
           />
-          
-          
+          <NavItem
+            icon={<Gauge size={18} />}
+            label="Check Limit Grok"
+            active={currentTab === "check_limit_grok"}
+            onClick={() => onTabChange("check_limit_grok")}
+          />
         </div>
         {/* GROUP 3: KHÁC (HỆ THỐNG) */}
         <div className="space-y-1">
           <div className="flex items-center gap-2 px-2 mb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
             <Settings size={12} className="text-red-500" /> Khác
           </div>
-          
+
           <NavItem
             icon={<Smartphone size={18} />}
             label="Thiết bị"
             active={currentTab === "devices"}
             onClick={() => onTabChange("devices")}
           />
-          
+
           <NavItem
             icon={<Settings size={18} />}
             label="Settings"
@@ -187,7 +190,6 @@ export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
             onClick={() => onTabChange("about")}
           />
         </div>
-
       </nav>
 
       {/* 3. FOOTER: SYSTEM INFO */}
@@ -215,7 +217,10 @@ export const Sidebar = ({ currentTab, onTabChange }: SidebarProps) => {
                 className="p-1.5 hover:bg-slate-100 rounded-md opacity-0 group-hover/hwid:opacity-100 transition-all"
                 title="Copy HWID"
               >
-                <Copy size={12} className="text-slate-400 hover:text-blue-600" />
+                <Copy
+                  size={12}
+                  className="text-slate-400 hover:text-blue-600"
+                />
               </button>
             </div>
           </div>
