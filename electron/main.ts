@@ -634,10 +634,10 @@ export function setupGpmHandlers() {
 
 }
 
-ipcMain.handle('grok:check-limit', async (_event, profileId) => {
+ipcMain.handle('grok:check-limit', async (_event, profileId,modelName) => {
     try {
         // Gọi thẳng vào hàm checkRateLimit có sẵn trong class của bạn
-        const result = await new GrokService().checkRateLimit(profileId);
+        const result = await new GrokService().checkRateLimit(profileId,modelName);
         return result;
     } catch (error: any) {
         return { success: false, message: error.message };

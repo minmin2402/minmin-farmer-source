@@ -126,7 +126,20 @@ export class TiktokService {
                 } catch (error) {
                     logger.error(`⚠️ Lỗi xử lý link TikTok rút gọn: ${error}`);
                 }
-            } else {
+            } else if (data.task.productUrl.includes("tiktok.com/view/product/")) {
+                const urlObj = new URL(data.task.productUrl);
+                const cleanUrl = `${urlObj.origin}${urlObj.pathname}`;
+                // Kết quả sẽ chỉ còn: https://www.tiktok.com/view/product/1731154662972098959
+
+                logger.info(`🔗 Lột link TikTok thành công: ${cleanUrl}`);
+
+                // 4. Lập tức quay xe, đi thẳng vào cái link sạch vừa lấy được
+                await page.goto(cleanUrl, {
+                    waitUntil: data.configVideoMKT?.method_load_page ?? "load",
+                    timeout: 30000
+                });
+            }
+            else {
                 // XỬ LÝ LINK TRỰC TIẾP (bao gồm /shop/... hoặc /view/product/...)
                 try {
                     logger.info(`🔗 Link đã chuẩn, phi thẳng vào: ${data.task.productUrl}`);

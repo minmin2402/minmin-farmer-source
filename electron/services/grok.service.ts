@@ -479,7 +479,7 @@ export class GrokService {
         }
     }
 
-    async checkRateLimit(profileId: string) {
+    async checkRateLimit(profileId: string, modelName: "auto" | "fast" | "grok-3" | string = 'auto') {
         try {
             const headers = this.buildRequestHeaders(profileId);
             if (!headers) return { success: false, message: "Header trống" };
@@ -491,7 +491,7 @@ export class GrokService {
                 'content-type': 'text/plain;charset=UTF-8',
             };
 
-            const payload = { modelName: "auto" };
+            const payload = { modelName };
 
             const response = await axios.post('https://grok.com/rest/rate-limits', payload, {
                 headers: reqHeaders,

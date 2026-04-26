@@ -28,7 +28,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onDownloadProgress: (callback: (arg0: any) => void) => {
     ipcRenderer.on('download-progress', (_event, value) => callback(value));
   },
-  checkGrokLimit: (profileId: string) => ipcRenderer.invoke('grok:check-limit', profileId),
+  checkGrokLimit: (profileId: string,modelName:string|null) => ipcRenderer.invoke('grok:check-limit', profileId,modelName),
   getGpmProfiles: () => ipcRenderer.invoke('gpm:get-profiles'),
   startGpmProfile: (id: any) => ipcRenderer.invoke('gpm:start-profile', id),
   stopGpmProfile: (id: any) => ipcRenderer.invoke('gpm:stop-profile', id),
